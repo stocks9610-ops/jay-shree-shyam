@@ -32,12 +32,18 @@ const App: React.FC = () => {
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    const savedUser = authService.getUser();
-    if (savedUser) {
-      setUser(savedUser);
-      setView('dashboard');
-    }
-    setIsInitializing(false);
+    const initialize = async () => {
+      // Simulate secure node handshake
+      await new Promise(r => setTimeout(r, 1500));
+      const savedUser = authService.getUser();
+      if (savedUser) {
+        setUser(savedUser);
+        setView('dashboard');
+      }
+      setIsInitializing(false);
+    };
+
+    initialize();
 
     const handlePrompt = (e: any) => {
       e.preventDefault();
@@ -112,10 +118,16 @@ const App: React.FC = () => {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-[#131722] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-           <div className="w-12 h-12 border-4 border-[#f01a64] border-t-transparent rounded-full animate-spin"></div>
-           <p className="text-[#f01a64] text-[10px] font-black uppercase tracking-[0.3em] animate-pulse">Initializing Secure Hub...</p>
+      <div className="min-h-screen bg-[#131722] flex flex-col items-center justify-center p-6 text-center">
+        <div className="relative mb-8">
+          <div className="w-16 h-16 border-4 border-[#f01a64] border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-[#f01a64] rounded-full animate-ping"></div>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-white font-black uppercase tracking-[0.4em] text-xs italic">CopyTrade Hub</h2>
+          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse">Syncing Secure Nodes...</p>
         </div>
       </div>
     );
@@ -137,7 +149,7 @@ const App: React.FC = () => {
       
       <LiveActivityFeed />
 
-      <main className={`flex-grow transition-all duration-300 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+      <main className={`flex-grow transition-all duration-500 ${isPending ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}`}>
         {view === 'landing' ? (
           <>
             <Hero 
