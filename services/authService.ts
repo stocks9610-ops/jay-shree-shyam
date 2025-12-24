@@ -13,18 +13,16 @@ export interface UserProfile {
   totalInvested: number;
   activeTraders: Trader[];
   schemaVersion: string;
-  // Referral Data
   nodeId: string;
   referralCount: number;
   referralEarnings: number;
   pendingClaims: number;
 }
 
-const SESSION_KEY = 'zulu_auth_token_v7'; // Updated key version
-const USERS_DB_KEY = 'zulu_vault_ledger_v7'; // Updated key version
+const SESSION_KEY = 'zulu_auth_token_v7';
+const USERS_DB_KEY = 'zulu_vault_ledger_v7';
 export const BUILD_ID = 'v7.0-PLATINUM-LAUNCH';
 
-// UNIVERSAL ENCODER: Works on HTTP (IP Address) and HTTPS (Netlify) identically.
 const hashPassword = (pwd: string): string => {
   try {
     return btoa(encodeURIComponent(pwd)).split('').reverse().join('');
@@ -33,7 +31,6 @@ const hashPassword = (pwd: string): string => {
   }
 };
 
-// ENHANCED VAULT: Unicode/Emoji Safe Storage
 const vault = {
   encode: (data: any) => {
     try {
@@ -79,7 +76,6 @@ export const authService = {
       const user = db[email.toLowerCase()];
       
       if (user) {
-        // Auto-fix missing fields for older accounts
         let needsUpdate = false;
         if (!user.nodeId) {
           user.nodeId = `NODE-${Math.floor(1000 + Math.random() * 9000)}-${user.username.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase()}`;
@@ -92,29 +88,22 @@ export const authService = {
            authService.updateUser(user);
         }
         return user;
-      } else {
-        // Session exists but user not in DB (cleared/corrupt DB), logout to fix
-        authService.logout();
       }
     } catch (e) {
-      console.error("Auth Retrieval Error", e);
       authService.logout();
     }
     return null;
   },
 
   register: async (user: UserProfile): Promise<boolean> => {
-    await new Promise(r => setTimeout(r, 800)); // Simulate net delay
+    await new Promise(r => setTimeout(r, 800));
     try {
       const db = authService.getDB();
       const emailKey = user.email.toLowerCase();
 
-      if (db[emailKey]) return false; // User exists
+      if (db[emailKey]) return false;
 
-      // Store using universal hash
       const hashedPassword = user.password ? hashPassword(user.password) : undefined;
-
-      // Generate Node ID
       const safeUsername = user.username.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase() || 'TRD';
       const nodeId = `NODE-${Math.floor(1000 + Math.random() * 9000)}-${safeUsername}`;
 
@@ -133,21 +122,18 @@ export const authService = {
       localStorage.setItem(SESSION_KEY, emailKey);
       return true;
     } catch (e) {
-      console.error("Registration failed", e);
       return false;
     }
   },
 
   login: async (email: string, password: string): Promise<UserProfile | null> => {
-    await new Promise(r => setTimeout(r, 1000)); // Simulate delay
+    await new Promise(r => setTimeout(r, 1000));
     const db = authService.getDB();
     const user = db[email.toLowerCase()];
 
     if (!user) return null;
 
     const inputHash = hashPassword(password);
-
-    // Strict comparison
     if (user.password === inputHash) {
       localStorage.setItem(SESSION_KEY, user.email.toLowerCase());
       return user;
