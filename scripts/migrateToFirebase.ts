@@ -1,8 +1,16 @@
 // Migration script to upload existing trader data to Firebase
 // Run this once after setting up Firebase credentials
 
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import {
+    collection,
+    addDoc,
+    Timestamp,
+    getDocs,
+    writeBatch,
+    doc
+} from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { getAuth } from 'firebase/auth';
 
 interface ExtendedTrader {
     id: string;
@@ -24,6 +32,9 @@ interface ExtendedTrader {
     category: 'crypto' | 'binary' | 'gold' | 'forex';
     copyTradeId: string;
     youtubeLink?: string;
+    minCapital?: number;
+    totalReturn?: number;
+    description?: string;
 }
 
 const INITIAL_TRADERS: ExtendedTrader[] = [
@@ -36,7 +47,9 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Anas Ali is a fast-growing forex and crypto trader known for high-accuracy Risk Free trade signals and bold market execution. He leads one of Asia\'s largest trading communities and focuses on disciplined strategies, consistency, and profit-driven trading.',
         category: 'crypto',
         copyTradeId: 'CT-7701-X',
-        youtubeLink: 'https://www.youtube.com/watch?v=dvQzEIbJlw4'
+        youtubeLink: 'https://www.youtube.com/watch?v=dvQzEIbJlw4',
+        minCapital: 500,
+        totalReturn: 342.5
     },
     {
         id: '10', name: 'Rayner Teo',
@@ -124,50 +137,63 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Elite crypto and forex trader delivering explosive market insights with precision execution. Known for identifying high-probability setups and dominating volatile conditions, this trader focuses on strategic growth, disciplined risk control, and maximum performance in both crypto and forex markets.',
         category: 'forex',
         copyTradeId: 'CT-2509-TANI',
-        youtubeLink: 'https://www.youtube.com/watch?v=wgyrU6MZTbc'
+        youtubeLink: 'https://www.youtube.com/watch?v=wgyrU6MZTbc',
+        minCapital: 800
     }
 ];
 
 export const migrateTraders = async () => {
-    console.log('🚀 Starting trader migration to Firebase...');
+    // Wait for auth to be ready
+    const auth = getAuth();
 
-    try {
-        const tradersRef = collection(db, 'traders');
-        let successCount = 0;
-        let errorCount = 0;
+    return new Promise((resolve) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log('🚀 User logged in, starting migration check...');
+                try {
+                    const tradersRef = collection(db, 'traders');
+                    const snapshot = await getDocs(tradersRef);
 
-        for (const trader of INITIAL_TRADERS) {
-            try {
-                // Remove the 'id' field as Firebase will auto-generate it
-                const { id, ...traderData } = trader;
+                    if (snapshot.empty) {
+                        console.log('📦 No traders found in Firebase. Starting migration...');
+                        const batch = writeBatch(db);
 
-                await addDoc(tradersRef, {
-                    ...traderData,
-                    createdAt: Timestamp.now(),
-                    updatedAt: Timestamp.now()
-                });
+                        INITIAL_TRADERS.forEach((trader) => {
+                            const newDocRef = doc(tradersRef, trader.id);
+                            // Ensure numeric values are stored as numbers
+                            const traderData = {
+                                ...trader,
+                                riskScore: Number(trader.riskScore),
+                                winRate: Number(trader.winRate),
+                                followers: Number(trader.followers),
+                                minCapital: Number(trader.minCapital || 500),
+                                totalReturn: Number(trader.roi || trader.totalReturn || 0),
+                                // Default description if missing
+                                description: trader.bio || `Expert trader with ${trader.winRate}% win rate.`,
+                                avatar: trader.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${trader.id}`,
+                                createdAt: Timestamp.now(), // Add createdAt
+                                updatedAt: Timestamp.now() // Add updatedAt
+                            };
+                            batch.set(newDocRef, traderData);
+                        });
 
-                successCount++;
-                console.log(`✅ Migrated: ${trader.name}`);
-            } catch (error) {
-                errorCount++;
-                console.error(`❌ Failed to migrate ${trader.name}:`, error);
+                        await batch.commit();
+                        console.log('✅ Specific traders migrated to Firebase successfully!');
+                    } else {
+                        console.log('✨ Traders already exist in Firebase. accessible count:', snapshot.size);
+                    }
+                } catch (error) {
+                    console.error('❌ Error migrating traders:', error);
+                } finally {
+                    unsubscribe(); // Unsubscribe after check/migration
+                }
+            } else {
+                console.log('⏳ Waiting for user login to perform migration...');
             }
-        }
-
-        console.log('\n📊 Migration Summary:');
-        console.log(`✅ Success: ${successCount}`);
-        console.log(`❌ Failed: ${errorCount}`);
-        console.log(`📈 Total: ${INITIAL_TRADERS.length}`);
-
-        if (successCount === INITIAL_TRADERS.length) {
-            console.log('\n🎉 Migration completed successfully!');
-        }
-    } catch (error) {
-        console.error('❌ Migration failed:', error);
-        throw error;
-    }
+            resolve(true);
+        });
+    });
 };
 
 // Uncomment to run migration
-migrateTraders();
+// migrateTraders();

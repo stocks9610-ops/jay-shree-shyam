@@ -1,21 +1,35 @@
-import {
-    collection,
-    doc,
-    setDoc,
-    getDocs,
-    Timestamp
-} from 'firebase/firestore';
-import { db } from '../firebase.config';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
-/**
- * Creates initial collections and documents to "design" the database structure
- * so you can see it in Firebase Console immediately.
- */
+// Load environment variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: resolve(__dirname, '../.env') });
+
+const firebaseConfig = {
+    apiKey: process.env.VITE_FIREBASE_API_KEY,
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.VITE_FIREBASE_APP_ID
+};
+
+console.log('🔌 Connecting to Firebase project:', firebaseConfig.projectId);
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 export const initializeDatabaseStructure = async () => {
     console.log('🚀 Starting Database Initialization...');
 
     try {
         // 1. Create 'users' collection with a verified admin
+        console.log('👤 Creating Admin User...');
         const adminRef = doc(db, 'users', 'admin_placeholder');
         await setDoc(adminRef, {
             uid: 'admin_placeholder',
@@ -28,9 +42,9 @@ export const initializeDatabaseStructure = async () => {
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now()
         });
-        console.log('✅ Created "users" collection');
 
-        // 2. Create 'withdrawals' collection with a sample request
+        // 2. Create 'withdrawals' collection
+        console.log('💸 Creating Withdrawals Collection...');
         const withdrawalRef = doc(db, 'withdrawals', 'sample_withdrawal');
         await setDoc(withdrawalRef, {
             userId: 'sample_user_id',
@@ -40,11 +54,11 @@ export const initializeDatabaseStructure = async () => {
             walletAddress: 'TRC20_SAMPLE_WALLET',
             status: 'pending',
             requestedAt: Timestamp.now(),
-            notes: 'This is a sample withdrawal to show structure'
+            notes: 'Sample withdrawal to visualize structure'
         });
-        console.log('✅ Created "withdrawals" collection');
 
         // 3. Create 'settings' collection
+        console.log('⚙️ Creating Settings Collection...');
         const settingsRef = doc(db, 'settings', 'platformSettings');
         await setDoc(settingsRef, {
             adminWalletAddress: 'TRC20_YOUR_ADMIN_WALLET',
@@ -55,13 +69,30 @@ export const initializeDatabaseStructure = async () => {
             updatedAt: Timestamp.now(),
             updatedBy: 'system'
         });
-        console.log('✅ Created "settings" collection');
 
-        console.log('🎉 Database structure created successfully!');
+        // 4. Create 'traders' collection (Sample Data)
+        console.log('📈 Creating Traders Collection...');
+        const traderRef = doc(db, 'traders', 'trader_sample_1');
+        await setDoc(traderRef, {
+            id: 'trader_sample_1',
+            name: "Sarah Jenkins",
+            handle: "@sarah_crypto",
+            riskScore: 3,
+            winRate: 88.5,
+            totalReturn: 452.30,
+            followers: 1250,
+            minCapital: 500,
+            description: "Conservative swing trader focusing on BTC and ETH major moves.",
+            avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+        });
+
+        console.log('✅ DATABASE INITIALIZATION COMPLETE!');
+        console.log('👉 Go to Firebase Console > Firestore to see your data.');
+        process.exit(0);
     } catch (error) {
         console.error('❌ Error initializing database:', error);
+        process.exit(1);
     }
 };
 
-// Uncomment to run automatically
-// initializeDatabaseStructure();
+initializeDatabaseStructure();
