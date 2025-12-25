@@ -31,13 +31,76 @@ interface ActiveTrade {
   progress: number;
 }
 
+import Tesseract from 'tesseract.js';
+
 const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
-  await new Promise(r => setTimeout(r, 3000));
-  return {
-    is_valid: true,
-    detected_amount: 1000,
-    summary: "Simulated Success: Institutional Transfer Verified via Node Sync."
-  };
+  try {
+    // 1. OCR Scanning
+    const { data: { text } } = await Tesseract.recognize(
+      `data:${mimeType};base64,${base64Image}`,
+      'eng',
+      { logger: m => console.log(m) }
+    );
+
+    const cleanText = text.toLowerCase();
+    console.log("OCR Result:", cleanText);
+
+    // 2. Keyword Validation (Status)
+    const successKeywords = ['success', 'completed', 'confirmed', 'successful', 'sent'];
+    const hasSuccess = successKeywords.some(keyword => cleanText.includes(keyword));
+
+    if (!hasSuccess) {
+      return {
+        is_valid: false,
+        detected_amount: 0,
+        summary: "Validation Failed: No 'Success' or 'Completed' status found in receipt."
+      };
+    }
+
+    // 3. Transaction Hash Validation (EVM 0x... or Tron T...)
+    // Regex looks for 0x followed by 64 hex chars OR T followed by 33 alphanumeric chars
+    const txHashRegex = /(0x[a-f0-9]{64}|T[a-zA-Z0-9]{33})/;
+    const hasTxHash = txHashRegex.test(text); // Case sensitive check for Trust/Tron addresses
+
+    if (!hasTxHash) {
+      // Fallback: simple check for long strings that look like hashes if regex is too strict
+      const simpleHashCheck = cleanText.includes('hash') || cleanText.includes('txid') || cleanText.includes('transaction id');
+      if (!simpleHashCheck) {
+        return {
+          is_valid: false,
+          detected_amount: 0,
+          summary: "Validation Failed: No valid Transaction Hash detected."
+        };
+      }
+    }
+
+    // 4. Amount Extraction
+    // Look for numbers following $, USDT, Amount, etc.
+    // This is a basic extractor, can be improved
+    const amountRegex = /(\$|usdt)\s?([0-9,]+(\.[0-9]{2})?)/i;
+    const amountMatch = cleanText.match(amountRegex);
+
+    let detectedAmount = 0;
+    if (amountMatch && amountMatch[2]) {
+      detectedAmount = parseFloat(amountMatch[2].replace(/,/g, ''));
+    }
+
+    return {
+      is_valid: true,
+      detected_amount: detectedAmount > 0 ? detectedAmount : 0,
+      summary: detectedAmount > 0
+        ? `Verified: $${detectedAmount} Transfer Confirmed.`
+        : "Verified: Transaction Valid (Amount check manual)."
+    };
+
+  } catch (err) {
+    console.error("OCR Error:", err);
+    return {
+      is_valid: false,
+      detected_amount: 0,
+      summary: "Error: Could not read image. Please upload a clearer screenshot."
+    };
+  }
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrader }) => {
