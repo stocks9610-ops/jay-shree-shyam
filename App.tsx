@@ -313,7 +313,7 @@ ${websiteUrl}
 
       {showMentorshipModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl animate-in fade-in">
-          <div className="bg-[#1e222d] border border-white/10 w-full max-w-lg rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-[0_0_120px_rgba(0,0,0,1)] animate-in zoom-in-95">
+          <div className="bg-[#1e222d] border border-white/10 w-[95%] max-w-lg rounded-[2.5rem] md:rounded-[3rem] overflow-hidden shadow-[0_0_120px_rgba(0,0,0,1)] animate-in zoom-in-95">
             <div className="p-8 md:p-14 space-y-8 relative">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
