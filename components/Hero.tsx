@@ -2,6 +2,7 @@ import React from 'react';
 import FloatingFlags from './FloatingFlags';
 
 interface HeroProps {
+  hasDeposited: boolean;
   onJoinClick: () => void;
   onInstallRequest: () => Promise<boolean>;
   onStartJourney?: () => void;
@@ -9,7 +10,7 @@ interface HeroProps {
   onShareClick?: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ onJoinClick, onInstallRequest, onStartJourney, externalShowMentorship, onShareClick }) => {
+const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest, onStartJourney, externalShowMentorship, onShareClick }) => {
   return (
     <section className="relative overflow-hidden pt-12 pb-24 md:pt-32 md:pb-56 bg-[#131722]">
       <FloatingFlags />
@@ -58,7 +59,13 @@ const Hero: React.FC<HeroProps> = ({ onJoinClick, onInstallRequest, onStartJourn
 
           {/* ELITE LIVE CLASSES BANNER */}
           <div
-            onClick={externalShowMentorship}
+            onClick={() => {
+              if (!hasDeposited) {
+                alert("First deposit then you will clear for your Google Meet Classes");
+                return;
+              }
+              externalShowMentorship?.();
+            }}
             className="w-full lg:w-auto min-w-0 md:min-w-[340px] bg-gradient-to-r from-[#1e222d] via-[#2a2e39] to-[#1e222d] border border-white/10 rounded-2xl p-5 flex items-center justify-between cursor-pointer group hover:border-[#00b36b]/40 transition-all shadow-2xl relative overflow-hidden active:scale-95"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 pointer-events-none opacity-50 group-hover:animate-pulse"></div>

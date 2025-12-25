@@ -210,11 +210,12 @@ ${websiteUrl}
         {view === 'landing' ? (
           <>
             <Hero
-              onJoinClick={() => setShowSignup(true)}
+              hasDeposited={user?.hasDeposited}
+              onJoinClick={() => document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })}
               onInstallRequest={handleInstallClick}
               onStartJourney={scrollToTraders}
               externalShowMentorship={handleMentorshipClick}
-              onShareClick={handleShareClick}
+              onShareClick={() => setShowReferral(true)}
             />
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 -mt-16 md:-mt-24 relative z-10 mb-8 md:mb-12">
               <div className="w-full bg-[#1e222d] border border-[#2a2e39] rounded-2xl shadow-2xl overflow-hidden h-[450px] md:h-[600px] border-t-[#00b36b] border-t-2">
