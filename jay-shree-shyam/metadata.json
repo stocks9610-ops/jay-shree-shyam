@@ -1,0 +1,7 @@
+{
+  "name": "jay shree shaym",
+  "description": "ye final web app ki copy because netfly and other issue aa rahe hai",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
