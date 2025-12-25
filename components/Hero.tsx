@@ -97,15 +97,27 @@ const Hero: React.FC<HeroProps> = ({ onJoinClick, onInstallRequest, onStartJourn
               START JOURNEY
             </button>
 
-            <button
-              onClick={onShareClick}
-              className="w-full sm:w-auto px-10 py-5 bg-[#0088cc] hover:bg-[#0077b5] text-white font-black text-base rounded-2xl shadow-[0_10px_30px_rgba(0,136,204,0.3)] transform transition active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2 border border-white/10"
-            >
-              <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123.836.761z" />
-              </svg>
-              <span className="whitespace-nowrap uppercase tracking-widest">Share & Earn $200</span>
-            </button>
+            <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={onShareClick}
+                className="w-full sm:w-auto px-10 py-5 bg-[#0088cc] hover:bg-[#0077b5] text-white font-black text-base rounded-2xl shadow-[0_10px_30px_rgba(0,136,204,0.3)] transform transition active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2 border border-white/10"
+              >
+                <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123.836.761z" />
+                </svg>
+                <span className="whitespace-nowrap uppercase tracking-widest">Share & Earn $200</span>
+              </button>
+
+              {/* Referral Info Caption */}
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 w-full sm:w-auto">
+                <p className="text-center text-[10px] md:text-xs font-bold text-gray-300 leading-relaxed">
+                  <span className="text-white font-black">👥 Refer 3 friends</span>
+                  <span className="mx-1 text-white/40">•</span>
+                  <span className="text-[#00b36b] font-black">💰 Earn $200</span>
+                  <span className="block text-[9px] md:text-[10px] mt-0.5 text-gray-400 font-semibold">on their first successful deposit</span>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
