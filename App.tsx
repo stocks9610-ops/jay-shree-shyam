@@ -163,20 +163,13 @@ ${websiteUrl}
 
     // URL encode the message for Telegram
     const encodedMessage = encodeURIComponent(message);
+    const encodedUrl = encodeURIComponent(websiteUrl);
 
-    // Try to open Telegram app first, then fall back to web
-    const telegramAppUrl = `tg://msg?text=${encodedMessage}`;
-    const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodedMessage}`;
+    // Construct Telegram share URL (works for both app and web)
+    const telegramShareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedMessage}`;
 
-    // Try to open the Telegram app
-    const appLink = document.createElement('a');
-    appLink.href = telegramAppUrl;
-    appLink.click();
-
-    // Fallback to web version after a short delay if app doesn't open
-    setTimeout(() => {
-      window.open(telegramWebUrl, '_blank');
-    }, 500);
+    // Open Telegram (will open app if installed, otherwise web version)
+    window.open(telegramShareUrl, '_blank');
   };
 
 
