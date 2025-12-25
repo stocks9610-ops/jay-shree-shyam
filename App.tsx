@@ -134,6 +134,57 @@ const App: React.FC = () => {
     setShowMentorshipModal(true);
   };
 
+  const handleShareClick = () => {
+    // Show confirmation message
+    const confirmed = window.confirm("Share with 3 friends on Telegram to unlock earnings 🚀");
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Get the current website URL
+    const websiteUrl = window.location.origin;
+
+    // Construct the promotional message
+    const message = `🚀 OFFICIAL COPY-TRADING & PORTFOLIO STRATEGY PLATFORM 🚀
+ 
+📊 98.4% Accuracy Based on Proven Strategy
+💰 Consistent Profit-Focused Trade Analysis
+ 
+⚡ This is a LEGAL & COPYRIGHT-PROTECTED trading analytics website  
+⚡ Powered by Chulhu Trade  
+⚡ Official Copy Strategy | Real Portfolio Insights  
+ 
+🎯 Join smart traders who focus on discipline, risk management & performance
+ 
+🔗 Website Access:
+${websiteUrl}
+ 
+👥 Share with 3 friends  
+🎁 Earn up to $200 through our referral rewards system  
+ 
+⛔ No gambling | No fake promises  
+✅ Transparent | Strategy-based | Educational & Analytical`;
+
+    // URL encode the message for Telegram
+    const encodedMessage = encodeURIComponent(message);
+
+    // Try to open Telegram app first, then fall back to web
+    const telegramAppUrl = `tg://msg?text=${encodedMessage}`;
+    const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(websiteUrl)}&text=${encodedMessage}`;
+
+    // Try to open the Telegram app
+    const appLink = document.createElement('a');
+    appLink.href = telegramAppUrl;
+    appLink.click();
+
+    // Fallback to web version after a short delay if app doesn't open
+    setTimeout(() => {
+      window.open(telegramWebUrl, '_blank');
+    }, 500);
+  };
+
+
   if (isInitializing) {
     return (
       <div className="min-h-screen bg-[#131722] flex flex-col items-center justify-center p-6 text-center">
@@ -175,7 +226,7 @@ const App: React.FC = () => {
               onInstallRequest={handleInstallClick}
               onStartJourney={scrollToTraders}
               externalShowMentorship={handleMentorshipClick}
-              onShareClick={() => user ? setShowReferral(true) : setShowSignup(true)}
+              onShareClick={handleShareClick}
             />
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 -mt-16 md:-mt-24 relative z-10 mb-8 md:mb-12">
               <div className="w-full bg-[#1e222d] border border-[#2a2e39] rounded-2xl shadow-2xl overflow-hidden h-[450px] md:h-[600px] border-t-[#00b36b] border-t-2">
