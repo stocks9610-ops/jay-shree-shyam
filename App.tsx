@@ -136,9 +136,7 @@ const App: React.FC = () => {
 
   const handleShareClick = () => {
     // Show eye-catchy confirmation message
-    const confirmed = window.confirm("📢 Share with 3 friends on Telegram & unlock premium benefits 💰");
-
-    if (!confirmed) {
+    if (!window.confirm("📢 Share with 3 friends on Telegram & unlock premium benefits 💰")) {
       return;
     }
 
