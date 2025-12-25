@@ -106,6 +106,20 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleSeedData = async () => {
+        if (!confirm('This will upload initial trader data to Firebase. Continue?')) return;
+        try {
+            setLoading(true);
+            const { migrateTraders } = await import('../../scripts/migrateToFirebase');
+            await migrateTraders();
+            setSuccess('Data migrated successfully! Check Firestore.');
+        } catch (err: any) {
+            setError('Migration failed: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#131722] p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
@@ -333,6 +347,20 @@ const AdminDashboard: React.FC = () => {
                             >
                                 {loading ? 'Saving...' : 'Save Settings'}
                             </button>
+
+                            <div className="pt-8 border-t border-[#2a2e39] mt-8">
+                                <h4 className="text-white font-bold mb-4">Database Tools</h4>
+                                <button
+                                    onClick={handleSeedData}
+                                    disabled={loading}
+                                    className="w-full py-3 bg-[#2a2e39] hover:bg-[#363c4e] text-gray-300 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                    </svg>
+                                    Seed/Reset Initial Data
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
