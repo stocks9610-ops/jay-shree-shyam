@@ -135,8 +135,8 @@ const App: React.FC = () => {
   };
 
   const handleShareClick = () => {
-    // Show confirmation message
-    const confirmed = window.confirm("Share with 3 friends on Telegram to unlock earnings 🚀");
+    // Show eye-catchy confirmation message
+    const confirmed = window.confirm("📢 Share with 3 friends on Telegram & unlock premium benefits 💰");
 
     if (!confirmed) {
       return;
@@ -146,25 +146,20 @@ const App: React.FC = () => {
     const websiteUrl = window.location.origin;
 
     // Construct the promotional message
-    const message = `🚀 OFFICIAL COPY-TRADING & PORTFOLIO STRATEGY PLATFORM 🚀
+    const message = `📈 Official Trading Copy Strategy Website
  
-📊 98.4% Accuracy Based on Proven Strategy
-💰 Consistent Profit-Focused Trade Analysis
+🔒 Copyright-Protected Trading Analytics Platform  
+⚙️ Powered by Zulu Trade
  
-⚡ This is a LEGAL & COPYRIGHT-PROTECTED trading analytics website  
-⚡ Powered by Chulhu Trade  
-⚡ Official Copy Strategy | Real Portfolio Insights  
+✅ Official Copy Strategy  
+✅ Verified Portfolio Performance  
+✅ Transparent Analytics
  
-🎯 Join smart traders who focus on discipline, risk management & performance
- 
-🔗 Website Access:
+🔗 Website:
 ${websiteUrl}
  
-👥 Share with 3 friends  
-🎁 Earn up to $200 through our referral rewards system  
- 
-⛔ No gambling | No fake promises  
-✅ Transparent | Strategy-based | Educational & Analytical`;
+🚀 Share with 3 friends & unlock benefits  
+💰 Refer & Earn: $200 after successful deposit`;
 
     // URL encode the message for Telegram
     const encodedMessage = encodeURIComponent(message);
