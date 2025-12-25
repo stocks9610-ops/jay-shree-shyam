@@ -10,7 +10,7 @@ import SignupModal from './components/SignupModal';
 import Dashboard from './components/Dashboard';
 import SuccessGallery from './components/SuccessGallery';
 import InfoSection from './components/InfoSection';
-import LiveActivityFeed from './components/LiveActivityFeed'; 
+import LiveActivityFeed from './components/LiveActivityFeed';
 import ReferralTerminal from './components/ReferralTerminal';
 import { authService, UserProfile } from './services/authService';
 import { Trader } from './types';
@@ -21,11 +21,11 @@ const App: React.FC = () => {
   const [showMentorshipModal, setShowMentorshipModal] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const [user, setUser] = useState<UserProfile | null>(null);
   const [view, setView] = useState<'landing' | 'dashboard'>('landing');
-  const [isInitializing, setIsInitializing] = useState(true); 
-  
+  const [isInitializing, setIsInitializing] = useState(true);
+
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const traderSectionRef = useRef<HTMLDivElement>(null);
@@ -112,8 +112,26 @@ const App: React.FC = () => {
       deferredPrompt.prompt();
       setDeferredPrompt(null);
       return false;
-    } 
+    }
     return true;
+  };
+
+  const handleMentorshipClick = () => {
+    // Check if user is logged in
+    if (!user) {
+      setShowSignup(true);
+      return;
+    }
+
+    // Check if user has made first deposit
+    if (!user.hasDeposited) {
+      alert("⚠️ PAYMENT REQUIRED\n\nPlease clear your first deposit to access Live Market & Google Meet Classes.\n\nNavigate to Dashboard → Add Funds to activate this feature.");
+      navigateToDashboard();
+      return;
+    }
+
+    // User has deposited, show the mentorship modal
+    setShowMentorshipModal(true);
   };
 
   if (isInitializing) {
@@ -136,8 +154,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500/30 overflow-x-hidden bg-[#131722] relative">
       <TickerTape />
-      <Navbar 
-        onJoinClick={() => setShowSignup(true)} 
+      <Navbar
+        onJoinClick={() => setShowSignup(true)}
         onGalleryClick={() => setShowGallery(true)}
         user={user}
         onLogout={handleLogout}
@@ -146,17 +164,17 @@ const App: React.FC = () => {
         onSearch={setSearchTerm}
         showSearch={view === 'landing'}
       />
-      
+
       <LiveActivityFeed />
 
       <main className={`flex-grow transition-all duration-500 ${isPending ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}`}>
         {view === 'landing' ? (
           <>
-            <Hero 
-              onJoinClick={() => setShowSignup(true)} 
-              onInstallRequest={handleInstallClick} 
+            <Hero
+              onJoinClick={() => setShowSignup(true)}
+              onInstallRequest={handleInstallClick}
               onStartJourney={scrollToTraders}
-              externalShowMentorship={() => setShowMentorshipModal(true)} 
+              externalShowMentorship={handleMentorshipClick}
               onShareClick={() => user ? setShowReferral(true) : setShowSignup(true)}
             />
             <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 -mt-16 md:-mt-24 relative z-10 mb-8 md:mb-12">
@@ -171,9 +189,9 @@ const App: React.FC = () => {
           </>
         ) : (
           user && (
-            <Dashboard 
-              user={user} 
-              onUserUpdate={handleLoginSuccess} 
+            <Dashboard
+              user={user}
+              onUserUpdate={handleLoginSuccess}
               onSwitchTrader={() => {
                 startTransition(() => {
                   setView('landing');
@@ -189,11 +207,11 @@ const App: React.FC = () => {
       <Footer />
 
       {/* Floating Action Cluster */}
-      <div 
+      <div
         className="fixed bottom-10 right-4 md:right-10 flex flex-row md:flex-col items-center gap-3 md:gap-5 z-[95]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <button 
+        <button
           onClick={() => user ? setShowReferral(true) : setShowSignup(true)}
           className="w-12 h-12 md:w-16 md:h-16 bg-[#00b36b] rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(0,179,107,0.3)] transition-transform hover:scale-110 active:scale-90 group relative border border-white/20"
           title="Referral Protocol"
@@ -211,32 +229,32 @@ const App: React.FC = () => {
           )}
         </button>
 
-        <button 
-          onClick={() => setShowMentorshipModal(true)}
+        <button
+          onClick={handleMentorshipClick}
           className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(255,255,255,0.1)] transition-transform hover:scale-110 active:scale-90 group relative border border-white/20"
-          title="Elite Mentorship"
+          title="Live Market Classes"
         >
           <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" alt="Meet" className="w-6 h-6 md:w-8 md:h-8" />
           <span className="hidden md:block absolute right-full mr-4 px-3 py-1.5 bg-[#131722] border border-white/10 text-white text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap uppercase tracking-widest shadow-2xl pointer-events-none">
-            Live Mentorship
+            Live Market Classes
           </span>
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#00b36b] rounded-full animate-pulse shadow-[0_0_8px_#00b36b]"></div>
         </button>
 
-        <button 
+        <button
           onClick={() => window.open('https://t.me/MentorwithZuluTrade_bot', '_blank')}
           className="w-12 h-12 md:w-16 md:h-16 bg-[#0088cc] rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(0,136,204,0.3)] transition-transform hover:scale-110 active:scale-90 group relative border border-white/10"
           title="Telegram Hub"
         >
           <svg className="h-6 w-6 md:h-8 md:w-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.462 8.27l-1.56 7.42c-.116.545-.44.68-.895.425l-2.37-1.75-1.145 1.1c-.125.127-.23.234-.473.234l.17-2.42 4.41-3.98c.19-.17-.04-.26-.297-.09l-5.45 3.43-2.34-.73c-.51-.16-.52-.51.107-.756l9.15-3.53c.42-.15.79.1.663.667z"/>
+            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.462 8.27l-1.56 7.42c-.116.545-.44.68-.895.425l-2.37-1.75-1.145 1.1c-.125.127-.23.234-.473.234l.17-2.42 4.41-3.98c.19-.17-.04-.26-.297-.09l-5.45 3.43-2.34-.73c-.51-.16-.52-.51.107-.756l9.15-3.53c.42-.15.79.1.663.667z" />
           </svg>
         </button>
       </div>
 
       {showSignup && (
-        <SignupModal 
-          onClose={() => setShowSignup(false)} 
+        <SignupModal
+          onClose={() => setShowSignup(false)}
           onSuccess={handleLoginSuccess}
         />
       )}
@@ -246,10 +264,10 @@ const App: React.FC = () => {
       )}
 
       {showReferral && user && (
-        <ReferralTerminal 
-          user={user} 
-          onUserUpdate={handleLoginSuccess} 
-          onClose={() => setShowReferral(false)} 
+        <ReferralTerminal
+          user={user}
+          onUserUpdate={handleLoginSuccess}
+          onClose={() => setShowReferral(false)}
         />
       )}
 
@@ -259,15 +277,15 @@ const App: React.FC = () => {
             <div className="p-8 md:p-14 space-y-8 relative">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 md:w-14 md:h-14 bg-[#00b36b] rounded-2xl flex items-center justify-center text-white shadow-[0_0_25px_rgba(0,179,107,0.3)]">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" className="w-6 h-6 md:w-8 md:h-8 invert brightness-0" alt="" />
-                   </div>
-                   <div>
-                      <h3 className="text-white font-black uppercase text-lg md:text-xl tracking-tighter italic">Live Mentorship</h3>
-                      <span className="text-[9px] md:text-[10px] text-[#00b36b] font-black uppercase tracking-[0.3em] flex items-center gap-2 mt-1">
-                        Professional Education Hub
-                      </span>
-                   </div>
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-[#00b36b] rounded-2xl flex items-center justify-center text-white shadow-[0_0_25px_rgba(0,179,107,0.3)]">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" className="w-6 h-6 md:w-8 md:h-8 invert brightness-0" alt="" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-black uppercase text-lg md:text-xl tracking-tighter italic">Live Mentorship</h3>
+                    <span className="text-[9px] md:text-[10px] text-[#00b36b] font-black uppercase tracking-[0.3em] flex items-center gap-2 mt-1">
+                      Professional Education Hub
+                    </span>
+                  </div>
                 </div>
                 <button onClick={() => setShowMentorshipModal(false)} className="text-gray-500 hover:text-white transition-colors p-2 bg-white/5 rounded-full">
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -275,22 +293,22 @@ const App: React.FC = () => {
               </div>
 
               <div className="bg-[#131722] p-6 md:p-8 rounded-[2rem] border border-white/5 space-y-6">
-                 <div className="space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                       <span className="text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest">Yearly Retainer</span>
-                       <span className="text-[#00b36b] font-black text-lg md:text-xl">$5,000.00</span>
-                    </div>
-                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                       <span className="text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest">Weekly Coaching</span>
-                       <span className="text-[#00b36b] font-black text-lg md:text-xl">$100.00</span>
-                    </div>
-                 </div>
-                 <p className="text-gray-300 text-[10px] md:text-xs font-bold text-center leading-relaxed italic uppercase tracking-tight pt-4">
-                   "Unlock institutional replication and 1-on-1 coaching with Sarah and the elite trade department."
-                 </p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <span className="text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest">Yearly Retainer</span>
+                    <span className="text-[#00b36b] font-black text-lg md:text-xl">$5,000.00</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                    <span className="text-gray-500 font-black text-[9px] md:text-[10px] uppercase tracking-widest">Weekly Coaching</span>
+                    <span className="text-[#00b36b] font-black text-lg md:text-xl">$100.00</span>
+                  </div>
+                </div>
+                <p className="text-gray-300 text-[10px] md:text-xs font-bold text-center leading-relaxed italic uppercase tracking-tight pt-4">
+                  "Unlock institutional replication and 1-on-1 coaching with Sarah and the elite trade department."
+                </p>
               </div>
 
-              <button 
+              <button
                 onClick={() => setShowMentorshipModal(false)}
                 className="w-full py-4 md:py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] md:text-[11px] shadow-2xl border border-white/10 active:scale-95"
               >
