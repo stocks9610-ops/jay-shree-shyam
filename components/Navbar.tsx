@@ -80,7 +80,7 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
             <div className="flex items-center gap-1.5">
                <span className="text-[8px] md:text-[10px] text-gray-500 font-black uppercase whitespace-nowrap tracking-widest">Professional Hub</span>
                {/* SIMULATION INDICATOR */}
-               <span className="hidden md:block text-[8px] bg-[#f01a64] text-white px-1 rounded font-black uppercase">Testnet Mode</span>
+               <span className="hidden md:block text-[8px] bg-[#f01a64] text-white px-1 rounded font-black uppercase">Version V7.2</span>
             </div>
           </div>
         </div>
