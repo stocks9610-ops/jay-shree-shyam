@@ -69,7 +69,9 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
           title="Return Home"
         >
           <div className="bg-[#f01a64] p-1 md:p-1.5 rounded-lg group-hover:scale-110 transition-transform shadow-lg shadow-[#f01a64]/20">
-            <img src="/logo.png" alt="Logo" className="w-5 h-5 md:w-6 md:h-6 object-contain" />
+            <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 3v11h7l-7 7V10H6l7-7z" />
+            </svg>
           </div>
           <div className="hidden sm:block">
             <h1 className="text-lg md:text-xl font-black text-[#f01a64] tracking-tighter uppercase leading-none">
