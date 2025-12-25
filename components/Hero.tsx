@@ -99,20 +99,29 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
             <button
               onClick={onStartJourney || onJoinClick}
-              className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-[#f01a64] hover:bg-pink-700 text-white font-black text-sm md:text-base rounded-2xl shadow-[0_10px_30px_rgba(240,26,100,0.3)] transform transition active:scale-95 uppercase tracking-tighter border border-white/10"
+              className="group w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#f01a64] to-pink-600 hover:from-pink-600 hover:to-[#f01a64] text-white font-black text-sm md:text-base rounded-2xl shadow-[0_10px_30px_rgba(240,26,100,0.3)] hover:shadow-[0_15px_40px_rgba(240,26,100,0.5)] transform transition-all duration-300 active:scale-95 uppercase tracking-tighter border border-white/10 relative overflow-hidden"
             >
-              START JOURNEY
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                START JOURNEY
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </button>
 
             <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={onShareClick}
-                className="w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-[#0088cc] hover:bg-[#0077b5] text-white font-black text-sm md:text-base rounded-2xl shadow-[0_10px_30px_rgba(0,136,204,0.3)] transform transition active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2 border border-white/10"
+                className="group w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#0088cc] to-[#0077b5] hover:from-[#0077b5] hover:to-[#006699] text-white font-black text-sm md:text-base rounded-2xl shadow-[0_10px_30px_rgba(0,136,204,0.3)] hover:shadow-[0_15px_40px_rgba(0,136,204,0.5)] transform transition-all duration-300 active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2 border border-white/10 relative overflow-hidden"
               >
-                <svg className="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123.836.761z" />
-                </svg>
-                <span className="whitespace-nowrap uppercase tracking-widest">Share & Earn $200</span>
+                <span className="relative z-10 flex items-center gap-2">
+                  <svg className="h-5 w-5 text-white group-hover:rotate-12 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123.836.761z" />
+                  </svg>
+                  <span className="whitespace-nowrap uppercase tracking-widest">Share & Earn $200</span>
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               </button>
 
               {/* Referral Info Caption */}

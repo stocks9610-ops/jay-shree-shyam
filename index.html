@@ -1,79 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#131722">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CopyTrade">
-    <meta name="build-version" content="v7.0-PLATINUM-LAUNCH">
-    
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535554.png">
-    
-    <title>CopyTrade - Elite Professional Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      :root {
-        --safe-area-inset-top: env(safe-area-inset-top);
-        --safe-area-inset-bottom: env(safe-area-inset-bottom);
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#131722">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CopyTrade">
+  <meta name="build-version" content="v7.0-PLATINUM-LAUNCH">
+
+  <!-- SEO Meta Tags -->
+  <meta name="description"
+    content="Elite professional trading platform. Copy winning traders, automate your trades, and achieve financial freedom. 100% transparent, military-grade encryption, daily payouts.">
+  <meta name="keywords"
+    content="copy trading, automated trading, forex, crypto, trading platform, financial freedom, elite traders">
+  <meta name="author" content="CopyTrade Platform">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://your-domain.netlify.app/">
+  <meta property="og:title" content="CopyTrade - Elite Professional Trading Hub">
+  <meta property="og:description"
+    content="Trade smarter, live better. Follow the pros and create a second income stream today.">
+  <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/2535/2535554.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://your-domain.netlify.app/">
+  <meta property="twitter:title" content="CopyTrade - Elite Professional Trading Hub">
+  <meta property="twitter:description"
+    content="Trade smarter, live better. Follow the pros and create a second income stream today.">
+  <meta property="twitter:image" content="https://cdn-icons-png.flaticon.com/512/2535/2535554.png">
+
+  <!-- Preconnect for performance -->
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+  <link rel="dns-prefetch" href="https://esm.sh">
+  <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535554.png">
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/2535/2535554.png">
+
+
+  <title>CopyTrade - Elite Professional Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --safe-area-inset-top: env(safe-area-inset-top);
+      --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: #131722;
+      color: #ffffff;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+      width: 100%;
+      position: relative;
+      overscroll-behavior-y: contain;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        radial-gradient(circle at 50% 50%, rgba(240, 26, 100, 0.05) 0%, transparent 60%),
+        linear-gradient(rgba(240, 26, 100, 0.01) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(240, 26, 100, 0.01) 1px, transparent 1px);
+      background-size: 100% 100%, 60px 60px, 60px 60px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      .font-black {
+        letter-spacing: -0.01em !important;
       }
-      body {
-        background-color: #131722;
-        color: #ffffff;
-        -webkit-tap-highlight-color: transparent;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        overflow-x: hidden;
-        width: 100%;
-        position: relative;
-        overscroll-behavior-y: contain;
-      }
-      
-      body::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-          radial-gradient(circle at 50% 50%, rgba(240, 26, 100, 0.05) 0%, transparent 60%),
-          linear-gradient(rgba(240, 26, 100, 0.01) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(240, 26, 100, 0.01) 1px, transparent 1px);
-        background-size: 100% 100%, 60px 60px, 60px 60px;
-        z-index: -1;
-        pointer-events: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #131722;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2a2e39;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #f01a64;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes progress {
+      0% {
+        transform: translateX(-100%);
       }
 
-      @media (max-width: 768px) {
-        .font-black {
-          letter-spacing: -0.01em !important;
-        }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes sync-spin {
+      from {
+        transform: rotate(0deg);
       }
 
-      ::-webkit-scrollbar { width: 4px; }
-      ::-webkit-scrollbar-track { background: #131722; }
-      ::-webkit-scrollbar-thumb { background: #2a2e39; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #f01a64; }
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .animate-sync-spin {
+      animation: sync-spin 1s linear infinite;
+    }
 
-      @keyframes progress {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
       }
 
-      @keyframes sync-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      .animate-sync-spin {
-        animation: sync-spin 1s linear infinite;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
       }
-    </style>
-<script type="importmap">
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes pulse-glow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(240, 26, 100, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 40px rgba(240, 26, 100, 0.6);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .animate-slide-in-right {
+      animation: slideInRight 0.6s ease-out;
+    }
+
+    .hover-glow:hover {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    /* Smooth transitions for all interactive elements */
+    button,
+    a,
+    input,
+    select,
+    textarea {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Enhanced focus states */
+    *:focus-visible {
+      outline: 2px solid #f01a64;
+      outline-offset: 2px;
+    }
+  </style>
+  <script type="importmap">
 {
   "imports": {
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
@@ -85,8 +218,10 @@
 }
 </script>
 </head>
+
 <body class="antialiased">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

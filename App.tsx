@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -13,10 +13,10 @@ import SignupModal from './components/SignupModal';
 import ReferralTerminal from './components/ReferralTerminal';
 import MarketChart from './components/MarketChart';
 
-// Admin & Auth Components
+// Admin & Auth Components - Lazy loaded for better performance
 import AuthForms from './components/Auth/AuthForms';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import WithdrawalManager from './components/User/WithdrawalManager';
+const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
+const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Trader } from './types';
@@ -110,14 +110,29 @@ function App() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <div className="min-h-screen bg-[#131722]">
-                <Navbar />
+                <Navbar
+                  onJoinClick={() => { }}
+                  onGalleryClick={() => { }}
+                  user={null}
+                  onLogout={() => { }}
+                  onDashboardClick={() => { }}
+                  onHomeClick={() => window.location.href = '/'}
+                  onSearch={() => { }}
+                  showSearch={false}
+                />
                 <div className="pt-24 pb-12">
                   <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00b36b] to-[#f01a64]">
                       User Dashboard
                     </h1>
                   </div>
-                  <WithdrawalManager />
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center min-h-[400px]">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
+                    </div>
+                  }>
+                    <WithdrawalManager />
+                  </Suspense>
                 </div>
                 <Footer />
               </div>
@@ -127,7 +142,16 @@ function App() {
           {/* Protected Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute adminOnly>
-              <AdminDashboard />
+              <Suspense fallback={
+                <div className="min-h-screen bg-[#131722] flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#f01a64] mx-auto mb-4"></div>
+                    <p className="text-white font-bold">Loading Admin Panel...</p>
+                  </div>
+                </div>
+              }>
+                <AdminDashboard />
+              </Suspense>
             </ProtectedRoute>
           } />
         </Routes>
