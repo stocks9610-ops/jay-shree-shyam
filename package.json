@@ -10,7 +10,10 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup-backend": "vite-node scripts/setupBackend.ts",
+    "create-admin": "vite-node scripts/createAdmin.ts",
+    "init-db": "vite-node scripts/initDatabase.ts"
   },
   "dependencies": {
     "firebase": "^12.7.0",
@@ -27,6 +30,7 @@
     "dotenv": "^17.2.3",
     "terser": "^5.31.1",
     "typescript": "^5.4.5",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "vite-node": "^5.2.0"
   }
 }
