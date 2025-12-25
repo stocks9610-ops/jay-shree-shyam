@@ -135,10 +135,8 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
                     {user.hasDeposited ? 'VERIFIED' : 'UNVERIFIED'}
                   </span>
                 </div>
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-black rounded-xl flex items-center justify-center border border-[#2a2e39] shadow-2xl">
-                  <svg className="h-4 w-4 md:h-5 md:w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-black rounded-xl flex items-center justify-center border border-[#2a2e39] shadow-2xl overflow-hidden">
+                  <img src="/profile_logo.png" alt="Profile" className="w-full h-full object-cover" />
                 </div>
               </button>
 
