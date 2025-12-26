@@ -47,3 +47,19 @@ export interface TradingSegment {
   order: number;
   color: string;
 }
+
+export interface Strategy {
+  id?: string;
+  order: number;
+  name: string;
+  tag: string;
+  hook: string;
+  duration: string;
+  durationMs: number;
+  minRet: number;
+  maxRet: number;
+  risk: string;
+  minInvest: number;
+  vip: boolean;
+  isActive: boolean;
+}

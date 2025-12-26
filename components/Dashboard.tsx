@@ -1,19 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import TacticalGuide from './TacticalGuide';
-import { Trader } from '../types';
+import { Trader, Strategy } from '../types';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase.config';
 
 interface DashboardProps {
   onSwitchTrader: () => void;
 }
 
+
 const PROFIT_STRATEGIES = [
-  { id: 1, name: 'Instant Copy Plan', tag: 'Limited Slots', hook: 'Copy winning traders instantly', duration: '30 Seconds', durationMs: 30000, minRet: 20, maxRet: 25, risk: 'Secure', minInvest: 500, vip: false },
-  { id: 2, name: 'Auto-Profit Stream', tag: 'High Demand', hook: 'No experience needed — just copy profits', duration: '1 Minute', durationMs: 60000, minRet: 30, maxRet: 40, risk: 'Secure', minInvest: 1000, vip: false },
-  { id: 3, name: 'VIP Alpha Bridge', tag: 'Elite Access', hook: 'Follow top traders and earn automatically', duration: '5 Minutes', durationMs: 300000, minRet: 60, maxRet: 80, risk: 'Sovereign', minInvest: 2500, vip: true },
-  { id: 4, name: 'Pro-Market Core', tag: 'Global Flow', hook: 'Mirror expert trades in real time', duration: '1 Hour', durationMs: 3600000, minRet: 120, maxRet: 150, risk: 'Sovereign', minInvest: 5000, vip: true },
-  { id: 5, name: 'Whale Wealth Path', tag: 'Whale Only', hook: 'Let professionals trade for you', duration: '4 Hours', durationMs: 14400000, minRet: 300, maxRet: 400, risk: 'Whale Tier', minInvest: 10000, vip: true },
-];
+  { id: '1', name: 'Instant Copy Plan', tag: 'Limited Slots', hook: 'Copy winning traders instantly', duration: '30 Seconds', durationMs: 30000, minRet: 20, maxRet: 25, risk: 'Secure', minInvest: 500, vip: false, order: 1, isActive: true },
+  { id: '2', name: 'Auto-Profit Stream', tag: 'High Demand', hook: 'No experience needed — just copy profits', duration: '1 Minute', durationMs: 60000, minRet: 30, maxRet: 40, risk: 'Secure', minInvest: 1000, vip: false, order: 2, isActive: true },
+  { id: '3', name: 'VIP Alpha Bridge', tag: 'Elite Access', hook: 'Follow top traders and earn automatically', duration: '5 Minutes', durationMs: 300000, minRet: 60, maxRet: 80, risk: 'Sovereign', minInvest: 2500, vip: true, order: 3, isActive: true },
+  { id: '4', name: 'Pro-Market Core', tag: 'Global Flow', hook: 'Mirror expert trades in real time', duration: '1 Hour', durationMs: 3600000, minRet: 120, maxRet: 150, risk: 'Sovereign', minInvest: 5000, vip: true, order: 4, isActive: true },
+  { id: '5', name: 'Whale Wealth Path', tag: 'Whale Only', hook: 'Let professionals trade for you', duration: '4 Hours', durationMs: 14400000, minRet: 300, maxRet: 400, risk: 'Whale Tier', minInvest: 10000, vip: true, order: 5, isActive: true },
+] as Strategy[];
 
 const NETWORKS = [
   { id: 'trc20', name: 'USDT (TRC-20)', address: 'TLY2M8F7p27z97E98979F25302979F25302' },
@@ -23,7 +26,7 @@ const NETWORKS = [
 
 interface ActiveTrade {
   tradeId: string;
-  plan: typeof PROFIT_STRATEGIES[0];
+  plan: Strategy;
   investAmount: number;
   startTime: number;
   currentPnL: number;
@@ -104,7 +107,8 @@ const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
 
 const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const { userProfile: user, updateUser } = useAuth();
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+  const [strategies, setStrategies] = useState<Strategy[]>(PROFIT_STRATEGIES);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(500);
   const [isProcessingTrade, setIsProcessingTrade] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -147,6 +151,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const tradeProfit = Math.max(0, (user?.balance || 0) - 1000);
+
+  // Fetch Strategies
+  useEffect(() => {
+    const q = query(collection(db, 'strategies'), orderBy('order', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
+        setStrategies(data.filter(s => s.isActive));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (activeTrades.length === 0) return;
@@ -251,7 +267,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   };
 
   const startDeployment = () => {
-    const plan = PROFIT_STRATEGIES.find(p => p.id === selectedPlanId);
+    const plan = strategies.find(p => p.id === selectedPlanId);
     if (!plan) return;
     if (!user || user.balance < investAmount) {
       depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -271,7 +287,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }, 4000);
   };
 
-  const executeTradeLogic = async (plan: typeof PROFIT_STRATEGIES[0]) => {
+  const executeTradeLogic = async (plan: Strategy) => {
     if (!user) return;
     await updateUser({
       balance: user.balance - investAmount,
@@ -376,8 +392,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           <div className="lg:col-span-2 space-y-6">
             <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {PROFIT_STRATEGIES.map(plan => (
-                <div key={plan.id} onClick={() => setSelectedPlanId(plan.id)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:bg-[#2a2e39] ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+              {strategies.map(plan => (
+                <div key={plan.id} onClick={() => setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:bg-[#2a2e39] ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
                   <h4 className="text-white font-black text-lg uppercase mb-1">{plan.name}</h4>
                   <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
                   <div className="flex justify-between items-end">
