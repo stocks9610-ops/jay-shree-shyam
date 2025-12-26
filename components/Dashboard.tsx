@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import TacticalGuide from './TacticalGuide';
 import { Trader, Strategy } from '../types';
+import GlobalStats from './GlobalStats';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
 
@@ -329,6 +330,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       />
 
       <div className="max-w-7xl mx-auto space-y-8">
+        <GlobalStats />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>

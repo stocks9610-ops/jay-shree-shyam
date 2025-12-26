@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase.config';
-import { getUserProfile, updateUserProfile, UserData } from '../services/userService';
+import { getUserProfile, updateUserProfile, createUserProfile, UserData } from '../services/userService';
 
 interface AuthContextType {
     currentUser: User | null;
@@ -10,6 +10,9 @@ interface AuthContextType {
     loading: boolean;
     isAdmin: boolean;
     updateUser: (data: Partial<UserData>) => Promise<void>;
+    signup: (email: string, pass: string, name: string) => Promise<void>;
+    login: (email: string, pass: string) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,7 +20,10 @@ const AuthContext = createContext<AuthContextType>({
     userProfile: null,
     loading: true,
     isAdmin: false,
-    updateUser: async () => { }
+    updateUser: async () => { },
+    signup: async () => { },
+    login: async () => { },
+    logout: async () => { }
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -82,12 +88,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
     };
 
+    const signup = async (email: string, pass: string, name: string) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+            // Create user profile in Firestore
+            await createUserProfile(userCredential.user.uid, email, name);
+        } catch (error) {
+            console.error("Signup Error", error);
+            throw error;
+        }
+    };
+
+    const login = async (email: string, pass: string) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+        } catch (error) {
+            console.error("Login Error", error);
+            throw error;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUserProfile(null);
+            setCurrentUser(null);
+        } catch (error) {
+            console.error("Logout Error", error);
+            throw error;
+        }
+    };
+
+
     const value = {
         currentUser,
         userProfile,
         loading,
         isAdmin: userProfile?.role === 'admin',
-        updateUser
+        updateUser,
+        signup,
+        login,
+        logout
     };
 
     return (
