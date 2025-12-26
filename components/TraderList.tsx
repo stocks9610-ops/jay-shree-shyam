@@ -159,7 +159,7 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
       const term = searchTerm.toLowerCase();
       return t.name.toLowerCase().includes(term) || t.strategy.toLowerCase().includes(term);
     }
-    return t.category === activeCategory;
+    return true;
   });
 
   return (
@@ -174,23 +174,7 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
             Copy trading lets you automatically follow experienced traders. Choose a trader based on verified performance and trade <span className="text-[#00b36b] font-bold">risk-free</span> with our C-Level expert strategies.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mt-8">
-            {segments.map((seg) => (
-              <button
-                key={seg.key}
-                onClick={() => !searchTerm && setActiveCategory(seg.key)}
-                className={getCategoryStyles(seg.key)}
-                disabled={!!searchTerm}
-                style={activeCategory === seg.key ? {
-                  backgroundColor: seg.color,
-                  borderColor: seg.color,
-                  boxShadow: `0 10px 30px ${seg.color}50`
-                } : {}}
-              >
-                {seg.label}
-              </button>
-            ))}
-          </div>
+          {/* Category buttons removed to show ALL traders force-applied */}
           {searchTerm && (
             <div className="text-center animate-in fade-in">
               <span className="text-[10px] text-[#f01a64] font-black uppercase tracking-[0.2em] bg-[#f01a64]/10 px-3 py-1 rounded-lg">

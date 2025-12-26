@@ -118,7 +118,7 @@ export const subscribeToTraders = (
 ): (() => void) => {
     try {
         const tradersRef = collection(db, TRADERS_COLLECTION);
-        const q = query(tradersRef, orderBy('createdAt', 'desc'));
+        const q = query(tradersRef); // orderBy removed to ensure data loads without index
 
         const unsubscribe = onSnapshot(
             q,

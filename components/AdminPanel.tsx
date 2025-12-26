@@ -391,7 +391,20 @@ const AdminPanel: React.FC = () => {
                                             <textarea placeholder="Trader Bio / Description" rows={3} className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.bio} onChange={e => setTraderForm({ ...traderForm, bio: e.target.value })} required />
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <input placeholder="Strategy Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.strategy} onChange={e => setTraderForm({ ...traderForm, strategy: e.target.value })} required />
-                                                <input placeholder="Category (crypto, forex, gold, binary)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.category} onChange={e => setTraderForm({ ...traderForm, category: e.target.value as any })} required />
+                                                <div className="flex flex-col">
+                                                    <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Category</label>
+                                                    <select
+                                                        className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500"
+                                                        value={traderForm.category}
+                                                        onChange={e => setTraderForm({ ...traderForm, category: e.target.value as any })}
+                                                        required
+                                                    >
+                                                        <option value="crypto">Crypto</option>
+                                                        <option value="forex">Forex</option>
+                                                        <option value="gold">Gold</option>
+                                                        <option value="binary">Binary</option>
+                                                    </select>
+                                                </div>
                                             </div>
 
                                             {/* EXTENDED ATTRIBUTES */}
