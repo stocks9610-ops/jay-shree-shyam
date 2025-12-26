@@ -233,22 +233,33 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
             <div>
               <h4 className="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest mb-3 border-l-2 border-[#f01a64] pl-3">Recent Trade History</h4>
               <div className="space-y-2">
-                {[
-                  { pair: 'BTC/USDT', type: 'LONG', pnl: '+12.5%', time: '2m ago' },
-                  { pair: 'ETH/USDT', type: 'SHORT', pnl: '+5.2%', time: '15m ago' },
-                  { pair: 'XAU/USD', type: 'LONG', pnl: '+8.1%', time: '1h ago' },
-                ].map((t, i) => (
-                  <div key={i} className="flex items-center justify-between bg-[#1e222d] p-3 md:p-4 rounded-xl border border-white/5 hover:bg-[#252a36] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${t.type === 'LONG' ? 'bg-[#00b36b]/20 text-[#00b36b]' : 'bg-red-500/20 text-red-500'}`}>{t.type}</span>
-                      <span className="text-xs font-bold text-white">{t.pair}</span>
+                {(() => {
+                  const markets = trader.markets || ['Crypto'];
+                  const getPair = (idx: number) => {
+                    const m = markets[idx % markets.length].toLowerCase();
+                    if (m === 'forex') return ['EUR/USD', 'GBP/JPY', 'USD/JPY'][idx % 3];
+                    if (m === 'gold') return 'XAU/USD';
+                    if (m === 'stocks') return ['AAPL', 'TSLA', 'NVDA'][idx % 3];
+                    return ['BTC/USDT', 'ETH/USDT', 'SOL/USDT'][idx % 3];
+                  };
+
+                  return [
+                    { pair: getPair(0), type: 'LONG', pnl: '+12.5%', time: '2m ago' },
+                    { pair: getPair(1), type: 'SHORT', pnl: '+5.2%', time: '15m ago' },
+                    { pair: getPair(2), type: 'LONG', pnl: '+8.1%', time: '1h ago' },
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-center justify-between bg-[#1e222d] p-3 md:p-4 rounded-xl border border-white/5 hover:bg-[#252a36] transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded ${t.type === 'LONG' ? 'bg-[#00b36b]/20 text-[#00b36b]' : 'bg-red-500/20 text-red-500'}`}>{t.type}</span>
+                        <span className="text-xs font-bold text-white">{t.pair}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-xs font-black text-[#00b36b]">{t.pnl}</span>
+                        <span className="block text-[8px] text-gray-600 font-medium">{t.time}</span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="block text-xs font-black text-[#00b36b]">{t.pnl}</span>
-                      <span className="block text-[8px] text-gray-600 font-medium">{t.time}</span>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           </div>

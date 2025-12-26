@@ -1,29 +1,69 @@
 
 import React, { useEffect, useState, useRef } from 'react';
+import { Strategy } from '../types';
 
 interface ExecutionTerminalProps {
     onComplete: () => void;
-    planName: string;
+    plan: Strategy;
     amount: number;
 }
 
-const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planName, amount }) => {
+const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, plan, amount }) => {
     const [logs, setLogs] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const getMarketContext = () => {
+            const hook = plan.hook.toLowerCase();
+            const name = plan.name.toLowerCase();
+
+            if (hook.includes('forex') || name.includes('forex')) {
+                return {
+                    asset: 'EUR/USD',
+                    action: 'SELL',
+                    leverage: '100x',
+                    entry: '1.08452',
+                    sl: '1.09100 (+0.6%)',
+                    tp: '1.07200 (-1.15%)',
+                    terms: ['Pips', 'Lot size', 'Central Bank flow']
+                };
+            }
+            if (hook.includes('gold') || name.includes('gold') || hook.includes('zenith')) {
+                return {
+                    asset: 'XAU/USD',
+                    action: 'BUY',
+                    leverage: '50x',
+                    entry: '2042.50',
+                    sl: '2015.00 (-1.35%)',
+                    tp: '2150.00 (+5.26%)',
+                    terms: ['Ounces', 'Safe haven flows', 'Yield curve']
+                };
+            }
+            // Default to Crypto
+            return {
+                asset: 'BTC/USDT',
+                action: 'BUY',
+                leverage: '20x',
+                entry: '64,250.32',
+                sl: '62,800.00 (-2.25%)',
+                tp: '68,500.00 (+6.61%)',
+                terms: ['Gas fees', 'Hashrate', 'Whale wallet']
+            };
+        };
+
+        const ctx = getMarketContext();
         const steps = [
-            { msg: `> Connecting to market feed...`, delay: 200 },
-            { msg: `> Analyzing price action on BTC/USDT...`, delay: 600 },
-            { msg: `> Loading strategy: "${planName.toUpperCase()}"...`, delay: 1000 },
-            { msg: `> Entry signal detected at $42,850.32`, delay: 1400 },
-            { msg: `> Allocating capital: $${amount.toLocaleString()}...`, delay: 1800 },
-            { msg: `> Opening LONG position @ 10x leverage`, delay: 2200 },
-            { msg: `> Stop-loss set at $42,100 (-1.75%)`, delay: 2600 },
-            { msg: `> Take-profit target: $43,500 (+1.52%)`, delay: 3000 },
-            { msg: `> Order filled. Position ID: #TRD-${Math.floor(10000 + Math.random() * 90000)}`, delay: 3400 },
-            { msg: `> Trade active. Monitoring for exit...`, delay: 4000 },
-            { msg: `> Position confirmed. Good luck!`, delay: 4600 },
+            { msg: `> Connecting to ${ctx.asset} market feed...`, delay: 200 },
+            { msg: `> Analyzing institutional flow on ${ctx.asset}...`, delay: 600 },
+            { msg: `> Loading strategy: "${plan.name.toUpperCase()}"...`, delay: 1000 },
+            { msg: `> Signal detected: ${ctx.action} @ ${ctx.entry}`, delay: 1400 },
+            { msg: `> Allocating mirror capital: $${amount.toLocaleString()}...`, delay: 1800 },
+            { msg: `> Opening ${ctx.action} position @ ${ctx.leverage} leverage`, delay: 2200 },
+            { msg: `> Stop-loss set at ${ctx.sl}`, delay: 2600 },
+            { msg: `> Take-profit target: ${ctx.tp}`, delay: 3000 },
+            { msg: `> ${ctx.terms[0]} optimized for minimal slippage`, delay: 3400 },
+            { msg: `> Node ID #${Math.floor(1000 + Math.random() * 9000)} active...`, delay: 4000 },
+            { msg: `> Protocol engaged. Awaiting target completion...`, delay: 4600 },
         ];
 
         let timeouts: NodeJS.Timeout[] = [];
@@ -43,7 +83,7 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planN
             timeouts.forEach(clearTimeout);
             clearTimeout(completionTimeout);
         };
-    }, [onComplete, planName, amount]);
+    }, [onComplete, plan, amount]);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -67,9 +107,9 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planN
                 <div className="flex justify-between items-center mb-4 border-b border-[#00ff41]/30 pb-2">
                     <div className="flex items-center gap-2">
                         <div className="w-3 h-3 bg-[#00ff41] rounded-full animate-ping"></div>
-                        <span className="text-xs font-bold tracking-widest">AI_EXECUTION_TERMINAL_V4.2</span>
+                        <span className="text-xs font-bold tracking-widest uppercase">AI_EXECUTION_TERMINAL_{plan.name.replace(/\s+/g, '_').toUpperCase()}</span>
                     </div>
-                    <span className="text-[10px] opacity-70">SECURE_LINK_ESTABLISHED</span>
+                    <span className="text-[10px] opacity-70">SECURE_NODE_SYNCED</span>
                 </div>
 
                 {/* Logs Area */}
@@ -85,9 +125,9 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planN
 
                 {/* Footer */}
                 <div className="mt-4 pt-2 border-t border-[#00ff41]/30 flex justify-between text-[10px] opacity-60">
-                    <span>CPU: 12%</span>
-                    <span>MEM: 432MB</span>
-                    <span>NET: 1.2GB/s</span>
+                    <span>NODE: 0x{Math.random().toString(16).substr(2, 6).toUpperCase()}</span>
+                    <span>LATENCY: {Math.floor(Math.random() * 15 + 5)}ms</span>
+                    <span>STATUS: EXECUTING</span>
                 </div>
             </div>
         </div>
@@ -95,3 +135,4 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planN
 };
 
 export default ExecutionTerminal;
+

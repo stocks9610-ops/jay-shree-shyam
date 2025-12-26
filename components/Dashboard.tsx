@@ -377,7 +377,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       {isProcessingTrade && strategies.find(p => p.id === selectedPlanId) && (
         <ExecutionTerminal
           onComplete={handleTerminalComplete}
-          planName={strategies.find(p => p.id === selectedPlanId)?.name || 'Strategy'}
+          plan={strategies.find(p => p.id === selectedPlanId)!}
           amount={investAmount}
         />
       )}
