@@ -1,6 +1,6 @@
 
 
-import { db } from './firebase.node.config';
+import { db } from './firebase.node.config.ts';
 import { collection, addDoc, getDocs, query, where, writeBatch, doc } from 'firebase/firestore';
 
 const STRATEGIES_COLLECTION = 'strategies';
@@ -8,73 +8,63 @@ const STRATEGIES_COLLECTION = 'strategies';
 const INITIAL_STRATEGIES = [
     {
         order: 1,
-        name: 'Instant Copy Plan',
-        tag: 'Limited Slots',
-        hook: 'Copy winning traders instantly',
-        duration: '30 Seconds',
-        durationMs: 30000,
-        minRet: 20,
-        maxRet: 25,
-        risk: 'Secure',
-        minInvest: 500,
-        vip: false,
-        isActive: true
+        name: "Micro-Scalp AI",
+        minRet: 30,
+        maxRet: 45,
+        duration: "30s",
+        risk: "High",
+        hook: "Flash Arbitrage / HFT",
+        description: "High-frequency arbitrage across 12 exchanges."
     },
     {
         order: 2,
-        name: 'Auto-Profit Stream',
-        tag: 'High Demand',
-        hook: 'No experience needed — just copy profits',
-        duration: '1 Minute',
-        durationMs: 60000,
-        minRet: 30,
-        maxRet: 40,
-        risk: 'Secure',
-        minInvest: 1000,
-        vip: false,
-        isActive: true
+        name: "Quantum 1M",
+        minRet: 45,
+        maxRet: 60,
+        duration: "1m",
+        risk: "High",
+        hook: "Forex Momentum / Quick",
+        description: "Exploits short-term forex inefficiencies."
     },
     {
         order: 3,
-        name: 'VIP Alpha Bridge',
-        tag: 'Elite Access',
-        hook: 'Follow top traders and earn automatically',
-        duration: '5 Minutes',
-        durationMs: 300000,
+        name: "Rapid Alpha",
         minRet: 60,
-        maxRet: 80,
-        risk: 'Sovereign',
-        minInvest: 2500,
-        vip: true,
-        isActive: true
+        maxRet: 85,
+        duration: "5m",
+        risk: "Medium",
+        hook: "Crypto Median / Burst",
+        description: "Capture mid-cap crypto breakouts."
     },
     {
         order: 4,
-        name: 'Pro-Market Core',
-        tag: 'Global Flow',
-        hook: 'Mirror expert trades in real time',
-        duration: '1 Hour',
-        durationMs: 3600000,
-        minRet: 120,
-        maxRet: 150,
-        risk: 'Sovereign',
-        minInvest: 5000,
-        vip: true,
-        isActive: true
+        name: "Swing Proto",
+        minRet: 85,
+        maxRet: 120,
+        duration: "10m",
+        risk: "Medium",
+        hook: "Trend Reversal / Swing",
+        description: "Reversal pattern recognition on major pairs."
     },
     {
         order: 5,
-        name: 'Whale Wealth Path',
-        tag: 'Whale Only',
-        hook: 'Let professionals trade for you',
-        duration: '4 Hours',
-        durationMs: 14400000,
-        minRet: 300,
-        maxRet: 400,
-        risk: 'Whale Tier',
-        minInvest: 10000,
-        vip: true,
-        isActive: true
+        name: "Macro Core",
+        minRet: 120,
+        maxRet: 150,
+        duration: "20m",
+        risk: "Low",
+        hook: "Institutional Flow / Deep",
+        description: "Following institutional money flow."
+    },
+    {
+        order: 6,
+        name: "Global Zenith",
+        minRet: 150,
+        maxRet: 200,
+        duration: "30m",
+        risk: "Low",
+        hook: "Strategic Hedge / Global",
+        description: "Long-term global macro hedging strategy."
     }
 ];
 
@@ -96,6 +86,7 @@ async function seedStrategies() {
 
         console.log('🚀 Adding new strategies...');
         // Add sequentially to ensure order field is respected if we query by it
+        // Note: Firestore order is not guaranteed by insertion unless we query by a field.
         for (const strategy of INITIAL_STRATEGIES) {
             await addDoc(strategiesRef, strategy);
             console.log(`✅ Added: ${strategy.name}`);

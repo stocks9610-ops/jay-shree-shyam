@@ -36,6 +36,7 @@ export interface UserData {
     referralCount: number;
     referralEarnings: number;
     pendingClaims: number;
+    totalProfit?: number;
 }
 
 const USERS_COLLECTION = 'users';
@@ -74,7 +75,8 @@ export const createUserProfile = async (
             nodeId,
             referralCount: 0,
             referralEarnings: 0,
-            pendingClaims: 0
+            pendingClaims: 0,
+            totalProfit: 0
         };
 
         await setDoc(userRef, userData);

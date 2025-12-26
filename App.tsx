@@ -68,7 +68,13 @@ const MainLayout = () => {
         </div>
 
         <div id="traders">
-          <TraderList onCopyClick={() => setShowSignup(true)} />
+          <TraderList onCopyClick={() => {
+            if (currentUser) {
+              window.location.href = '/dashboard';
+            } else {
+              setShowSignup(true);
+            }
+          }} />
         </div>
 
         <Features />
@@ -81,7 +87,10 @@ const MainLayout = () => {
       {showSignup && (
         <SignupModal
           onClose={() => setShowSignup(false)}
-          onSuccess={() => setShowSignup(false)}
+          onSuccess={() => {
+            setShowSignup(false);
+            window.location.href = '/dashboard';
+          }}
         />
       )}
       {showGallery && <SuccessGallery onClose={() => setShowGallery(false)} />}
