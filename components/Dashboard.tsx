@@ -10,14 +10,6 @@ interface DashboardProps {
 }
 
 
-const PROFIT_STRATEGIES = [
-  { id: '1', name: 'Instant Copy Plan', tag: 'Limited Slots', hook: 'Copy winning traders instantly', duration: '30 Seconds', durationMs: 30000, minRet: 20, maxRet: 25, risk: 'Secure', minInvest: 500, vip: false, order: 1, isActive: true },
-  { id: '2', name: 'Auto-Profit Stream', tag: 'High Demand', hook: 'No experience needed — just copy profits', duration: '1 Minute', durationMs: 60000, minRet: 30, maxRet: 40, risk: 'Secure', minInvest: 1000, vip: false, order: 2, isActive: true },
-  { id: '3', name: 'VIP Alpha Bridge', tag: 'Elite Access', hook: 'Follow top traders and earn automatically', duration: '5 Minutes', durationMs: 300000, minRet: 60, maxRet: 80, risk: 'Sovereign', minInvest: 2500, vip: true, order: 3, isActive: true },
-  { id: '4', name: 'Pro-Market Core', tag: 'Global Flow', hook: 'Mirror expert trades in real time', duration: '1 Hour', durationMs: 3600000, minRet: 120, maxRet: 150, risk: 'Sovereign', minInvest: 5000, vip: true, order: 4, isActive: true },
-  { id: '5', name: 'Whale Wealth Path', tag: 'Whale Only', hook: 'Let professionals trade for you', duration: '4 Hours', durationMs: 14400000, minRet: 300, maxRet: 400, risk: 'Whale Tier', minInvest: 10000, vip: true, order: 5, isActive: true },
-] as Strategy[];
-
 const NETWORKS = [
   { id: 'trc20', name: 'USDT (TRC-20)', address: 'TLY2M8F7p27z97E98979F25302979F25302' },
   { id: 'erc20', name: 'USDT (ERC-20)', address: '0x91F25302Ae72D97e989797592766391918c7d3E7' },
@@ -107,7 +99,7 @@ const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
 
 const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const { userProfile: user, updateUser } = useAuth();
-  const [strategies, setStrategies] = useState<Strategy[]>(PROFIT_STRATEGIES);
+  const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(500);
   const [isProcessingTrade, setIsProcessingTrade] = useState(false);
@@ -152,14 +144,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   const tradeProfit = Math.max(0, (user?.balance || 0) - 1000);
 
-  // Fetch Strategies
+  // Fetch Strategies from Firebase
   useEffect(() => {
     const q = query(collection(db, 'strategies'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
-        setStrategies(data.filter(s => s.isActive));
-      }
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
+      setStrategies(data.filter(s => s.isActive));
     });
     return () => unsubscribe();
   }, []);
