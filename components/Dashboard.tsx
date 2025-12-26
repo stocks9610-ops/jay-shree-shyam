@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UserProfile, authService } from '../services/authService';
+import { useAuth } from '../contexts/AuthContext';
 import TacticalGuide from './TacticalGuide';
+import { Trader } from '../types';
 
 interface DashboardProps {
-  user: UserProfile;
-  onUserUpdate: (u: UserProfile) => void;
   onSwitchTrader: () => void;
 }
 
@@ -103,7 +102,8 @@ const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
   }
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrader }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
+  const { userProfile: user, updateUser } = useAuth();
   const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(500);
   const [isProcessingTrade, setIsProcessingTrade] = useState(false);
@@ -116,6 +116,28 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
 
+  const finishTrade = async (trade: ActiveTrade) => {
+    const isWin = Math.random() <= 0.99;
+    if (!user) return;
+
+    if (isWin) {
+      const profit = trade.investAmount * ((trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet)) / 100);
+      await updateUser({
+        balance: user.balance + trade.investAmount + profit,
+        totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
+        wins: user.wins + 1
+      });
+      setTradeResult({ status: 'WIN', amount: profit });
+    } else {
+      await updateUser({
+        totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
+        losses: user.losses + 1
+      });
+      setTradeResult({ status: 'LOSS', amount: trade.investAmount });
+    }
+    setTimeout(() => setTradeResult(null), 5000);
+  };
+
   const depositSectionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [depositNetwork] = useState(NETWORKS[0]);
@@ -124,7 +146,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
   const [verificationError, setVerificationError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const tradeProfit = Math.max(0, user.balance - 1000);
+  const tradeProfit = Math.max(0, (user?.balance || 0) - 1000);
 
   useEffect(() => {
     if (activeTrades.length === 0) return;
@@ -176,13 +198,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
 
       if (result.is_valid && result.detected_amount > 0) {
         setVerificationStatus(`VERIFIED: $${result.detected_amount}`);
-        setTimeout(() => {
-          const freshUser = authService.getUser() || user;
-          onUserUpdate(authService.updateUser({
-            balance: freshUser.balance + result.detected_amount,
-            hasDeposited: true
-          })!);
-          setIsVerifyingReceipt(false);
+        setTimeout(async () => {
+          if (user) {
+            await updateUser({
+              balance: user.balance + result.detected_amount,
+              hasDeposited: true
+            });
+            setIsVerifyingReceipt(false);
+          }
         }, 1500);
       } else {
         setVerificationStatus('PROTOCOL REJECTED');
@@ -200,7 +223,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
       setWithdrawError("Min Withdrawal: $100");
       return;
     }
-    if (amount > user.balance) {
+    if (amount > (user?.balance || 0)) {
       setWithdrawError("Insufficient Liquidity");
       return;
     }
@@ -208,7 +231,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
       setWithdrawError("Invalid Wallet Target");
       return;
     }
-    if (!user.hasDeposited) {
+    if (!user?.hasDeposited) {
       setWithdrawError("Node Inactive. Deposit to Activate Payouts.");
       return;
     }
@@ -218,18 +241,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
   const confirmWithdrawal = () => {
     setIsWithdrawing(true);
     const amountToDeduct = Number(withdrawAmount);
-    setTimeout(() => {
-      const freshUser = authService.getUser() || user;
-      onUserUpdate(authService.updateUser({ balance: freshUser.balance - amountToDeduct })!);
-      setIsWithdrawing(false);
-      setWithdrawStep('success');
+    setTimeout(async () => {
+      if (user) {
+        await updateUser({ balance: user.balance - amountToDeduct });
+        setIsWithdrawing(false);
+        setWithdrawStep('success');
+      }
     }, 3000);
   };
 
   const startDeployment = () => {
     const plan = PROFIT_STRATEGIES.find(p => p.id === selectedPlanId);
     if (!plan) return;
-    if (user.balance < investAmount) {
+    if (!user || user.balance < investAmount) {
       depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       alert("INSUFFICIENT_FUNDS: Please deposit to initialize strategy.");
       return;
@@ -238,9 +262,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
     setTradeResult(null);
     setTimeout(() => {
       setIsProcessingTrade(false);
-      const freshUser = authService.getUser() || user;
       setShowSuccessToast(true);
-      executeTradeLogic(plan, freshUser);
+      if (user) executeTradeLogic(plan);
       setTimeout(() => {
         setShowSuccessToast(false);
         setSelectedPlanId(null);
@@ -248,11 +271,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
     }, 4000);
   };
 
-  const executeTradeLogic = (plan: typeof PROFIT_STRATEGIES[0], currentUser: UserProfile) => {
-    onUserUpdate(authService.updateUser({
-      balance: currentUser.balance - investAmount,
-      totalInvested: currentUser.totalInvested + investAmount
-    })!);
+  const executeTradeLogic = async (plan: typeof PROFIT_STRATEGIES[0]) => {
+    if (!user) return;
+    await updateUser({
+      balance: user.balance - investAmount,
+      totalInvested: user.totalInvested + investAmount
+    });
     const newTrade: ActiveTrade = {
       tradeId: Math.random().toString(36).substr(2, 9),
       plan,
@@ -264,29 +288,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
     setActiveTrades(prev => [...prev, newTrade]);
   };
 
-  const finishTrade = (trade: ActiveTrade) => {
-    const isWin = Math.random() <= 0.99;
-    const currentUser = authService.getUser() || user;
-    if (isWin) {
-      const profit = trade.investAmount * ((trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet)) / 100);
-      onUserUpdate(authService.updateUser({
-        balance: currentUser.balance + trade.investAmount + profit,
-        totalInvested: Math.max(0, currentUser.totalInvested - trade.investAmount),
-        wins: currentUser.wins + 1
-      })!);
-      setTradeResult({ status: 'WIN', amount: profit });
-    } else {
-      onUserUpdate(authService.updateUser({
-        totalInvested: Math.max(0, currentUser.totalInvested - trade.investAmount),
-        losses: currentUser.losses + 1
-      })!);
-      setTradeResult({ status: 'LOSS', amount: trade.investAmount });
-    }
-    setTimeout(() => setTradeResult(null), 5000);
-  };
 
   return (
     <div className="bg-[#131722] min-h-screen pt-4 pb-32 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
+      {(!user) && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
+          Loading Account Data...
+        </div>
+      )}
+
       {isProcessingTrade && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl">
           <div className="flex flex-col items-center gap-6">
@@ -307,8 +317,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
 
       <TacticalGuide
         step={activeTrades.length > 0 ? 'investing' : 'ready'}
-        balance={user.balance}
-        hasDeposited={user.hasDeposited}
+        balance={user?.balance || 0}
+        hasDeposited={user?.hasDeposited || false}
         onDepositClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
       />
 
@@ -316,11 +326,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
-            <span className={`text-2xl font-black ${user.hasDeposited ? 'text-[#00b36b]' : 'text-amber-500'}`}>${user.balance.toLocaleString()}</span>
+            <span className={`text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-amber-500'}`}>${(user?.balance || 0).toLocaleString()}</span>
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Money in Trade</span>
-            <span className="text-2xl font-black text-white">${user.totalInvested.toLocaleString()}</span>
+            <span className="text-2xl font-black text-white">${(user?.totalInvested || 0).toLocaleString()}</span>
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Global Profits</span>
@@ -436,7 +446,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onUserUpdate, onSwitchTrade
                   <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                   </div>
-                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Node {user.nodeId}</p>
+                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Node {user?.nodeId}</p>
                   <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
                 </div>
               )}

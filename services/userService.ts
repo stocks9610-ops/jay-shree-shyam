@@ -7,8 +7,11 @@ import {
     query,
     where,
     getDocs,
-    Timestamp
+    Timestamp,
+    onSnapshot
 } from 'firebase/firestore';
+import { Trader } from '../types';
+
 import { db } from '../firebase.config';
 
 export interface UserData {
@@ -21,6 +24,18 @@ export interface UserData {
     createdAt: Timestamp;
     updatedAt: Timestamp;
     status: 'active' | 'suspended';
+
+    // Extended fields
+    phone?: string;
+    hasDeposited: boolean;
+    wins: number;
+    losses: number;
+    totalInvested: number;
+    activeTraders: Trader[];
+    nodeId: string;
+    referralCount: number;
+    referralEarnings: number;
+    pendingClaims: number;
 }
 
 const USERS_COLLECTION = 'users';
@@ -36,16 +51,30 @@ export const createUserProfile = async (
 ): Promise<void> => {
     try {
         const userRef = doc(db, USERS_COLLECTION, uid);
+        const safeUsername = displayName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase() || 'TRD';
+        const nodeId = `NODE-${Math.floor(1000 + Math.random() * 9000)}-${safeUsername}`;
+
         const userData: UserData = {
             uid,
             email,
             displayName,
             walletAddress,
-            balance: 0,
+            balance: 1000, // Starting balance
             role: 'user',
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),
-            status: 'active'
+            status: 'active',
+
+            // Initial values for extended fields
+            hasDeposited: false,
+            wins: 0,
+            losses: 0,
+            totalInvested: 0,
+            activeTraders: [],
+            nodeId,
+            referralCount: 0,
+            referralEarnings: 0,
+            pendingClaims: 0
         };
 
         await setDoc(userRef, userData);

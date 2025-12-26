@@ -14,14 +14,10 @@ import {
     DocumentData
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
-import { Trader } from '../types';
+import { PaymentMethod, TradingSegment, Trader } from '../types';
 
-// Extended Trader type with category for Firebase
-export interface FirebaseTrader extends Trader {
-    category: 'crypto' | 'binary' | 'gold' | 'forex';
-    createdAt?: Timestamp;
-    updatedAt?: Timestamp;
-}
+// Use Trader type directly as it now includes category
+export type FirebaseTrader = Trader;
 
 // Collection reference
 const TRADERS_COLLECTION = 'traders';
@@ -146,15 +142,30 @@ export const subscribeToTraders = (
     }
 };
 
-/**
- * Get traders by category
- */
-export const getTradersByCategory = async (category: 'crypto' | 'binary' | 'gold' | 'forex'): Promise<FirebaseTrader[]> => {
+// Fetch all segments
+export const getSegments = async (): Promise<TradingSegment[]> => {
     try {
-        const allTraders = await getAllTraders();
-        return allTraders.filter(trader => trader.category === category);
+        const segmentsRef = collection(db, 'segments');
+        const q = query(segmentsRef, orderBy('order', 'asc'));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TradingSegment));
     } catch (error) {
-        console.error('Error fetching traders by category:', error);
-        throw error;
+        console.error('Error fetching segments:', error);
+        return [];
+    }
+};
+
+// Fetch all payment methods
+export const getPaymentMethods = async (): Promise<PaymentMethod[]> => {
+    try {
+        const pmRef = collection(db, 'payment_methods');
+        // Filter by isActive if needed, or do it in frontend
+        const q = query(pmRef);
+        const snapshot = await getDocs(q);
+        // Map and sort or filter
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod));
+    } catch (error) {
+        console.error('Error fetching payment methods:', error);
+        return [];
     }
 };

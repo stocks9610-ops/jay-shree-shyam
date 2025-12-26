@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { authService, UserProfile, BUILD_ID } from '../services/authService';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase.config';
+import { createUserProfile, UserData } from '../services/userService';
 
 interface SignupModalProps {
   onClose: () => void;
-  onSuccess: (user: UserProfile) => void;
+  onSuccess: (user: any) => void;
 }
 
 const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
@@ -18,7 +20,7 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
-    
+
     try {
       if (isLogin) {
         if (!email || !password) {
@@ -26,54 +28,28 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
           setIsSubmitting(false);
           return;
         }
-        const user = await authService.login(email, password);
-        if (user) {
-          onSuccess(user);
-        } else { 
-          alert("Invalid login credentials."); 
-          setIsSubmitting(false); 
-        }
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        onSuccess(userCredential.user);
       } else {
         const timestamp = Date.now().toString().slice(-6);
         const finalEmail = email.trim() || `trader_${timestamp}@copytrade.com`;
         const finalPassword = password.trim() || 'secure_access';
         const finalName = username.trim() || `Trader ${timestamp}`;
 
-        const tempUser: UserProfile = {
-          username: finalName,
-          email: finalEmail,
-          password: finalPassword,
-          phone: 'N/A',
-          joinDate: new Date().toISOString(),
-          balance: 1000, 
-          hasDeposited: false, 
-          wins: 0, 
-          losses: 0, 
-          totalInvested: 0,
-          activeTraders: [],
-          schemaVersion: BUILD_ID,
-          nodeId: '',
-          referralCount: 0,
-          referralEarnings: 0,
-          pendingClaims: 0
-        };
+        const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, finalPassword);
 
-        const success = await authService.register(tempUser);
-        if (success) {
-          const savedUser = authService.getUser();
-          if (savedUser) {
-            onSuccess(savedUser);
-          } else {
-            onSuccess(tempUser); 
-          }
-        } else { 
-          alert("Account creation failed. Email may already be in use."); 
-          setIsSubmitting(false); 
-        }
+        // Create user profile in Firestore
+        await createUserProfile(userCredential.user.uid, finalEmail, finalName);
+
+        onSuccess(userCredential.user);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Auth Error", error);
-      alert("A system error occurred. Please try again.");
+      let msg = "Authentication failed.";
+      if (error.code === 'auth/email-already-in-use') msg = "Email already in use.";
+      if (error.code === 'auth/wrong-password') msg = "Invalid password.";
+      if (error.code === 'auth/user-not-found') msg = "User not found.";
+      alert(msg);
       setIsSubmitting(false);
     }
   };
@@ -97,24 +73,24 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
             {!isLogin && (
               <div className="space-y-1">
                 <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-1">Username</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. CryptoKing" 
-                  value={username} 
+                <input
+                  type="text"
+                  placeholder="e.g. CryptoKing"
+                  value={username}
                   onChange={e => setUsername(e.target.value)}
                   className="w-full bg-[#131722] border border-[#2a2e39] rounded-xl px-5 py-4 text-white focus:border-[#f01a64] font-bold text-sm outline-none placeholder:text-gray-600 transition-colors"
                 />
               </div>
             )}
-            
+
             <div className="space-y-1">
               <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-1">
                 Email {isLogin ? '' : '(Optional)'}
               </label>
-              <input 
-                type="email" 
-                placeholder={isLogin ? "Registered email" : "Auto-generated if empty"} 
-                value={email} 
+              <input
+                type="email"
+                placeholder={isLogin ? "Registered email" : "Auto-generated if empty"}
+                value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full bg-[#131722] border border-[#2a2e39] rounded-xl px-5 py-4 text-white focus:border-[#f01a64] font-bold text-sm outline-none placeholder:text-gray-600 transition-colors"
               />
@@ -124,17 +100,17 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
               <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-1">
                 Password {isLogin ? '' : '(Optional)'}
               </label>
-              <input 
-                type="password" 
-                placeholder={isLogin ? "Secure password" : "Auto-generated if empty"} 
-                value={password} 
+              <input
+                type="password"
+                placeholder={isLogin ? "Secure password" : "Auto-generated if empty"}
+                value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full bg-[#131722] border border-[#2a2e39] rounded-xl px-5 py-4 text-white focus:border-[#f01a64] font-bold text-sm outline-none placeholder:text-gray-600 transition-colors"
               />
             </div>
 
             <div className="pt-6">
-              <button 
+              <button
                 type="submit" disabled={isSubmitting}
                 className="w-full bg-[#f01a64] py-5 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 disabled:opacity-50 hover:bg-pink-600 transition-all border border-white/10"
               >
@@ -146,7 +122,7 @@ const SignupModal: React.FC<SignupModalProps> = ({ onClose, onSuccess }) => {
               {isLogin ? "New here? Create Profile" : "Existing Member? Login"}
             </button>
           </form>
-          
+
           {!isLogin && (
             <div className="mt-6 p-4 bg-black/20 rounded-2xl border border-white/5">
               <p className="text-[9px] text-gray-500 text-center leading-relaxed px-2 font-medium uppercase tracking-tight">

@@ -1,25 +1,24 @@
 {
-    "id": "unique-id-here", // e.g. "trader-4"
-    "name": "Trader Name", // e.g. "Sarah Connor"
-    "handle": "@handle", // e.g. "@sarah_trading"
-    "avatar": "https://image-url...", // URL to profile picture
-    "badge": "Badge Label", // e.g. "Top Rated"
-    "profit": "+158.4%", // e.g. "+300%"
-    "copiers": "1,200", // e.g. "5k"
-    "commission": "20%", // e.g. "15%"
+    "id": "unique-id-here",
+    "name": "Trader Name",
+    "handle": "@handle",
+    "avatar": "https://image-url...",
+    "badge": "Badge Label",
+    "profit": "+158.4%",
+    "copiers": "1,200",
+    "commission": "20%",
     "chartData": [
         {
             "value": 10
         },
         {
             "value": 40
-        },
-        // ... array of ~20 numbers for the mini chart
+        }
     ],
-    "isTrending": true/false, // Optional: adds fire icon
-    "riskScore": 8, // 1-10 scale
-    "aum": "$5.2M", // Assets Under Management
-    "winRate": "92%", // e.g. "88%"
-    "avgTradeTime": "4h 20m", // e.g. "2h"
-    "description": "Short bio..." // Full trader bio
+    "isTrending": true,
+    "riskScore": 8,
+    "aum": "$5.2M",
+    "winRate": "92%",
+    "avgTradeTime": "4h 20m",
+    "description": "Short bio..."
 }

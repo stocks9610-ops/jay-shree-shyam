@@ -33,7 +33,7 @@ const MainLayout = () => {
   const [showSignup, setShowSignup] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500/30 overflow-x-hidden bg-[#131722] relative">
@@ -41,7 +41,7 @@ const MainLayout = () => {
       <Navbar
         onJoinClick={() => setShowSignup(true)}
         onGalleryClick={() => setShowGallery(true)}
-        user={currentUser as any}
+        user={userProfile}
         onLogout={() => { }} // Logout handled by AuthContext or Firebase directly usually
         onDashboardClick={() => window.location.href = '/dashboard'}
         onHomeClick={() => window.location.href = '/'}
@@ -87,8 +87,6 @@ const MainLayout = () => {
       {showGallery && <SuccessGallery onClose={() => setShowGallery(false)} />}
       {showReferral && currentUser && (
         <ReferralTerminal
-          user={currentUser as any}
-          onUserUpdate={() => { }}
           onClose={() => setShowReferral(false)}
         />
       )}

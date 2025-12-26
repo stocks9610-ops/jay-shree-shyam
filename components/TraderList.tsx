@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trader } from '../types';
+import { Trader, TradingSegment } from '../types';
 import TraderProfileModal from './TraderProfileModal';
-import { subscribeToTraders, FirebaseTrader } from '../services/firebaseService';
-
-interface ExtendedTrader extends Trader {
-  category: 'crypto' | 'binary' | 'gold' | 'forex';
-}
+import { subscribeToTraders, getSegments } from '../services/firebaseService';
 
 // Fallback traders in case Firebase is not configured yet
-const FALLBACK_TRADERS: ExtendedTrader[] = [
+const FALLBACK_TRADERS: Trader[] = [
   {
     id: '0', name: 'Anas Ali (Elite Signal)',
     avatar: 'https://raw.githubusercontent.com/stocks9610-ops/Stocks-Analysis/new-launch/public/images/1.jpeg',
@@ -114,7 +110,7 @@ const ALL_TRADERS = [...FALLBACK_TRADERS];
 
 const SocialIcons: React.FC<{ color: string }> = ({ color }) => (
   <div className="flex gap-1.5 mt-1 opacity-60">
-    <svg className={`w-2.5 h-2.5 ${color}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.054-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163-2.759 6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+    <svg className={`w-2.5 h-2.5 ${color}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.054-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.163 6.163 6.162-2.759 6.162-6.163-2.759 6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
     <svg className={`w-2.5 h-2.5 ${color}`} fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.462 8.27l-1.56 7.42c-.116.545-.44.68-.895.425l-2.37-1.75-1.145 1.1c-.125.127-.23.234-.473.234l.17-2.42 4.41-3.98c.19-.17-.04-.26-.297-.09l-5.45 3.43-2.34-.73c-.51-.16-.52-.51.107-.756l9.15-3.53c.42-.15.79.1.663.667z" /></svg>
   </div>
 );
@@ -125,46 +121,71 @@ interface TraderListProps {
 }
 
 const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' }) => {
-  const [activeCategory, setActiveCategory] = useState<'crypto' | 'binary' | 'gold' | 'forex'>('crypto');
+  const [activeCategory, setActiveCategory] = useState<string>('crypto');
+  const [segments, setSegments] = useState<TradingSegment[]>([]);
   const [traderProfits, setTraderProfits] = useState<Record<string, number>>({});
   const [liveWinRates, setLiveWinRates] = useState<Record<string, number>>({});
   const [animatingTraders, setAnimatingTraders] = useState<Record<string, boolean>>({});
   const [selectedTrader, setSelectedTrader] = useState<Trader | null>(null);
-  const [traders, setTraders] = useState<ExtendedTrader[]>(ALL_TRADERS);
+  const [traders, setTraders] = useState<Trader[]>(ALL_TRADERS);
   const [isFirebaseEnabled, setIsFirebaseEnabled] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to Firebase traders
+  // Subscribe to Firebase traders and fetch segments
   useEffect(() => {
-    // Check if Firebase is configured
-    const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const initData = async () => {
+      // Check if Firebase is configured
+      const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
 
-    if (!firebaseApiKey) {
-      console.log('Firebase not configured, using fallback data');
-      setIsFirebaseEnabled(false);
-      return;
-    }
+      if (!firebaseApiKey) {
+        console.log('Firebase not configured, using fallback data');
+        setIsFirebaseEnabled(false);
+        setSegments([
+          { id: '1', key: 'crypto', label: 'Crypto', order: 1, color: '#f01a64' },
+          { id: '2', key: 'binary', label: 'Binary', order: 2, color: '#2563eb' },
+          { id: '3', key: 'gold', label: 'Gold', order: 3, color: '#eab308' },
+          { id: '4', key: 'forex', label: 'Forex', order: 4, color: '#059669' }
+        ]);
+        return;
+      }
 
-    setIsFirebaseEnabled(true);
-    console.log('Subscribing to Firebase traders...');
+      setIsFirebaseEnabled(true);
+      console.log('Subscribing to Firebase traders...');
 
-    const unsubscribe = subscribeToTraders(
-      (firebaseTraders) => {
-        if (firebaseTraders.length > 0) {
-          console.log(`Loaded ${firebaseTraders.length} traders from Firebase`);
-          setTraders(firebaseTraders as ExtendedTrader[]);
-        } else {
-          console.log('No traders in Firebase, using fallback data');
+      // Fetch segments
+      const segs = await getSegments();
+      if (segs.length > 0) {
+        setSegments(segs);
+        setActiveCategory(segs[0].key);
+      } else {
+        setSegments([
+          { id: '1', key: 'crypto', label: 'Crypto', order: 1, color: '#f01a64' },
+          { id: '2', key: 'binary', label: 'Binary', order: 2, color: '#2563eb' },
+          { id: '3', key: 'gold', label: 'Gold', order: 3, color: '#eab308' },
+          { id: '4', key: 'forex', label: 'Forex', order: 4, color: '#059669' }
+        ]);
+      }
+
+      const unsubscribe = subscribeToTraders(
+        (firebaseTraders) => {
+          if (firebaseTraders.length > 0) {
+            console.log(`Loaded ${firebaseTraders.length} traders from Firebase`);
+            setTraders(firebaseTraders);
+          } else {
+            console.log('No traders in Firebase, using fallback data');
+            setTraders(ALL_TRADERS);
+          }
+        },
+        (error) => {
+          console.error('Firebase subscription error:', error);
           setTraders(ALL_TRADERS);
         }
-      },
-      (error) => {
-        console.error('Firebase subscription error:', error);
-        setTraders(ALL_TRADERS);
-      }
-    );
+      );
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    };
+
+    initData();
   }, []);
 
   useEffect(() => {
@@ -215,23 +236,24 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
     }
   };
 
-  const getCategoryStyles = (cat: string) => {
+  const getCategoryStyles = (catKey: string) => {
     const base = "px-6 md:px-8 py-3 md:py-4 rounded-2xl font-black text-[9px] md:text-xs uppercase tracking-[0.2em] transition-all transform hover:-translate-y-1 active:scale-95 border-2";
-    if (activeCategory !== cat && !searchTerm) {
+    if (activeCategory !== catKey && !searchTerm) {
       return `${base} bg-[#1e222d] text-gray-400 border-[#2a2e39] hover:border-gray-500 hover:text-white`;
     }
     // Dim categories if searching
-    if (searchTerm && activeCategory !== cat) {
+    if (searchTerm && activeCategory !== catKey) {
       return `${base} opacity-50 bg-[#1e222d] text-gray-600 border-[#2a2e39] cursor-not-allowed`;
     }
 
-    switch (cat) {
-      case 'crypto': return `${base} bg-[#f01a64] text-white border-[#f01a64] shadow-[0_10px_30px_rgba(240,26,100,0.3)]`;
-      case 'binary': return `${base} bg-blue-600 text-white border-blue-600 shadow-[0_10px_30px_rgba(37,99,235,0.3)]`;
-      case 'gold': return `${base} bg-yellow-500 text-black border-yellow-500 shadow-[0_10px_30px_rgba(234,179,8,0.3)]`;
-      case 'forex': return `${base} bg-emerald-600 text-white border-emerald-600 shadow-[0_10px_30_rgba(5,150,105,0.3)]`;
-      default: return base;
+    // Find segment to get color
+    const segment = segments.find(s => s.key === catKey);
+    // const color = segment?.color || '#3b82f6'; 
+
+    if (activeCategory === catKey) {
+      return `${base} text-white shadow-[0_10px_30px_rgba(0,0,0,0.3)]`;
     }
+    return base;
   };
 
   const filteredTraders = traders.filter(t => {
@@ -255,14 +277,19 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
           </p>
 
           <div className="flex flex-wrap justify-center gap-2 md:gap-3 mt-8">
-            {(['crypto', 'binary', 'gold', 'forex'] as const).map((cat) => (
+            {segments.map((seg) => (
               <button
-                key={cat}
-                onClick={() => !searchTerm && setActiveCategory(cat)}
-                className={getCategoryStyles(cat)}
+                key={seg.key}
+                onClick={() => !searchTerm && setActiveCategory(seg.key)}
+                className={getCategoryStyles(seg.key)}
                 disabled={!!searchTerm}
+                style={activeCategory === seg.key ? {
+                  backgroundColor: seg.color,
+                  borderColor: seg.color,
+                  boxShadow: `0 10px 30px ${seg.color}50`
+                } : {}}
               >
-                {cat}
+                {seg.label}
               </button>
             ))}
           </div>

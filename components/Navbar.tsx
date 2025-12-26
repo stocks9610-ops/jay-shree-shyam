@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { UserProfile, authService } from '../services/authService';
+import { UserData } from '../services/userService';
+import { auth } from '../firebase.config';
+import { signOut } from 'firebase/auth';
 
 interface NavbarProps {
   onJoinClick: () => void;
   onGalleryClick: () => void;
-  user: UserProfile | null;
+  user: UserData | null;
   onLogout: () => void;
   onDashboardClick: () => void;
   onHomeClick: () => void;
@@ -47,7 +49,12 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
     setIsTerminating(true);
     // Simulated security wipe sequence
     await new Promise(r => setTimeout(r, 1800));
-    onLogout();
+    try {
+      await signOut(auth);
+      onLogout();
+    } catch (e) {
+      console.error("Logout failed", e);
+    }
     setIsTerminating(false);
     setShowTerminateConfirm(false);
   };
@@ -129,7 +136,7 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
               >
                 <div className="flex flex-col items-end">
                   <span className="text-[10px] md:text-xs text-white font-black uppercase tracking-tighter truncate max-w-[80px] md:max-w-none">
-                    {user.username.split(' ')[0]}
+                    {user.displayName?.split(' ')[0] || user.email?.split('@')[0]}
                   </span>
                   <span className={`text-[7px] md:text-[9px] font-black tracking-widest uppercase ${user.hasDeposited ? 'text-[#00b36b]' : 'text-amber-500'}`}>
                     {user.hasDeposited ? 'VERIFIED' : 'UNVERIFIED'}
