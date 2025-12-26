@@ -23,7 +23,8 @@ export interface Trader {
   commission?: string;
   isTrending?: boolean;
   aum?: string;
-  copiers?: string; // string in json template, number in some usage? Let's keep consistent with valid JSON use or standardize.
+  copiers?: string;
+  totalProfit?: number;
 }
 
 export interface ChatMessage {

@@ -24,7 +24,8 @@ const AdminPanel: React.FC = () => {
     const initialTraderState: Partial<FirebaseTrader> = {
         name: '', avatar: '', roi: 0, drawdown: 0, followers: 0, weeks: 0, strategy: '',
         type: 'Trader', experienceYears: 0, markets: [], riskScore: 5, winRate: 0,
-        avgDuration: '', riskMethods: [], bio: '', category: 'crypto', copyTradeId: '', youtubeLink: ''
+        avgDuration: '', riskMethods: [], bio: '', category: 'crypto', copyTradeId: '', youtubeLink: '',
+        totalProfit: 0 // New field
     };
     const [traderForm, setTraderForm] = useState(initialTraderState);
 
@@ -233,14 +234,56 @@ const AdminPanel: React.FC = () => {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {activeTab === 'traders' ? (
                                 // Trader Form Fields
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <input placeholder="Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.name} onChange={e => setTraderForm({ ...traderForm, name: e.target.value })} required />
-                                    <input placeholder="Category (crypto, forex...)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.category} onChange={e => setTraderForm({ ...traderForm, category: e.target.value as any })} required />
-                                    <input type="number" placeholder="ROI %" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.roi} onChange={e => setTraderForm({ ...traderForm, roi: Number(e.target.value) })} required />
-                                    <input type="number" placeholder="Win Rate %" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.winRate} onChange={e => setTraderForm({ ...traderForm, winRate: Number(e.target.value) })} required />
-                                    <input placeholder="Avatar URL" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64] md:col-span-2" value={traderForm.avatar} onChange={e => setTraderForm({ ...traderForm, avatar: e.target.value })} required />
-                                    <input placeholder="Copy Trade ID" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.copyTradeId} onChange={e => setTraderForm({ ...traderForm, copyTradeId: e.target.value })} required />
-                                    <input placeholder="Strategy Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.strategy} onChange={e => setTraderForm({ ...traderForm, strategy: e.target.value })} required />
+                                // Trader Form Fields
+                                <div className="space-y-6">
+                                    {/* Identity Section */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <h3 className="text-white font-bold uppercase text-xs tracking-widest mb-4 text-[#f01a64]">Identity & Visuals</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2 flex gap-4 items-center">
+                                                {traderForm.avatar && <img src={traderForm.avatar} className="w-16 h-16 rounded-xl object-cover border-2 border-[#f01a64]" />}
+                                                <input placeholder="Avatar Image URL" className="flex-1 bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.avatar} onChange={e => setTraderForm({ ...traderForm, avatar: e.target.value })} required />
+                                            </div>
+                                            <input placeholder="Trader Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.name} onChange={e => setTraderForm({ ...traderForm, name: e.target.value })} required />
+                                            <input placeholder="Copy Trade ID (e.g. CT-8899-X)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.copyTradeId} onChange={e => setTraderForm({ ...traderForm, copyTradeId: e.target.value })} required />
+                                        </div>
+                                    </div>
+
+                                    {/* Performance Section */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <h3 className="text-white font-bold uppercase text-xs tracking-widest mb-4 text-[#00b36b]">Performance Stats</h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Total Profit ($)</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white outline-none focus:border-[#00b36b]" value={traderForm.totalProfit || 0} onChange={e => setTraderForm({ ...traderForm, totalProfit: Number(e.target.value) })} />
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Win Rate (%)</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white outline-none focus:border-[#00b36b]" value={traderForm.winRate} onChange={e => setTraderForm({ ...traderForm, winRate: Number(e.target.value) })} required />
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">ROI (%)</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white outline-none focus:border-[#00b36b]" value={traderForm.roi} onChange={e => setTraderForm({ ...traderForm, roi: Number(e.target.value) })} required />
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Followers</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white outline-none focus:border-[#00b36b]" value={traderForm.followers} onChange={e => setTraderForm({ ...traderForm, followers: Number(e.target.value) })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Details Section */}
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <h3 className="text-white font-bold uppercase text-xs tracking-widest mb-4 text-blue-500">Profile Details</h3>
+                                        <div className="space-y-4">
+                                            <textarea placeholder="Trader Bio / Description" rows={3} className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.bio} onChange={e => setTraderForm({ ...traderForm, bio: e.target.value })} required />
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <input placeholder="Strategy Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.strategy} onChange={e => setTraderForm({ ...traderForm, strategy: e.target.value })} required />
+                                                <input placeholder="Category (crypto, forex, gold, binary)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.category} onChange={e => setTraderForm({ ...traderForm, category: e.target.value as any })} required />
+                                                <input placeholder="YouTube Link (Optional)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500 md:col-span-2" value={traderForm.youtubeLink} onChange={e => setTraderForm({ ...traderForm, youtubeLink: e.target.value })} />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 // Strategy Form Fields

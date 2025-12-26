@@ -89,8 +89,9 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
     const initialWinRates: Record<string, number> = {};
 
     traders.forEach(t => {
-      const baseProfit = t.id === '0' ? 245000.00 : 5000.00;
-      initialProfits[t.id] = baseProfit + Math.random() * 45000;
+      // Use database profit if available, else default
+      const baseProfit = t.totalProfit || (t.id === '0' ? 245000.00 : 5000.00);
+      initialProfits[t.id] = baseProfit + Math.random() * (t.totalProfit ? t.totalProfit * 0.01 : 100); // Smaller fluctuation for fixed profit
       initialWinRates[t.id] = t.winRate;
     });
 
@@ -103,8 +104,9 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
       const randomIdx = Math.floor(Math.random() * filtered.length);
       const trader = filtered[randomIdx];
 
-      const baseIncrement = trader.id === '0' ? 850 : 250;
-      const increment = baseIncrement + Math.random() * 1250;
+      // Dynamic increment based on profit magnitude
+      const baseInc = trader.totalProfit ? trader.totalProfit * 0.0005 : 250;
+      const increment = baseInc + Math.random() * baseInc;
       const winRateFluctuation = (Math.random() - 0.5) * 0.4;
 
       setTraderProfits(prev => ({ ...prev, [trader.id]: prev[trader.id] + increment }));
