@@ -28,7 +28,7 @@ const TRADERS_COLLECTION = 'traders';
 export const getAllTraders = async (): Promise<FirebaseTrader[]> => {
     try {
         const tradersRef = collection(db, TRADERS_COLLECTION);
-        const q = query(tradersRef, orderBy('createdAt', 'desc'));
+        const q = query(tradersRef); // orderBy('createdAt', 'desc') removed to prevent index errors temporarily
         const querySnapshot = await getDocs(q);
 
         const traders: FirebaseTrader[] = [];

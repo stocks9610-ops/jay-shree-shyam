@@ -11,8 +11,10 @@ import {
 import { getSettings, updateSettings, PlatformSettings } from '../../services/settingsService';
 import { auth } from '../../firebase.config';
 
+import AdminPanel from '../AdminPanel';
+
 const AdminDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'withdrawals' | 'settings'>('dashboard');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'withdrawals' | 'settings' | 'content'>('content');
     const [users, setUsers] = useState<UserData[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [pendingWithdrawals, setPendingWithdrawals] = useState<Withdrawal[]>([]);
@@ -124,9 +126,18 @@ const AdminDashboard: React.FC = () => {
         <div className="min-h-screen bg-[#131722] p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-black text-white mb-2">Admin Dashboard</h1>
-                    <p className="text-gray-400">Manage users, withdrawals, and platform settings</p>
+                <div className="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
+                    <div>
+                        <h1 className="text-4xl font-black text-white mb-2">Admin Dashboard</h1>
+                        <p className="text-gray-400">Manage users, withdrawals, and platform settings</p>
+                    </div>
+                    <button
+                        onClick={() => window.location.href = '/create-trader'}
+                        className="bg-[#f01a64] hover:bg-[#d01555] text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider transition shadow-lg flex items-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                        Add New Trader
+                    </button>
                 </div>
 
                 {/* Notifications */}
@@ -146,19 +157,22 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto">
-                    {(['dashboard', 'users', 'withdrawals', 'settings'] as const).map((tab) => (
+                    {(['dashboard', 'users', 'withdrawals', 'settings', 'content'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-3 rounded-xl font-bold uppercase tracking-wider transition ${activeTab === tab
-                                ? 'bg-[#f01a64] text-white'
+                            className={`px-6 py-3 rounded-xl font-bold uppercase tracking-wider transition whitespace-nowrap ${activeTab === tab
+                                ? 'bg-[#f01a64] text-white shadow-lg'
                                 : 'bg-[#1e222d] text-gray-400 hover:text-white'
                                 }`}
                         >
-                            {tab}
+                            {tab === 'content' ? 'Traders & Strategies' : tab}
                         </button>
                     ))}
                 </div>
+
+                {/* Content Management Tab */}
+                {activeTab === 'content' && <AdminPanel />}
 
                 {/* Dashboard Tab */}
                 {activeTab === 'dashboard' && (

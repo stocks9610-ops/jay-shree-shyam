@@ -25,6 +25,18 @@ export interface Trader {
   aum?: string;
   copiers?: string;
   totalProfit?: number;
+  // New Fields
+  rank?: string;
+  country?: string;
+  verificationStatus?: string;
+  performanceBadge?: string;
+  specialization?: string;
+  socials?: {
+    instagram?: string;
+    telegram?: string;
+    twitter?: string;
+    youtube?: string;
+  };
 }
 
 export interface ChatMessage {

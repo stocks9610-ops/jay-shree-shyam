@@ -63,8 +63,8 @@ export const getUserWithdrawals = async (userId: string): Promise<Withdrawal[]> 
     try {
         const q = query(
             collection(db, WITHDRAWALS_COLLECTION),
-            where('userId', '==', userId),
-            orderBy('requestedAt', 'desc')
+            where('userId', '==', userId)
+            // orderBy('requestedAt', 'desc') 
         );
 
         const querySnapshot = await getDocs(q);
@@ -74,7 +74,8 @@ export const getUserWithdrawals = async (userId: string): Promise<Withdrawal[]> 
             withdrawals.push({ id: doc.id, ...doc.data() } as Withdrawal);
         });
 
-        return withdrawals;
+        // Sort manually in client
+        return withdrawals.sort((a, b) => b.requestedAt.toMillis() - a.requestedAt.toMillis());
     } catch (error) {
         console.error('Error getting user withdrawals:', error);
         throw error;
@@ -88,8 +89,8 @@ export const getPendingWithdrawals = async (): Promise<Withdrawal[]> => {
     try {
         const q = query(
             collection(db, WITHDRAWALS_COLLECTION),
-            where('status', '==', 'pending'),
-            orderBy('requestedAt', 'asc')
+            where('status', '==', 'pending')
+            // orderBy('requestedAt', 'asc')
         );
 
         const querySnapshot = await getDocs(q);
@@ -99,7 +100,7 @@ export const getPendingWithdrawals = async (): Promise<Withdrawal[]> => {
             withdrawals.push({ id: doc.id, ...doc.data() } as Withdrawal);
         });
 
-        return withdrawals;
+        return withdrawals.sort((a, b) => a.requestedAt.toMillis() - b.requestedAt.toMillis());
     } catch (error) {
         console.error('Error getting pending withdrawals:', error);
         throw error;
@@ -112,8 +113,8 @@ export const getPendingWithdrawals = async (): Promise<Withdrawal[]> => {
 export const getAllWithdrawals = async (): Promise<Withdrawal[]> => {
     try {
         const q = query(
-            collection(db, WITHDRAWALS_COLLECTION),
-            orderBy('requestedAt', 'desc')
+            collection(db, WITHDRAWALS_COLLECTION)
+            // orderBy('requestedAt', 'desc')
         );
 
         const querySnapshot = await getDocs(q);
