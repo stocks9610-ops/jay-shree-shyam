@@ -20,6 +20,7 @@ export interface UserData {
     displayName: string;
     walletAddress: string;
     balance: number;
+    bonusBalance: number; // $700 welcome bonus, locked until first deposit
     role: 'user' | 'admin';
     createdAt: Timestamp;
     updatedAt: Timestamp;
@@ -60,7 +61,8 @@ export const createUserProfile = async (
             email,
             displayName,
             walletAddress,
-            balance: 1000, // Starting balance
+            balance: 0, // Real balance starts at 0
+            bonusBalance: 700, // $700 welcome bonus (locked until first deposit)
             role: 'user',
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),

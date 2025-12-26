@@ -35,6 +35,7 @@ interface ExtendedTrader {
     minCapital?: number;
     totalReturn?: number;
     description?: string;
+    usdtAddress?: string;
 }
 
 const INITIAL_TRADERS: ExtendedTrader[] = [
@@ -49,7 +50,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         copyTradeId: 'CT-7701-X',
         youtubeLink: 'https://www.youtube.com/watch?v=dvQzEIbJlw4',
         minCapital: 500,
-        totalReturn: 342.5
+        totalReturn: 342.5,
+        usdtAddress: 'TLy8ZJ9X2Wp7E98979F25302979F25302'
     },
     {
         id: '10', name: 'Rayner Teo',
@@ -60,7 +62,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Rayner Teo is an independent trader and founder of TradingwithRayner, known for clear, profit-first content covering price action, technical analysis, and risk-free management, and structured trading strategies across forex, stocks, and crypto. With millions of subscribers, his mission is to help serious traders improve performance with practical, no-hype guidance.',
         category: 'crypto',
         copyTradeId: 'CT-2710-RT',
-        youtubeLink: 'https://www.youtube.com/channel/UCFSn-h8wTnhpKJMteN76Abg'
+        youtubeLink: 'https://www.youtube.com/channel/UCFSn-h8wTnhpKJMteN76Abg',
+        usdtAddress: 'TEx6M7F2p27x97E98979F25302979F25324'
     },
     {
         id: '1', name: 'Thomas Kralow (Pro)',
@@ -71,7 +74,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Thomas Kralow is a high-performance crypto and forex trader known for AI-driven trading strategies. With 500K+ subscribers, he shares bold market insights, aggressive setups, and next-level trading education designed for serious traders. Risk Free Trade',
         category: 'crypto',
         copyTradeId: 'CT-9102-K',
-        youtubeLink: 'https://youtu.be/PVjbDGkFrDw'
+        youtubeLink: 'https://youtu.be/PVjbDGkFrDw',
+        usdtAddress: 'TRD2N1F5p27y97E98979F25302979F25311'
     },
     {
         id: '2', name: 'P4 Provider',
@@ -82,7 +86,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'P4 Provider is a professional Forex and Crypto trader with over 8 years of experience. He has mentored 3,300+ traders and shares practical trading strategies, market analysis, and risk management techniques through his YouTube channel Risk Free Trade.',
         category: 'crypto',
         copyTradeId: 'CT-4403-P',
-        youtubeLink: 'https://youtu.be/0CgD6mDVV_M'
+        youtubeLink: 'https://youtu.be/0CgD6mDVV_M',
+        usdtAddress: 'TPN5M8F3p27z97E98979F25302979F25309'
     },
     {
         id: '11', name: 'Binary Edge Pro',
@@ -93,7 +98,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'A high-speed binary options specialist focusing on short-term market momentum and candle-stick reversals. Known for delivering rapid growth in binary markets with precision timing.',
         category: 'binary',
         copyTradeId: 'CT-6611-BIN',
-        youtubeLink: 'https://youtu.be/-jAP50QgAAY'
+        youtubeLink: 'https://youtu.be/-jAP50QgAAY',
+        usdtAddress: 'TBN1M2F7p27a97E98979F25302979F25388'
     },
     {
         id: '12', name: 'Pocket Master',
@@ -104,7 +110,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Elite binary analyst delivering high-frequency signals based on volatility patterns. Specializes in rapid account scaling using disciplined risk per trade.',
         category: 'binary',
         copyTradeId: 'CT-9912-PM',
-        youtubeLink: 'https://www.youtube.com/@thetradernextdoor'
+        youtubeLink: 'https://www.youtube.com/@thetradernextdoor',
+        usdtAddress: 'TPM8M3F9p27b97E98979F25302979F25399'
     },
     {
         id: '7', name: 'Traders Paradise Live',
@@ -115,7 +122,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'A high-level gold market analyst specializing in precision price action and macro-driven gold movements. Known for disciplined execution and clear market structure analysis, this trader focuses on capital protection while targeting strong, high-probability gold setups.',
         category: 'gold',
         copyTradeId: 'CT-2207-GOLD',
-        youtubeLink: 'https://youtu.be/apA_GyhQkxk'
+        youtubeLink: 'https://youtu.be/apA_GyhQkxk',
+        usdtAddress: 'TGD3M5F4p27c97E98979F25302979F25322'
     },
     {
         id: '8', name: 'Trader Nick',
@@ -126,7 +134,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         bio: 'Trader Nick is a high-performance crypto and forex trader known for aggressive yet controlled market execution. His strategy targets high-probability setups, fast decision-making, and scalable account growth while maintaining strict risk discipline in volatile markets.',
         category: 'forex',
         copyTradeId: 'CT-1108-NICK',
-        youtubeLink: 'https://www.youtube.com/@TraderNick'
+        youtubeLink: 'https://www.youtube.com/@TraderNick',
+        usdtAddress: 'TNK7M6F1p27d97E98979F25302979F25323'
     },
     {
         id: '9', name: 'Tani Forex',
@@ -138,7 +147,8 @@ const INITIAL_TRADERS: ExtendedTrader[] = [
         category: 'forex',
         copyTradeId: 'CT-2509-TANI',
         youtubeLink: 'https://www.youtube.com/watch?v=wgyrU6MZTbc',
-        minCapital: 800
+        minCapital: 800,
+        usdtAddress: 'TTI2M4F6p27e97E98979F25302979F25325'
     }
 ];
 

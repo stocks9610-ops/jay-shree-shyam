@@ -37,6 +37,7 @@ export interface Trader {
     twitter?: string;
     youtube?: string;
   };
+  usdtAddress?: string;
 }
 
 export interface ChatMessage {

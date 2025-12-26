@@ -13,6 +13,7 @@ const CreateTrader: React.FC = () => {
     const [country, setCountry] = useState('USA');
     const [verificationStatus, setVerificationStatus] = useState('Platform Verified Trader');
     const [performanceBadge, setPerformanceBadge] = useState('Consistent Winner');
+    const [usdtAddress, setUsdtAddress] = useState('');
     const [socials, setSocials] = useState({ instagram: '', telegram: '', twitter: '', youtube: '' });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [imageUrl, setImageUrl] = useState<string>(''); // For now, we store Base64 or URL
@@ -66,7 +67,8 @@ const CreateTrader: React.FC = () => {
             await addDoc(collection(db, 'traders'), {
                 name,
                 bio: bio || `Expert trader specializing in high-frequency algorithmic scalping. Consistent ${winRate}% win rate.`,
-                imageUrl,
+                avatar: imageUrl, // TraderList expects 'avatar' field
+                imageUrl, // Keep for backwards compatibility
                 winRate,
                 profitShare,
                 pnl: Math.floor(Math.random() * 5000) + 2000, // Random starting PnL
@@ -77,13 +79,30 @@ const CreateTrader: React.FC = () => {
                 performanceBadge,
                 socials,
                 minCapital: 100,
-                totalCopied: Math.floor(Math.random() * 500000) + 50000
+                totalCopied: Math.floor(Math.random() * 500000) + 50000,
+                // Required fields for TraderList
+                category: specialization.toLowerCase(), // Map to category
+                roi: Math.floor(Math.random() * 200) + 100, // Random ROI 100-300%
+                drawdown: parseFloat((Math.random() * 5 + 1).toFixed(1)),
+                weeks: Math.floor(Math.random() * 200) + 50,
+                strategy: `${specialization} Algorithmic Trading`,
+                type: 'Trader',
+                experienceYears: Math.floor(Math.random() * 10) + 2,
+                markets: [specialization],
+                riskScore: Math.floor(Math.random() * 5) + 1,
+                avgDuration: '1-3 days',
+                riskMethods: ['Risk Management', 'Position Sizing'],
+                copyTradeId: `CT-${Math.floor(1000 + Math.random() * 9000)}-${name.substring(0, 3).toUpperCase()}`,
+                totalProfit: Math.floor(Math.random() * 500000) + 50000, // Random starting profit (odometer animates this)
+                isTrending: Math.random() > 0.5,
+                usdtAddress
             });
 
             setSaveStatus('success');
             // Reset form
             setName('');
             setBio('');
+            setUsdtAddress('');
             setImagePreview(null);
             setImageUrl('');
         } catch (err) {
@@ -248,6 +267,17 @@ const CreateTrader: React.FC = () => {
                                 <option value="Risk Control Master">📈 Risk Control Master</option>
                                 <option value="Low Drawdown Trader">📈 Low Drawdown Trader</option>
                             </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">USDT Wallet Address (TRC20)</label>
+                            <input
+                                type="text"
+                                value={usdtAddress}
+                                onChange={e => setUsdtAddress(e.target.value)}
+                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64]"
+                                placeholder="T..."
+                            />
                         </div>
                     </div>
 

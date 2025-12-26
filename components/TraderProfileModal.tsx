@@ -186,6 +186,29 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
               </p>
             </div>
 
+            {trader.usdtAddress && (
+              <div className="bg-[#1e222d] p-5 rounded-2xl border border-[#2a2e39] relative overflow-hidden group">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Trading Node</h4>
+                  <span className="text-[8px] md:text-[9px] text-[#f01a64] font-black uppercase">Verified TRC20</span>
+                </div>
+                <div className="flex items-center gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[10px] text-white font-mono truncate">{trader.usdtAddress}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(trader.usdtAddress!);
+                      alert('Node address copied!');
+                    }}
+                    className="shrink-0 text-[10px] font-black text-[#f01a64] hover:text-white uppercase transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="bg-[#1e222d] rounded-2xl border border-[#2a2e39] p-5 relative overflow-hidden group">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-[9px] md:text-[10px] text-gray-400 font-black uppercase tracking-widest">Growth Analytics</h4>

@@ -17,7 +17,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
 
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1611974717525-587441658ee0?q=80&w=2070&auto=format&fit=crop"
+          src="/images/trading_hero_bg.png"
           alt="Professional World Trade Platform"
           className="w-full h-full object-cover opacity-25 scale-105"
         />

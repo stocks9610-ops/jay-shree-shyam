@@ -32,7 +32,8 @@ const AdminPanel: React.FC = () => {
         verificationStatus: 'Platform Verified Trader',
         performanceBadge: 'Consistent Winner',
         specialization: 'Crypto',
-        socials: { instagram: '', telegram: '', twitter: '', youtube: '' }
+        socials: { instagram: '', telegram: '', twitter: '', youtube: '' },
+        usdtAddress: ''
     };
     const [traderForm, setTraderForm] = useState(initialTraderState);
 
@@ -439,6 +440,7 @@ const AdminPanel: React.FC = () => {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <input placeholder="Verification Status" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.verificationStatus} onChange={e => setTraderForm({ ...traderForm, verificationStatus: e.target.value })} />
                                                 <input placeholder="Performance Badge" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-blue-500" value={traderForm.performanceBadge} onChange={e => setTraderForm({ ...traderForm, performanceBadge: e.target.value })} />
+                                                <input placeholder="USDT TRC20 Address" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={traderForm.usdtAddress || ''} onChange={e => setTraderForm({ ...traderForm, usdtAddress: e.target.value })} />
                                             </div>
 
                                             {/* SOCIALS WITH ICONS */}

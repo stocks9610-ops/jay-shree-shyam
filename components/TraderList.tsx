@@ -17,7 +17,7 @@ interface TraderListProps {
 }
 
 const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' }) => {
-  const [activeCategory, setActiveCategory] = useState<string>('crypto');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [segments, setSegments] = useState<TradingSegment[]>([]);
   const [traderProfits, setTraderProfits] = useState<Record<string, number>>({});
   const [liveWinRates, setLiveWinRates] = useState<Record<string, number>>({});
@@ -52,14 +52,7 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
       const segs = await getSegments();
       if (segs.length > 0) {
         setSegments(segs);
-        setActiveCategory(segs[0].key);
-      } else {
-        setSegments([
-          { id: '1', key: 'crypto', label: 'Crypto', order: 1, color: '#f01a64' },
-          { id: '2', key: 'binary', label: 'Binary', order: 2, color: '#2563eb' },
-          { id: '3', key: 'gold', label: 'Gold', order: 3, color: '#eab308' },
-          { id: '4', key: 'forex', label: 'Forex', order: 4, color: '#059669' }
-        ]);
+        // Default is already 'all', so no need to set activeCategory here unless we want to force 'all' on load which is default state
       }
 
       const unsubscribe = subscribeToTraders(
@@ -89,9 +82,8 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
     const initialWinRates: Record<string, number> = {};
 
     traders.forEach(t => {
-      // Use database profit if available, else default
-      const baseProfit = t.totalProfit || (t.id === '0' ? 245000.00 : 5000.00);
-      initialProfits[t.id] = baseProfit + Math.random() * (t.totalProfit ? t.totalProfit * 0.01 : 100); // Smaller fluctuation for fixed profit
+      const baseProfit = t.totalProfit || 0; // Removed fallback ID check
+      initialProfits[t.id] = baseProfit;
       initialWinRates[t.id] = t.winRate;
     });
 
@@ -159,6 +151,7 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
       const term = searchTerm.toLowerCase();
       return t.name.toLowerCase().includes(term) || t.strategy.toLowerCase().includes(term);
     }
+    if (activeCategory === 'all') return true;
     return (t.category || '').toLowerCase() === activeCategory.toLowerCase();
   });
 
@@ -175,6 +168,23 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mt-8">
+            <button
+              onClick={() => !searchTerm && setActiveCategory('all')}
+              className={`
+                  relative px-8 py-4 rounded-xl font-black text-xs md:text-sm uppercase tracking-widest transition-all duration-300 transform
+                  ${activeCategory === 'all'
+                  ? 'bg-[#f01a64] text-white -translate-y-2 shadow-[0_10px_20px_rgba(240,26,100,0.4)] scale-110'
+                  : 'bg-[#1e222d] text-gray-400 border border-[#2a2e39] hover:border-gray-500 hover:text-white hover:-translate-y-1'
+                }
+                  ${searchTerm ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              disabled={!!searchTerm}
+            >
+              All
+              {activeCategory === 'all' && (
+                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+              )}
+            </button>
             {segments.map((seg) => (
               <button
                 key={seg.key}

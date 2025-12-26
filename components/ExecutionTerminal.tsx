@@ -13,17 +13,17 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, planN
 
     useEffect(() => {
         const steps = [
-            { msg: `> INITIALIZING SECURE CONNECTION...`, delay: 200 },
-            { msg: `> ENCRYPTING DATA PACKETS [AES-256]...`, delay: 600 },
-            { msg: `> CONNECTING TO GLOBAL LIQUIDITY POOL...`, delay: 1000 },
-            { msg: `> ROUTING VIA FRANKFURT [DE] NODE (2ms)...`, delay: 1400 },
-            { msg: `> VERIFYING STRATEGY PARAMETERS FOR "${planName.toUpperCase()}"...`, delay: 1800 },
-            { msg: `> ALLOCATING CAPITAL: $${amount}...`, delay: 2000 },
-            { msg: `> SCANNING ARBITRAGE OPPORTUNITIES...`, delay: 2600 },
-            { msg: `> OPPORTUNITY FOUND: EXCHANGE BINANCE [SPREAD 0.4%]`, delay: 3200 },
-            { msg: `> EXECUTING ORDER...`, delay: 3800 },
-            { msg: `> TRADE CONFIRMED. MUTABLE STATE UPDATED.`, delay: 4200 },
-            { msg: `> DEPLOYMENT SUCCESSFUL.`, delay: 4600 },
+            { msg: `> Connecting to market feed...`, delay: 200 },
+            { msg: `> Analyzing price action on BTC/USDT...`, delay: 600 },
+            { msg: `> Loading strategy: "${planName.toUpperCase()}"...`, delay: 1000 },
+            { msg: `> Entry signal detected at $42,850.32`, delay: 1400 },
+            { msg: `> Allocating capital: $${amount.toLocaleString()}...`, delay: 1800 },
+            { msg: `> Opening LONG position @ 10x leverage`, delay: 2200 },
+            { msg: `> Stop-loss set at $42,100 (-1.75%)`, delay: 2600 },
+            { msg: `> Take-profit target: $43,500 (+1.52%)`, delay: 3000 },
+            { msg: `> Order filled. Position ID: #TRD-${Math.floor(10000 + Math.random() * 90000)}`, delay: 3400 },
+            { msg: `> Trade active. Monitoring for exit...`, delay: 4000 },
+            { msg: `> Position confirmed. Good luck!`, delay: 4600 },
         ];
 
         let timeouts: NodeJS.Timeout[] = [];

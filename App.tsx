@@ -18,6 +18,7 @@ import AuthForms from './components/Auth/AuthForms';
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const CreateTrader = lazy(() => import('./components/Admin/CreateTrader'));
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Trader } from './types';
@@ -69,9 +70,9 @@ const MainLayout = () => {
         </div>
 
         <div id="traders">
-          <TraderList onCopyClick={() => {
+          <TraderList onCopyClick={(trader) => {
             if (currentUser) {
-              window.location.href = '/dashboard';
+              window.location.href = `/dashboard?trader=${encodeURIComponent(trader.name)}`;
             } else {
               setShowSignup(true);
             }
@@ -117,33 +118,13 @@ function App() {
           {/* Protected User Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-[#131722]">
-                <Navbar
-                  onJoinClick={() => { }}
-                  onGalleryClick={() => { }}
-                  user={null}
-                  onLogout={() => { }}
-                  onDashboardClick={() => { }}
-                  onHomeClick={() => window.location.href = '/'}
-                  onSearch={() => { }}
-                  showSearch={false}
-                />
-                <div className="pt-24 pb-12">
-                  <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#00b36b] to-[#f01a64]">
-                      User Dashboard
-                    </h1>
-                  </div>
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center min-h-[400px]">
-                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
-                    </div>
-                  }>
-                    <WithdrawalManager />
-                  </Suspense>
+              <Suspense fallback={
+                <div className="min-h-screen bg-[#131722] flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
                 </div>
-                <Footer />
-              </div>
+              }>
+                <Dashboard />
+              </Suspense>
             </ProtectedRoute>
           } />
 
