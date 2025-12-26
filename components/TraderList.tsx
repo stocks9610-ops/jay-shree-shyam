@@ -159,7 +159,7 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
       const term = searchTerm.toLowerCase();
       return t.name.toLowerCase().includes(term) || t.strategy.toLowerCase().includes(term);
     }
-    return true;
+    return (t.category || '').toLowerCase() === activeCategory.toLowerCase();
   });
 
   return (
@@ -174,7 +174,28 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
             Copy trading lets you automatically follow experienced traders. Choose a trader based on verified performance and trade <span className="text-[#00b36b] font-bold">risk-free</span> with our C-Level expert strategies.
           </p>
 
-          {/* Category buttons removed to show ALL traders force-applied */}
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
+            {segments.map((seg) => (
+              <button
+                key={seg.key}
+                onClick={() => !searchTerm && setActiveCategory(seg.key)}
+                className={`
+                  relative px-8 py-4 rounded-xl font-black text-xs md:text-sm uppercase tracking-widest transition-all duration-300 transform
+                  ${activeCategory === seg.key
+                    ? 'bg-[#f01a64] text-white -translate-y-2 shadow-[0_10px_20px_rgba(240,26,100,0.4)] scale-110'
+                    : 'bg-[#1e222d] text-gray-400 border border-[#2a2e39] hover:border-gray-500 hover:text-white hover:-translate-y-1'
+                  }
+                  ${searchTerm ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+                disabled={!!searchTerm}
+              >
+                {seg.label}
+                {activeCategory === seg.key && (
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full animate-bounce"></span>
+                )}
+              </button>
+            ))}
+          </div>
           {searchTerm && (
             <div className="text-center animate-in fade-in">
               <span className="text-[10px] text-[#f01a64] font-black uppercase tracking-[0.2em] bg-[#f01a64]/10 px-3 py-1 rounded-lg">
