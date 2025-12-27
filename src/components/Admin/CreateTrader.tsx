@@ -51,10 +51,12 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Track upload promise for "Optimistic Save"
+    const uploadPromiseRef = React.useRef<Promise<string> | null>(null);
+
     // Load initial data if editing
     useEffect(() => {
         if (initialData) {
-            // Merge defaults to ensure no missing fields
             setForm({ ...defaultState, ...initialData });
         }
     }, [initialData]);
@@ -67,23 +69,34 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
         if (!e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
 
-        // Basic validation
         if (file.size > 5 * 1024 * 1024) {
             setError('Image size too large (max 5MB)');
             return;
         }
 
+        // 1. Optimistic Preview
+        const previewUrl = URL.createObjectURL(file);
+        setForm(prev => ({ ...prev, avatar: previewUrl }));
         setUploading(true);
         setError('');
-        try {
-            const url = await uploadImage(file, `traders/${Date.now()}_${file.name}`);
-            setForm(prev => ({ ...prev, avatar: url }));
-        } catch (err) {
-            console.error(err);
-            setError('Failed to upload image');
-        } finally {
-            setUploading(false);
-        }
+
+        // 2. Start Background Upload
+        const promise = uploadImage(file, `traders/${Date.now()}_${file.name}`)
+            .then(url => {
+                setForm(prev => ({ ...prev, avatar: url }));
+                return url;
+            })
+            .catch(err => {
+                console.error(err);
+                setError('Failed to upload image');
+                return '';
+            })
+            .finally(() => {
+                setUploading(false);
+                uploadPromiseRef.current = null;
+            });
+
+        uploadPromiseRef.current = promise;
     };
 
     const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>, field: 'markets' | 'riskMethods') => {
@@ -113,8 +126,26 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
         setError('');
         setSuccess('');
 
+        // Wait for any pending upload
+        if (uploading && uploadPromiseRef.current) {
+            try {
+                await uploadPromiseRef.current;
+            } catch (err) {
+                setError('Please wait for image upload to finish.');
+                setLoading(false);
+                return;
+            }
+        }
+
         if (!form.name || !form.copyTradeId) {
             setError('Name and Copy Trade ID are required.');
+            setLoading(false);
+            return;
+        }
+
+        // Ensure we don't save a blob URL if upload failed
+        if (form.avatar?.startsWith('blob:')) {
+            setError('Image upload failed or is still processing. Please try again.');
             setLoading(false);
             return;
         }
@@ -209,8 +240,8 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
                         <button type="button" onClick={onCancel} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold uppercase text-xs transition">
                             Cancel
                         </button>
-                        <button onClick={handleSubmit} disabled={loading || uploading} className="px-6 py-2 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-bold uppercase text-xs shadow-lg transition disabled:opacity-50">
-                            {loading ? 'Saving...' : initialData ? 'Update Profile' : 'Publish Trader'}
+                        <button onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-bold uppercase text-xs shadow-lg transition disabled:opacity-50">
+                            {loading ? (uploading ? 'Uploading Image...' : 'Saving...') : initialData ? 'Update Profile' : 'Publish Trader'}
                         </button>
                     </div>
                 </div>
