@@ -4,13 +4,12 @@ import FloatingFlags from './FloatingFlags';
 interface HeroProps {
   hasDeposited: boolean;
   onJoinClick: () => void;
-  onInstallRequest: () => Promise<boolean>;
   onStartJourney?: () => void;
   externalShowMentorship?: () => void;
   onShareClick?: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest, onStartJourney, externalShowMentorship, onShareClick }) => {
+const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, externalShowMentorship, onShareClick }) => {
   return (
     <section className="relative overflow-hidden pt-12 pb-24 md:pt-32 md:pb-56 bg-[#131722]">
       <FloatingFlags />

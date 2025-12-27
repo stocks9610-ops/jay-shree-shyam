@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import TacticalGuide from './TacticalGuide';
+
 import { Trader, Strategy } from '../types';
 import GlobalStats from './GlobalStats';
 import ExecutionTerminal from './ExecutionTerminal';
@@ -539,12 +539,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       )}
 
-      <TacticalGuide
-        step={activeTrades.length > 0 ? 'investing' : 'ready'}
-        balance={user?.balance || 0}
-        hasDeposited={user?.hasDeposited || false}
-        onDepositClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-      />
+
 
       {/* Feature 2: Live Community Pulse */}
       <div className="max-w-xl mx-auto mb-6">

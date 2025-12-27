@@ -31,7 +31,7 @@ const Footer: React.FC = () => {
 
           <div className="bg-[#1e222d] p-8 lg:p-12 rounded-[2rem] border border-[#2a2e39] shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
-               <svg className="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3v11h7l-7 7V10H6l7-7z" /></svg>
+              <svg className="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M13 3v11h7l-7 7V10H6l7-7z" /></svg>
             </div>
             <h5 className="text-white font-black text-xl mb-6 uppercase tracking-tighter">Sophisticated Infrastructure</h5>
             <div className="space-y-6">
@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
               <li><a href="#" onClick={handleEmptyClick} className="hover:text-[#f01a64] transition-colors">World Trade Access</a></li>
             </ul>
           </div>
-          
+
           <div>
             <h5 className="text-gray-300 font-black mb-6 uppercase text-[10px] tracking-[0.2em]">Liquidity</h5>
             <ul className="space-y-3 text-gray-500 font-bold">
@@ -99,14 +99,18 @@ const Footer: React.FC = () => {
         <div className="pt-12 border-t border-[#2a2e39]">
           <div className="flex flex-col items-center gap-8">
             <div className="text-center max-w-4xl">
-              <h6 className="text-white font-black uppercase text-sm mb-4 tracking-tight italic">Elegance in Execution. Power in Privacy.</h6>
-              <p className="text-gray-500 text-xs leading-relaxed font-bold uppercase tracking-tight">
-                Designed for professional results with zero friction. Optimized liquidity paths via USDT and TrustWallet ensure total asset control. Securely.
+              <p className="text-gray-400 text-sm leading-relaxed font-medium">
+                CopyTrade Platform is proudly Powered by ZuluTrade™ Technology. The world’s leading multi-broker social trading ecosystem, providing advanced automated trading solutions and signal provider connectivity.
               </p>
             </div>
-            <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.3em]">
-              © 2025 COPYTRADE PLATFORM. POWERED BY ZULUTRADE TECHNOLOGY. SOUTH AFRICA NETWORK.
-            </p>
+            <div className="text-center space-y-2">
+              <p className="text-gray-600 text-[10px] uppercase tracking-wider">
+                © 2021Copy Trade All rights reserved. Trading services are facilitated via ZuluTrade International Limited, registered in Cyprus (Reg. No. HE242240).
+              </p>
+              <p className="text-gray-600 text-[10px] uppercase tracking-wider">
+                European Operations: ZuluTrade is regulated by the Hellenic Capital Market Commission (License No. 2/540/17.2.2010). Global Licenses: FSCA (South Africa) No. 49299 | FSC (Mauritius) No. IK21000018.
+              </p>
+            </div>
           </div>
         </div>
       </div>

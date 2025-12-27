@@ -58,7 +58,6 @@ const MainLayout = () => {
         <Hero
           hasDeposited={false} // Todo: get from user profile
           onJoinClick={() => setShowSignup(true)}
-          onInstallRequest={async () => true}
           onStartJourney={() => document.getElementById('traders')?.scrollIntoView()}
           externalShowMentorship={() => { }}
           onShareClick={() => {
