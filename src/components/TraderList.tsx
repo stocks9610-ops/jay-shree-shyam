@@ -82,7 +82,16 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
     const initialWinRates: Record<string, number> = {};
 
     traders.forEach(t => {
-      const baseProfit = t.totalProfit || 0; // Removed fallback ID check
+      // User requested range: $78k - $650k
+      // If db value is low (e.g. 0), assign a mock value in range.
+      // If db value is high, keep it but ensure it's at least 78k.
+      let baseProfit = t.totalProfit || 0;
+      if (baseProfit < 78000) {
+        // Generate deterministic random based on ID char codes to keep it stable across re-renders if possible, 
+        // or just random if not crucial. Pure random feels more "live" for a demo factory.
+        // Let's use a stable seed if we can, or just random from 78k to 650k
+        baseProfit = 78000 + Math.random() * (650000 - 78000);
+      }
       initialProfits[t.id] = baseProfit;
       initialWinRates[t.id] = t.winRate;
     });
@@ -90,29 +99,59 @@ const TraderList: React.FC<TraderListProps> = ({ onCopyClick, searchTerm = '' })
     setTraderProfits(initialProfits);
     setLiveWinRates(initialWinRates);
 
+    // "Rotate fast swing fast" - Fast interval
     const updateInterval = setInterval(() => {
-      const filtered = traders.filter(t => t.category === activeCategory);
-      if (filtered.length === 0) return;
-      const randomIdx = Math.floor(Math.random() * filtered.length);
-      const trader = filtered[randomIdx];
+      // Pick multiple traders to update at once for a busier feel
+      const countToUpdate = Math.max(1, Math.floor(traders.length * 0.3)); // Update 30% of traders every tick
 
-      // Dynamic increment based on profit magnitude
-      const baseInc = trader.totalProfit ? trader.totalProfit * 0.0005 : 250;
-      const increment = baseInc + Math.random() * baseInc;
-      const winRateFluctuation = (Math.random() - 0.5) * 0.4;
+      setTraderProfits(prev => {
+        const next = { ...prev };
+        for (let i = 0; i < countToUpdate; i++) {
+          const randomIdx = Math.floor(Math.random() * traders.length);
+          const trader = traders[randomIdx];
+          if (!trader) continue;
 
-      setTraderProfits(prev => ({ ...prev, [trader.id]: prev[trader.id] + increment }));
-      setLiveWinRates(prev => ({
-        ...prev,
-        [trader.id]: Math.min(100, Math.max(50, prev[trader.id] + winRateFluctuation))
-      }));
+          // Fast swing logic:
+          // Sometimes jump up, sometimes small tick. 
+          // Keep within 78k - 650k generally, but allow growth.
+          const current = next[trader.id] || 78000;
 
-      setAnimatingTraders(prev => ({ ...prev, [trader.id]: true }));
-      setTimeout(() => setAnimatingTraders(prev => ({ ...prev, [trader.id]: false })), 400);
-    }, 1200);
+          // Swing magnitude: $50 to $500
+          const swing = 50 + Math.random() * 450;
+
+          // 10% chance to lose a bit to look realistic, 90% chance to gain
+          const change = Math.random() > 0.1 ? swing : -swing * 0.5;
+
+          let newVal = current + change;
+          // Hard clamp to ensure user requirement is met (visually)
+          if (newVal < 78000) newVal = 78000 + Math.random() * 1000;
+          // Let it go above 650k if they are winning hard, but maybe soft cap?
+          // User said "$78k-$650K", implied range. Let's soft cap.
+          if (newVal > 650000) newVal = 650000 - Math.random() * 5000;
+
+          next[trader.id] = newVal;
+
+          // Trigger animation state
+          setAnimatingTraders(a => ({ ...a, [trader.id]: true }));
+        }
+        return next;
+      });
+
+      // Reset animation flags after a short delay is tricky in a loop.
+      // Instead, we just let them visually pulse if we rely on CSS transition or keyframes on value change.
+      // The current code sets 'animatingTraders' to true. We should clear it?
+      // Actually, updating the state so fast might flood re-renders. 
+      // Let's assume the previous logic of setting it true, then timeout false is okayish but maybe expensive at high freq.
+      // Simplified: Just toggle color class based on recent update?
+
+      // Let's clear animation flags in bulk occasionally or just use a timeout per update?
+      // The previous code had a timeout inside the interval.
+      setTimeout(() => setAnimatingTraders({}), 150);
+
+    }, 200); // 200ms tick for "Fast" feel
 
     return () => clearInterval(updateInterval);
-  }, [activeCategory, traders]);
+  }, [traders]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {

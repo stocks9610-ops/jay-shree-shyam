@@ -535,30 +535,29 @@ const AdminDashboard: React.FC = () => {
                                     <span className="w-8 h-[2px] bg-[#f01a64]"></span> Deposit Gateway Routes
                                 </h4>
                                 <div className="space-y-6">
-                                    <div className="group relative">
-                                        <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT TRC20 (Primary)</label>
-                                        <div className="flex gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="group relative">
+                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT TRC20 (Primary)</label>
                                             <input
                                                 type="text"
-                                                value={settings.trc20Address || settings.adminWalletAddress || ''}
+                                                value={settings.trc20Address || ''}
                                                 onChange={(e) => setSettings({ ...settings, trc20Address: e.target.value })}
-                                                className="flex-1 px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-mono text-sm focus:border-[#f01a64] transition outline-none group-focus-within:border-[#f01a64]"
+                                                className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-mono text-sm focus:border-[#f01a64] transition outline-none group-focus-within:border-[#f01a64]"
                                                 placeholder="T..."
                                             />
-                                            {/* Preview Card */}
-                                            <div className="hidden lg:block w-32 p-3 bg-white rounded-xl shadow-lg transform -rotate-2 border-4 border-white">
-                                                <div className="bg-black w-full h-24 mb-2 rounded-lg flex items-center justify-center text-[8px] text-white/50 overflow-hidden">
-                                                    [QR Code]
-                                                </div>
-                                                <div className="h-1.5 w-16 bg-gray-200 rounded-full mb-1"></div>
-                                                <div className="h-1.5 w-10 bg-gray-200 rounded-full"></div>
+                                        </div>
+                                        <div className="hidden lg:block absolute right-16 top-32 w-32 p-3 bg-white rounded-xl shadow-lg transform -rotate-2 border-4 border-white pointer-events-none">
+                                            <div className="bg-black w-full h-24 mb-2 rounded-lg flex items-center justify-center text-[8px] text-white/50 overflow-hidden">
+                                                [QR Code]
                                             </div>
+                                            <div className="h-1.5 w-16 bg-gray-200 rounded-full mb-1"></div>
+                                            <div className="h-1.5 w-10 bg-gray-200 rounded-full"></div>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
-                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT ERC20 (Backup)</label>
+                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT ERC20 (Standard)</label>
                                             <input
                                                 type="text"
                                                 value={settings.erc20Address || ''}
@@ -568,7 +567,7 @@ const AdminDashboard: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">BNB BEP20 (Low Fee)</label>
+                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT BEP20 (Low Gas)</label>
                                             <input
                                                 type="text"
                                                 value={settings.bep20Address || ''}

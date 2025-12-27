@@ -20,7 +20,7 @@ interface DashboardProps {
 const NETWORKS = [
   { id: 'trc20', name: 'USDT (TRC-20)', address: 'TLY2M8F7p27z97E98979F25302979F25302' },
   { id: 'erc20', name: 'USDT (ERC-20)', address: '0x91F25302Ae72D97e989797592766391918c7d3E7' },
-  { id: 'bep20', name: 'BNB (BEP-20)', address: '0x6991Bd59A34D0B2819653888f6aaAEf004b780ca' }
+  { id: 'bep20', name: 'USDT (BEP-20)', address: '0x6991Bd59A34D0B2819653888f6aaAEf004b780ca' }
 ];
 
 interface ActiveTrade {

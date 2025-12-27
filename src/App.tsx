@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { isAdmin } from './services/userService';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -145,7 +146,16 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
-          <Route path="/login" element={<AuthForms onSuccess={() => window.location.href = '/dashboard'} />} />
+          <Route path="/login" element={
+            <AuthForms onSuccess={async (user) => {
+              const admin = await isAdmin(user.uid);
+              if (admin) {
+                window.location.href = '/secure-access-shyam';
+              } else {
+                window.location.href = '/dashboard';
+              }
+            }} />
+          } />
 
           {/* Protected User Routes */}
           <Route path="/dashboard" element={
