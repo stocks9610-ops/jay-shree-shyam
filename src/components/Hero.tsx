@@ -18,7 +18,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
       <div className="absolute inset-0 z-0">
         <img
           src="/images/trading_hero_bg.png"
-          alt="Professional World Trade Platform"
+          alt="Deploy capital with me and unlock a $200 USDT allocation! 🚀"
           className="w-full h-full object-cover opacity-25 scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[#1e222d] via-transparent to-[#131722]"></div>
@@ -31,16 +31,16 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
         </div>
 
         <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent leading-[0.95] uppercase italic px-2">
-          TRADE SMARTER,<br className="hidden sm:block" /> LIVE BETTER.
+          DEPLOY CAPITAL,<br className="hidden sm:block" /> HARVEST YIELDS.
         </h1>
 
         <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-2 md:gap-4 max-w-5xl mx-auto mb-8 px-2">
           {[
-            "Save Time & Automate",
-            "Daily Payout Stream",
-            "100% Transparent",
-            "Military Encryption",
-            "Elite Learning Hub"
+            "Automated Alpha Generation",
+            "Daily USDT Settlements",
+            "On-Chain Transparency",
+            "Institutional Grade Security",
+            "Quant Research Terminal"
           ].map((benefit, i) => (
             <div key={i} className="flex items-center gap-1.5 bg-[#1e222d]/80 border border-[#2a2e39] px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm">
               <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#00b36b] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +52,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
         </div>
 
         <p className="max-w-3xl mx-auto text-sm md:text-xl text-gray-300 mb-10 px-6 font-bold leading-relaxed tracking-wide drop-shadow-lg">
-          Achieve financial freedom. Follow the pros and create a second income stream today. <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">Simple, fast, and secure.</span>
+          Achieve sovereign wealth. Mirror institutional-grade strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT Yield Daily.</span>
         </p>
 
         <div className="flex flex-col lg:flex-row items-center justify-center gap-4 px-4">
@@ -102,7 +102,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onInstallRequest
               className="group w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-[#f01a64] to-pink-600 hover:from-pink-600 hover:to-[#f01a64] text-white font-black text-sm md:text-base rounded-2xl shadow-[0_10px_30px_rgba(240,26,100,0.3)] hover:shadow-[0_15px_40px_rgba(240,26,100,0.5)] transform transition-all duration-300 active:scale-95 uppercase tracking-tighter border border-white/10 relative overflow-hidden"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                START JOURNEY
+                START EARNING USDT
                 <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>

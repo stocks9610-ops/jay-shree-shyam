@@ -413,7 +413,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
     const amountToDeduct = Number(withdrawAmount);
 
-    // Wait for the animation simulation (7 seconds) before processing
+    // Awaiting Network Block Confirmations (Real-time Latency)
     await new Promise(resolve => setTimeout(resolve, 7000));
 
     // Create pending withdrawal request

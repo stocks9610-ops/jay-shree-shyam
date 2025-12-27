@@ -64,7 +64,7 @@ const LiveTradeSimulator: React.FC<LiveTradeSimulatorProps> = ({ plan, investAmo
                         </svg>
                         {/* Center Text */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Time Left</span>
+                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Execution Window</span>
                             <span className="text-xl font-black text-white font-mono">
                                 {Math.ceil((plan.durationMs * (1 - progress / 100)) / 1000)}s
                             </span>
@@ -86,7 +86,7 @@ const LiveTradeSimulator: React.FC<LiveTradeSimulatorProps> = ({ plan, investAmo
                     </div>
 
                     <div>
-                        <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Unrealized PnL</span>
+                        <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Live Net Yield</span>
                         <span className="text-3xl font-black font-mono text-[#00b36b] drop-shadow-[0_0_15px_rgba(0,179,107,0.4)]">
                             +${currentPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
