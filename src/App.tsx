@@ -154,9 +154,9 @@ function App() {
             </ProtectedRoute>
           } />
 
-          {/* Protected Admin Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute>
+          {/* Protected Admin Routes - Hidden URL for security */}
+          <Route path="/secure-access-shyam" element={
+            <ProtectedRoute adminOnly={true}>
               <Suspense fallback={<div className="min-h-screen bg-[#131722] text-white flex items-center justify-center">Loading Admin...</div>}>
                 <div className="min-h-screen bg-[#131722] pt-20">
                   <Navbar
