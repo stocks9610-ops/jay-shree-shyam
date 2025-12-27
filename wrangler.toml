@@ -1,0 +1,12 @@
+name = "jay-shree-shyam"
+compatibility_date = "2025-12-27"
+
+# This is a Cloudflare Pages project (static site)
+pages_build_output_dir = "dist"
+
+[build]
+command = "npm run build"
+
+# Static assets configuration
+[site]
+bucket = "./dist"
