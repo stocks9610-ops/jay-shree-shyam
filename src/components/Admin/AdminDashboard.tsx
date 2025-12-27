@@ -263,7 +263,7 @@ const AdminDashboard: React.FC = () => {
                                     {pendingWithdrawals.slice(0, 5).map((withdrawal) => {
                                         // Find user context for Smart Card
                                         const userContext = users.find(u => u.uid === withdrawal.userId);
-                                        const totalDeposited = (userContext?.balance || 0) + (userContext?.totalInvested || 0); // Simplified proxy for demo
+                                        const totalDeposited = (userContext?.balance || 0) + (userContext?.totalInvested || 0);
                                         const isHighRisk = withdrawal.amount > totalDeposited * 1.5;
 
                                         return (
