@@ -124,6 +124,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS[0]);
   const marketNotification = useMarketNotifications();
 
+  // --- Demo / Trial Mode Logic ---
+  const [isDemoActive, setIsDemoActive] = useState(true);
+  const [demoTradeCount, setDemoTradeCount] = useState(0);
+
+  useEffect(() => {
+    // 5 Minutes "Trial Mode" for new visitors/refresh to try premium strategies
+    const timer = setTimeout(() => {
+      setIsDemoActive(false);
+    }, 300000); // 5 minutes
+    return () => clearTimeout(timer);
+  }, []);
+
   const queryParams = new URLSearchParams(window.location.search);
   const activeTraderName = queryParams.get('trader');
 
@@ -457,6 +469,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   };
 
   const startDeployment = () => {
+    setDemoTradeCount(prev => prev + 1); // Track usage for demo limit
+
     const plan = strategies.find(p => p.id === selectedPlanId);
     if (!plan) return;
     if (!user || user.balance < investAmount) {
@@ -704,7 +718,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {strategies.map(plan => {
                 const isPremium = plan.minRet >= 60;
-                const isLocked = isPremium && !user?.hasDeposited;
+                // Locked if: Premium AND Not Deposited AND (Demo Time Over OR Max Demo Trades Reached)
+                const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
                 return (
                   <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
                     <div className="flex justify-between items-start mb-1">
