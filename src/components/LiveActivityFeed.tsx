@@ -1,28 +1,64 @@
 import React, { useState, useEffect } from 'react';
 
-const NAMES = ['Alex M.', 'Sarah K.', 'David R.', 'Wei L.', 'James B.', 'Maria G.', 'Ahmed H.', 'Elena P.', 'Chris T.', 'Sophie L.'];
-const LOCATIONS = ['Johannesburg, ZA', 'Dubai, UAE', 'London, UK', 'New York, USA', 'Singapore, SG', 'Cape Town, ZA', 'Lagos, NG', 'Berlin, DE'];
+// LOCALIZED BOT DATA (Gulf / South Asia Focus) - 50 Identities
+const NAMES = [
+  'Zain Malik', 'Fatima Al-Sayed', 'Ahmed Khan', 'Raj Patel', 'Sarah Jones',
+  'Bilal Hassan', 'Ayesha Siddiqui', 'Hamza Tariq', 'Priya Sharma', 'David Miller',
+  'Omar Farooq', 'Layla Mahmoud', 'Vikram Singh', 'John Smith', 'Huda Kattan',
+  'Usman Ali', 'Maria Garcia', 'Sana Mir', 'Amit Kumar', 'Elena Petrov',
+  'Youssef Ibrahim', 'Noor Jahan', 'Rahul Gupta', 'Chris Taylor', 'Sophie Lee',
+  // Expanded
+  'Fahad Al-Rasheed', 'Nadia Hussain', 'Mustafa Kemal', 'Arjun Reddy', 'Linda Wilson',
+  'Tariq Jameel', 'Mehwish Hayat', 'Ravi Shankar', 'James Bond', 'Anna Weber',
+  'Khalid bin Walid', 'Zoya Akhtar', 'Imran Nazir', 'Deepak Chopra', 'Michael Ross',
+  'Salma Hayek', 'Babur Azam', 'Kareena Kapoor', 'Steve Jobs', 'Natalia V.',
+  'Hassan Sheheryar', 'Mahira Khan', 'Virat Kohli', 'Tom Cruise', 'Olga Kurylenko'
+];
+
+const LOCATIONS = [
+  'Dubai, UAE', 'Karachi, PK', 'Islamabad, PK', 'Riyadh, SA', 'Doha, QA',
+  'Lahore, PK', 'Abu Dhabi, UAE', 'Mumbai, IN', 'London, UK', 'New York, USA',
+  'Sharjah, UAE', 'Jeddah, SA', 'Manama, BH', 'Kuwait City, KW', 'Muscat, OM'
+];
+
+const ASSETS = [
+  { symbol: 'USDT', name: 'Tether (TRC20)', icon: 'T' },
+  { symbol: 'BTC', name: 'Bitcoin', icon: '₿' },
+  { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ' },
+  { symbol: 'XRP', name: 'Ripple', icon: 'X' },
+  { symbol: 'BNB', name: 'BNB Smart Chain', icon: 'B' }
+];
+
 const ACTIONS = [
-  { type: 'withdraw', text: 'extracted', asset: 'USDT (TRC-20)', color: 'text-yellow-500', glow: 'shadow-yellow-500/20', bg: 'bg-yellow-500' },
-  { type: 'trade', text: 'realized', asset: 'on BTC/USDT', color: 'text-[#00b36b]', glow: 'shadow-[#00b36b]/20', bg: 'bg-[#00b36b]' },
-  { type: 'deposit', text: 'confirmed', asset: 'via Secure Wallet', color: 'text-blue-500', glow: 'shadow-blue-500/20', bg: 'bg-blue-500' }
+  { type: 'withdraw', text: 'withdrew', color: 'text-amber-500', glow: 'shadow-amber-500/20', bg: 'bg-amber-500' },
+  { type: 'trade', text: 'profited', color: 'text-[#00b36b]', glow: 'shadow-[#00b36b]/20', bg: 'bg-[#00b36b]' },
+  { type: 'deposit', text: 'deposited', color: 'text-blue-500', glow: 'shadow-blue-500/20', bg: 'bg-blue-500' }
 ];
 
 const LiveActivityFeed: React.FC = () => {
   const [notification, setNotification] = useState<{
-    name: string, 
+    name: string,
     location: string,
-    action: typeof ACTIONS[0], 
+    action: typeof ACTIONS[0],
     amount: string,
+    asset: string,
+    time: string,
     id: string
   } | null>(null);
+
   const [visible, setVisible] = useState(false);
 
+  // Helper: Get Time in UTC+5 (Islamabad/Karachi)
+  const getSimulatedTime = () => {
+    // 80% chance of "Just now", 20% chance of "1m ago" to look organic
+    return Math.random() > 0.8 ? "1m ago" : "Just now";
+  };
+
   useEffect(() => {
-    const initialTimer = setTimeout(() => triggerNotification(), 3000);
+    const initialTimer = setTimeout(() => triggerNotification(), 2000);
     const loop = setInterval(() => {
       triggerNotification();
-    }, Math.random() * 5000 + 7000);
+    }, Math.random() * 6000 + 8000); // 8-14 seconds gap (Not too spammy)
 
     return () => {
       clearTimeout(initialTimer);
@@ -32,23 +68,41 @@ const LiveActivityFeed: React.FC = () => {
 
   const triggerNotification = () => {
     setVisible(false);
-    
+
     setTimeout(() => {
       const name = NAMES[Math.floor(Math.random() * NAMES.length)];
       const location = LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)];
       const actionObj = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
-      
-      let amount = 0;
-      if (actionObj.type === 'withdraw') amount = Math.floor(Math.random() * 8000) + 1500;
-      if (actionObj.type === 'trade') amount = Math.floor(Math.random() * 2000) + 400;
-      if (actionObj.type === 'deposit') amount = Math.floor(Math.random() * 5000) + 500;
+      const assetObj = ASSETS[Math.floor(Math.random() * ASSETS.length)];
+
+      // HIGH VALUE LOGIC ($5k - $50k)
+      // 10% chance of small amount ($500-$2000)
+      // 90% chance of big amount
+      let baseAmount = 0;
+      if (Math.random() > 0.9) {
+        baseAmount = Math.random() * 1500 + 500;
+      } else {
+        baseAmount = Math.random() * 45000 + 5000;
+      }
+
+      // Adjust for Asset Price (Rough check)
+      let displayAmount = "";
+      if (assetObj.symbol === 'BTC') {
+        displayAmount = (baseAmount / 65000).toFixed(4) + " BTC";
+      } else if (assetObj.symbol === 'ETH') {
+        displayAmount = (baseAmount / 3500).toFixed(2) + " ETH";
+      } else {
+        displayAmount = baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " " + assetObj.symbol;
+      }
 
       setNotification({
         id: Math.random().toString(36).substr(2, 9),
         name,
         location,
         action: actionObj,
-        amount: amount.toLocaleString(undefined, { minimumFractionDigits: 2 })
+        amount: displayAmount,
+        asset: assetObj.name,
+        time: getSimulatedTime()
       });
       setVisible(true);
 
@@ -59,63 +113,42 @@ const LiveActivityFeed: React.FC = () => {
   if (!notification) return null;
 
   return (
-    <div 
-      className={`fixed bottom-36 left-4 md:bottom-10 md:left-10 z-[110] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform pb-[env(safe-area-inset-bottom)] ${
-        visible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-90 blur-sm'
-      }`}
+    // Position: Bottom-Left on Desktop, Top-Center (Toast) on Mobile
+    <div
+      className={`fixed z-[110] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] transform
+        bottom-24 left-4 md:bottom-10 md:left-10 
+        ${visible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-12 opacity-0 scale-90 blur-sm'}
+      `}
     >
-      <div className="relative group">
+      <div className="relative group max-w-[90vw] md:max-w-none mx-auto">
         {/* Pulse Ring Effect */}
-        <div className={`absolute -inset-1 rounded-[1.5rem] blur-xl opacity-20 transition-colors duration-500 ${notification.action.bg}`}></div>
-        
-        <div className="relative w-[280px] md:w-[320px] bg-[#1e222d]/70 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] p-4 shadow-2xl overflow-hidden">
+        <div className={`absolute -inset-1 rounded-[1.2rem] blur-xl opacity-20 transition-colors duration-500 ${notification.action.bg}`}></div>
+
+        <div className="relative w-auto md:w-[320px] bg-[#1e222d]/80 backdrop-blur-2xl border border-white/10 rounded-[1.2rem] p-3 md:p-4 shadow-2xl overflow-hidden flex gap-3 items-center">
           {/* Subtle top light effect */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-          
-          <div className="flex gap-4">
-            {/* High-End Identicon Icon */}
-            <div className="relative shrink-0">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-inner relative z-10 ${notification.action.bg}`}>
-                {notification.name.split(' ')[0][0]}{notification.name.split(' ')[1][0]}
-              </div>
-              {/* Pulse Animation */}
-              <div className={`absolute inset-0 rounded-2xl animate-ping opacity-25 ${notification.action.bg}`}></div>
-              {/* Verified Badge */}
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#131722] rounded-full flex items-center justify-center border border-white/10 z-20">
-                <svg className="w-3 h-3 text-[#00b36b]" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
+
+          {/* Icon */}
+          <div className="relative shrink-0">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-inner relative z-10 ${notification.action.bg}`}>
+              {notification.name.split(' ')[0][0]}{notification.name.split(' ')[1] ? notification.name.split(' ')[1][0] : ''}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[9px] text-gray-300 font-bold truncate mr-2">
+                {notification.name} <span className="text-gray-500 text-[8px] uppercase tracking-wide ml-1">{notification.location}</span>
+              </span>
+              <span className="text-[7px] text-gray-600 font-bold uppercase tracking-tighter shrink-0">
+                {notification.time}
+              </span>
             </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[8px] text-gray-400 font-black uppercase tracking-[0.2em] truncate mr-2">
-                  {notification.name} • {notification.location}
-                </span>
-                <span className="text-[7px] text-[#00b36b] font-mono bg-[#00b36b]/10 px-1.5 py-0.5 rounded uppercase font-black">
-                  Verified
-                </span>
-              </div>
-              
-              <div className="flex flex-col">
-                <p className="text-[10px] text-gray-200 font-medium mb-1">
-                  System {notification.action.text}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-xl font-black font-mono leading-none tracking-tight ${notification.action.color}`}>
-                    ${notification.amount}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-2 flex items-center justify-between">
-                 <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest truncate">
-                   {notification.action.asset}
-                 </span>
-                 <span className="text-[7px] text-gray-600 font-bold uppercase tracking-tighter">
-                   Just now
-                 </span>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-1">
+                <span className={`text-[10px] uppercase font-black ${notification.action.color}`}>{notification.action.text}</span>
+                <span className="text-white font-black font-mono text-sm tracking-tight">{notification.amount}</span>
               </div>
             </div>
           </div>
