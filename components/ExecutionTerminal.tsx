@@ -6,9 +6,10 @@ interface ExecutionTerminalProps {
     onComplete: () => void;
     plan: Strategy;
     amount: number;
+    traderName?: string;
 }
 
-const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, plan, amount }) => {
+const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, plan, amount, traderName }) => {
     const [logs, setLogs] = useState<string[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -63,6 +64,7 @@ const ExecutionTerminal: React.FC<ExecutionTerminalProps> = ({ onComplete, plan,
             { msg: `> Take-profit target: ${ctx.tp}`, delay: 3000 },
             { msg: `> ${ctx.terms[0]} optimized for minimal slippage`, delay: 3400 },
             { msg: `> Node ID #${Math.floor(1000 + Math.random() * 9000)} active...`, delay: 4000 },
+            { msg: `> ${traderName ? `Syncing with ${traderName}'s master node...` : 'Searching for best execution path...'}`, delay: 4300 },
             { msg: `> Protocol engaged. Awaiting target completion...`, delay: 4600 },
         ];
 

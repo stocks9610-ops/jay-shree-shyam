@@ -5,7 +5,10 @@ import { Trader, Strategy } from '../types';
 import GlobalStats from './GlobalStats';
 import ExecutionTerminal from './ExecutionTerminal';
 import LiveTradeSimulator from './LiveTradeSimulator';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import VIPProgress from './VIPProgress';
+import ReferralTerminal from './ReferralTerminal';
+import { useMarketNotifications } from '../hooks/useMarketNotifications';
+import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { getSettings } from '../services/settingsService';
 
@@ -110,6 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [tradeResult, setTradeResult] = useState<{ status: 'WIN' | 'LOSS', amount: number } | null>(null);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
+  const [showReferral, setShowReferral] = useState(false);
   const [withdrawStep, setWithdrawStep] = useState<'input' | 'confirm' | 'success'>('input');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');
@@ -117,6 +121,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
   const [depositAddress, setDepositAddress] = useState(NETWORKS[0].address);
+  const marketNotification = useMarketNotifications();
 
   const queryParams = new URLSearchParams(window.location.search);
   const activeTraderName = queryParams.get('trader');
@@ -218,25 +223,36 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       setActiveTrades(currentTrades => {
         const updated = currentTrades.map(trade => {
           const elapsed = now - trade.startTime;
+          // Calculate precise progress based on time
           const rawProgress = (elapsed / trade.plan.durationMs) * 100;
+          const cappedProgress = Math.min(100, Math.max(0, rawProgress));
 
           if (rawProgress >= 100 && trade.progress < 100) {
             finishTrade(trade);
-            return { ...trade, progress: 100 };
+            return { ...trade, progress: 100, currentPnL: trade.investAmount * (trade.plan.minRet / 100) }; // Finalize at min profit until async result
           }
 
-          const roi = (trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet)) / 100;
-          const currentPnL = trade.investAmount * roi * (Math.min(100, rawProgress) / 100);
+          // Smooth Linear Interpolation for PnL
+          // We target a value between minRet and maxRet
+          // To make it look "organic" but smooth, we can add a tiny sine wave on top of the linear growth
+          const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
+          const linearGrowth = (targetRoi / 100) * cappedProgress;
+
+          // Gentle organic fluctuation (sine wave)
+          const fluctuation = Math.sin(now / 1000) * 0.05; // Small wave
+
+          const currentProfitPercent = linearGrowth + fluctuation;
+          const currentPnL = trade.investAmount * (currentProfitPercent / 100);
 
           return {
             ...trade,
-            progress: Math.min(100, rawProgress),
-            currentPnL
+            progress: cappedProgress,
+            currentPnL: Math.max(0, currentPnL) // Never show negative for "winning" trades
           };
         });
         return updated.filter(t => t.progress < 100);
       });
-    }, 100);
+    }, 50); // Faster tick for smoother animation (50ms)
 
     return () => clearInterval(interval);
   }, [activeTrades]);
@@ -299,7 +315,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     setWithdrawStep('confirm');
   };
 
-  const confirmWithdrawal = () => {
+  const confirmWithdrawal = async () => {
     setIsWithdrawing(true);
     setWithdrawStatus('Initiating Secure Protocol...');
 
@@ -315,13 +331,38 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     });
 
     const amountToDeduct = Number(withdrawAmount);
-    setTimeout(async () => {
+
+    // Wait for the animation simulation (7 seconds) before processing
+    await new Promise(resolve => setTimeout(resolve, 7000));
+
+    // Create pending withdrawal request
+    try {
       if (user) {
+        // 1. Deduct balance first (optimistic update)
         await updateUser({ balance: user.balance - amountToDeduct });
+
+        // 2. Create Withdrawal Record
+        await addDoc(collection(db, 'withdrawals'), {
+          userId: user.uid,
+          userEmail: user.email,
+          userName: user.displayName || 'User',
+          amount: amountToDeduct,
+          address: withdrawAddress,
+          network: 'TRC20', // Hardcoded for now based on UI
+          status: 'pending',
+          timestamp: Date.now(),
+          date: new Date().toISOString()
+        });
+
         setIsWithdrawing(false);
         setWithdrawStep('success');
       }
-    }, 7000); // 7 seconds total animation
+    } catch (error) {
+      console.error("Withdrawal Error:", error);
+      setWithdrawStatus('Connection Failed. Retrying...');
+      setIsWithdrawing(false);
+      setWithdrawError('Network Error: Could not broadcast to ledger.');
+    }
   };
 
   const startDeployment = () => {
@@ -367,7 +408,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
 
   return (
-    <div className="bg-[#131722] min-h-screen pt-4 pb-32 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
+    <div className="bg-[#131722] min-h-screen pt-24 pb-32 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
       {(!user) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
           Loading Account Data...
@@ -379,12 +420,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           onComplete={handleTerminalComplete}
           plan={strategies.find(p => p.id === selectedPlanId)!}
           amount={investAmount}
+          traderName={activeTraderName || undefined}
         />
       )}
 
       {showSuccessToast && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
           <span className="font-black uppercase tracking-widest text-xs">Trade Executed Successfully</span>
+        </div>
+      )}
+
+      {/* Market Opportunity Notification */}
+      {marketNotification && (
+        <div className={`fixed top-24 right-4 z-[220] max-w-sm w-full p-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-4 border backdrop-blur-md ${marketNotification.type === 'opportunity' ? 'bg-[#00b36b]/10 border-[#00b36b]/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+          <div className="flex gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${marketNotification.type === 'opportunity' ? 'bg-[#00b36b]/20 text-[#00b36b]' : 'bg-amber-500/20 text-amber-500'}`}>
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+            </div>
+            <div>
+              <h4 className={`text-xs font-black uppercase tracking-widest mb-1 ${marketNotification.type === 'opportunity' ? 'text-[#00b36b]' : 'text-amber-500'}`}>{marketNotification.title}</h4>
+              <p className="text-white text-[10px] leading-relaxed">{marketNotification.message}</p>
+              {marketNotification.type === 'opportunity' && (
+                <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-[9px] bg-[#00b36b] text-white px-3 py-1 rounded-lg font-bold uppercase tracking-wide hover:bg-[#009e5f]">Deposit & Trade</button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -396,6 +456,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       />
 
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* VIP Progress Widget */}
+        <VIPProgress
+          currentBalance={Math.floor(user?.balance || 0)}
+          onDeposit={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+        />
+
+        {/* Share & Earn Widget */}
+        <div onClick={() => setShowReferral(true)} className="bg-gradient-to-r from-[#f01a64]/20 to-[#f01a64]/5 border border-[#f01a64]/30 p-6 rounded-3xl cursor-pointer group hover:bg-[#f01a64]/20 transition-all active:scale-95 relative overflow-hidden">
+          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-[#f01a64]/20 to-transparent skew-x-12 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-[#f01a64] rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(240,26,100,0.4)] group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+              </div>
+              <div>
+                <h3 className="text-white font-black uppercase text-lg italic tracking-tighter">Invite Friends & Earn <span className="text-[#f01a64]">$200</span></h3>
+                <p className="text-gray-400 text-xs font-bold">Get instant trading capital for every referral</p>
+              </div>
+            </div>
+            <div className="bg-[#f01a64] text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg group-hover:shadow-[0_0_20px_rgba(240,26,100,0.6)] transition-all">
+              Get Link
+            </div>
+          </div>
+        </div>
+
         <GlobalStats />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
@@ -559,6 +644,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
       </div>
+      {showReferral && (
+        <ReferralTerminal onClose={() => setShowReferral(false)} />
+      )}
     </div>
   );
 };

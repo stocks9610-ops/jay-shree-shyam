@@ -105,6 +105,32 @@ const MainLayout = () => {
   );
 };
 
+// Dashboard Layout Wrapper to provide Auth Context to Navbar
+const DashboardLayout = () => {
+  const { userProfile } = useAuth();
+  return (
+    <>
+      <Navbar
+        onJoinClick={() => { }}
+        onGalleryClick={() => { }}
+        user={userProfile}
+        onLogout={() => { }}
+        onDashboardClick={() => window.location.href = '/dashboard'}
+        onHomeClick={() => window.location.href = '/'}
+        onSearch={() => { }}
+        showSearch={true}
+      />
+      <Suspense fallback={
+        <div className="min-h-screen bg-[#131722] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
+        </div>
+      }>
+        <Dashboard />
+      </Suspense>
+    </>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -118,13 +144,7 @@ function App() {
           {/* Protected User Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Suspense fallback={
-                <div className="min-h-screen bg-[#131722] flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
-                </div>
-              }>
-                <Dashboard />
-              </Suspense>
+              <DashboardLayout />
             </ProtectedRoute>
           } />
 

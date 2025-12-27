@@ -62,10 +62,12 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
   // --- MATH LOGIC ---
   const invested = user ? (user.totalInvested || 0) : 0;
   const wallet = user ? user.balance : 0;
-  const globalBalance = wallet + invested;
-  const netProfit = Math.max(0, globalBalance - 1000);
+  // If we have totalProfit field, use it. Otherwise derive from balance vs deposited (simplified)
+  // For better accuracy, we should track 'totalDeposited'. For now, we rely on totalProfit being updated by Dashboard
+  const netProfit = user ? (user.totalProfit || 0) : 0;
 
-  const gasFee = netProfit > 0 ? netProfit * 0.02 : 0.00;
+  const globalBalance = wallet + invested;
+  const gasFee = netProfit > 0 ? netProfit * 0.15 : 0.00; // 15% Performance Fee Simulation
 
   return (
     <>
