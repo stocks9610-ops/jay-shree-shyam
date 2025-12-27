@@ -657,9 +657,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
             <span className="text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#f01a64] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all hover:shadow-[0_0_30px_rgba(240,26,100,0.4)]">
+          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
             <span className="text-sm font-black text-white uppercase italic">Add Funds</span>
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 7l5 5m0 0l-5 5m5-5H6" strokeWidth={2.5} /></svg>
+            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 
@@ -733,8 +733,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           <div className="space-y-6">
             <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[3rem] p-8 shadow-2xl">
               <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
+
+              {/* Network Selector */}
+              <div className="flex gap-2 mb-6">
+                {NETWORKS.map(net => (
+                  <button
+                    key={net.id}
+                    onClick={() => handleNetworkChange(net)}
+                    className={`flex-1 py-3 rounded-xl font-black uppercase text-[10px] transition-all border ${selectedNetwork.id === net.id ? 'bg-[#00b36b] border-[#00b36b] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                  >
+                    {net.name.split(' ')[0]} <span className="hidden sm:inline">{net.name.split(' ')[1]}</span>
+                  </button>
+                ))}
+              </div>
+
               <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
-                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Network: {depositNetwork.name}</span>
+                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Selected Network: <span className="text-[#00b36b]">{selectedNetwork.name}</span></span>
                 <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositAddress}</div>
                 <button onClick={() => { navigator.clipboard.writeText(depositAddress); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
                   {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
