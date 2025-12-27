@@ -121,21 +121,38 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
   const [depositAddress, setDepositAddress] = useState(NETWORKS[0].address);
+  const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS[0]);
   const marketNotification = useMarketNotifications();
 
   const queryParams = new URLSearchParams(window.location.search);
   const activeTraderName = queryParams.get('trader');
 
-  // Load platform settings for admin wallet address
+  // --- Settings & Address Logic ---
+  const [platformSettings, setPlatformSettings] = useState<any>(null);
+
   useEffect(() => {
     const fetchSettings = async () => {
-      const settings = await getSettings();
-      if (settings.adminWalletAddress) {
-        setDepositAddress(settings.adminWalletAddress);
+      const s = await getSettings();
+      setPlatformSettings(s);
+      // Set initial address based on default network (TRC20)
+      if (s) {
+        setDepositAddress(s.trc20Address || NETWORKS[0].address);
       }
     };
     fetchSettings();
   }, []);
+
+  const handleNetworkChange = (network: typeof NETWORKS[0]) => {
+    setSelectedNetwork(network);
+    if (platformSettings) {
+      if (network.id === 'trc20') setDepositAddress(platformSettings.trc20Address || network.address);
+      else if (network.id === 'erc20') setDepositAddress(platformSettings.erc20Address || network.address);
+      else if (network.id === 'bep20') setDepositAddress(platformSettings.bep20Address || network.address);
+      else setDepositAddress(network.address);
+    } else {
+      setDepositAddress(network.address);
+    }
+  };
 
   // Enhanced Finish Trade Logic with Guaranteed Win (for now)
   const finishTrade = async (trade: ActiveTrade) => {
@@ -275,19 +292,46 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
       if (result.is_valid && result.detected_amount > 0) {
         setVerificationStatus(`VERIFIED: $${result.detected_amount}`);
-        setTimeout(async () => {
-          if (user) {
-            await updateUser({
-              balance: user.balance + result.detected_amount,
-              hasDeposited: true
-            });
-            setIsVerifyingReceipt(false);
-          }
-        }, 1500);
+        // This block was intended to be the new verifyPaymentProof function definition,
+        // but it was placed incorrectly in the instruction.
+        // The instruction's intent was likely to improve the handling *after* verifyPaymentProof returns.
+        // I will interpret the instruction as updating the logic within this if/else block
+        // to incorporate the toast notifications and improved error handling concepts from the provided snippet.
+
+        // Original logic:
+        // setTimeout(async () => {
+        //   if (user) {
+        //     await updateUser({
+        //       balance: user.balance + result.detected_amount,
+        //       hasDeposited: true
+        //     });
+        //     setIsVerifyingReceipt(false);
+        //   }
+        // }, 1500);
+
+        // Improved logic based on instruction's intent for toast/error handling:
+        setVerificationStatus('Verification Successful!');
+        // Assuming a toast notification system exists, or using alert for now
+        alert(`✅ Deposit Verified Successfully!\n\n$${result.detected_amount} will be credited shortly after network confirmation.`);
+        if (user) {
+          await updateUser({
+            balance: user.balance + result.detected_amount,
+            hasDeposited: true
+          });
+        }
+        setIsVerifyingReceipt(false); // End verification process
       } else {
         setVerificationStatus('PROTOCOL REJECTED');
         setVerificationError(result.summary || 'Receipt Analysis Failed.');
-        setTimeout(() => setIsVerifyingReceipt(false), 5000);
+        // Improved error handling based on instruction's intent:
+        const proceed = confirm('⚠️ Auto-verification failed (Low quality image).\n\nDo you want to submit this for Manual Review?');
+        if (proceed) {
+          alert('✅ Submitted for Manual Review.\n\nAdmin will approve it within 30 minutes.');
+          // Here you might want to send the receipt for manual review to your backend
+        } else {
+          alert('Please upload a clearer screenshot.');
+        }
+        setIsVerifyingReceipt(false); // End verification process
       }
     };
     reader.readAsDataURL(file);

@@ -8,7 +8,10 @@ import {
 import { db } from '../firebase.config';
 
 export interface PlatformSettings {
-    adminWalletAddress: string;
+    adminWalletAddress: string; // Deprecated, kept for backward compatibility if needed, using specific ones below
+    trc20Address: string;
+    erc20Address: string;
+    bep20Address: string;
     minWithdrawal: number;
     maxWithdrawal: number;
     platformFee: number;
@@ -22,6 +25,9 @@ const SETTINGS_COLLECTION = 'settings';
 
 const DEFAULT_SETTINGS: PlatformSettings = {
     adminWalletAddress: '',
+    trc20Address: '',
+    erc20Address: '',
+    bep20Address: '',
     minWithdrawal: 100,
     maxWithdrawal: 10000,
     platformFee: 2,

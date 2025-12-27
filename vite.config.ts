@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, './src'),
       }
     },
     build: {
@@ -38,18 +38,18 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             'firebase-vendor': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
             'ui-components': [
-              './components/Hero.tsx',
-              './components/Navbar.tsx',
-              './components/Footer.tsx',
-              './components/Features.tsx',
+              './src/components/Hero.tsx',
+              './src/components/Navbar.tsx',
+              './src/components/Footer.tsx',
+              './src/components/Features.tsx',
             ],
             'admin': [
-              './components/AdminPanel.tsx',
-              './components/Admin/AdminDashboard.tsx',
+              './src/components/AdminPanel.tsx',
+              './src/components/Admin/AdminDashboard.tsx',
             ],
             'dashboard': [
-              './components/Dashboard.tsx',
-              './components/User/WithdrawalManager.tsx',
+              './src/components/Dashboard.tsx',
+              './src/components/User/WithdrawalManager.tsx',
             ],
           },
           chunkFileNames: 'assets/[name]-[hash].js',

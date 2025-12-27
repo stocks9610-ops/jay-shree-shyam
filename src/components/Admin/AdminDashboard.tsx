@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
         if (!confirm('This will upload initial trader data to Firebase. Continue?')) return;
         try {
             setLoading(true);
-            const { migrateTraders } = await import('../../scripts/migrateToFirebase');
+            const { migrateTraders } = await import('../../../scripts/migrateToFirebase');
             await migrateTraders();
             setSuccess('Data migrated successfully! Check Firestore.');
         } catch (err: any) {
@@ -341,13 +341,31 @@ const AdminDashboard: React.FC = () => {
                         <h3 className="text-2xl font-black text-white mb-6">Platform Settings</h3>
                         <div className="space-y-6">
                             <div>
-                                <label className="block text-gray-400 font-bold mb-2">Admin Wallet Address</label>
+                                <label className="block text-gray-400 font-bold mb-2">USDT TRC20 Wallet Address</label>
                                 <input
                                     type="text"
-                                    value={settings.adminWalletAddress}
-                                    onChange={(e) => setSettings({ ...settings, adminWalletAddress: e.target.value })}
+                                    value={settings.trc20Address || settings.adminWalletAddress || ''}
+                                    onChange={(e) => setSettings({ ...settings, trc20Address: e.target.value })}
+                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white mb-4"
+                                    placeholder="Enter TRC20 Address (Starts with T)"
+                                />
+
+                                <label className="block text-gray-400 font-bold mb-2">USDT ERC20 Wallet Address</label>
+                                <input
+                                    type="text"
+                                    value={settings.erc20Address || ''}
+                                    onChange={(e) => setSettings({ ...settings, erc20Address: e.target.value })}
+                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white mb-4"
+                                    placeholder="Enter ERC20 Address (Starts with 0x)"
+                                />
+
+                                <label className="block text-gray-400 font-bold mb-2">USDT BEP20 Wallet Address</label>
+                                <input
+                                    type="text"
+                                    value={settings.bep20Address || ''}
+                                    onChange={(e) => setSettings({ ...settings, bep20Address: e.target.value })}
                                     className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white"
-                                    placeholder="TRC20 Wallet Address"
+                                    placeholder="Enter BEP20 Address (Starts with 0x)"
                                 />
                             </div>
 

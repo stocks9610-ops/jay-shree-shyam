@@ -9,7 +9,7 @@ import {
     writeBatch,
     doc
 } from 'firebase/firestore';
-import { db } from '../firebase.config';
+import { db } from '../src/firebase.config';
 import { getAuth } from 'firebase/auth';
 
 import { INITIAL_TRADERS, ExtendedTrader } from './data/initialTraders';
