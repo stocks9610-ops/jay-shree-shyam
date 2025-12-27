@@ -199,7 +199,6 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(trader.usdtAddress!);
-                      alert('Node address copied!');
                     }}
                     className="shrink-0 text-[10px] font-black text-[#f01a64] hover:text-white uppercase transition-colors"
                   >

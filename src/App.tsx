@@ -156,21 +156,23 @@ function App() {
 
           {/* Protected Admin Routes */}
           <Route path="/admin" element={
-            <Suspense fallback={<div className="min-h-screen bg-[#131722] text-white flex items-center justify-center">Loading Admin...</div>}>
-              <div className="min-h-screen bg-[#131722] pt-20">
-                <Navbar
-                  onJoinClick={() => { }}
-                  onGalleryClick={() => { }}
-                  user={null}
-                  onLogout={() => { }}
-                  onDashboardClick={() => { }}
-                  onHomeClick={() => window.location.href = '/'}
-                  onSearch={() => { }}
-                  showSearch={false}
-                />
-                <AdminDashboard />
-              </div>
-            </Suspense>
+            <ProtectedRoute>
+              <Suspense fallback={<div className="min-h-screen bg-[#131722] text-white flex items-center justify-center">Loading Admin...</div>}>
+                <div className="min-h-screen bg-[#131722] pt-20">
+                  <Navbar
+                    onJoinClick={() => { }}
+                    onGalleryClick={() => { }}
+                    user={null}
+                    onLogout={() => { }}
+                    onDashboardClick={() => { }}
+                    onHomeClick={() => window.location.href = '/'}
+                    onSearch={() => { }}
+                    showSearch={false}
+                  />
+                  <AdminDashboard />
+                </div>
+              </Suspense>
+            </ProtectedRoute>
           } />
 
 

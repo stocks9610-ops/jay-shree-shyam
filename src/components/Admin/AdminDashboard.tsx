@@ -302,7 +302,6 @@ const AdminDashboard: React.FC = () => {
                                                         <button
                                                             onClick={() => {
                                                                 navigator.clipboard.writeText(withdrawal.walletAddress);
-                                                                alert('Address copied!');
                                                             }}
                                                             className="text-[10px] bg-[#f01a64]/10 text-[#f01a64] px-3 py-1.5 rounded-lg border border-[#f01a64]/20 hover:bg-[#f01a64] hover:text-white transition uppercase font-black"
                                                         >

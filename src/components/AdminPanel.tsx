@@ -5,6 +5,7 @@ import { db } from '../firebase.config';
 import { useAuth } from '../contexts/AuthContext';
 import { Strategy } from '../types';
 import CreateTrader from './Admin/CreateTrader';
+import { useImageUpload } from '../hooks/useImageUpload';
 
 const AdminPanel: React.FC = () => {
     const { userProfile, isAdmin, loading: authLoading } = useAuth();
@@ -46,10 +47,10 @@ const AdminPanel: React.FC = () => {
     const [strategyForm, setStrategyForm] = useState(initialStrategyState);
 
     useEffect(() => {
-        // if (isAdmin) { // TEMPORARILY DISABLED
-        loadData();
-        // }
-    }, [/* isAdmin, */ activeTab]);
+        if (isAdmin) {
+            loadData();
+        }
+    }, [isAdmin, activeTab]);
 
     const loadData = async () => {
         setLoading(true);
@@ -150,7 +151,6 @@ const AdminPanel: React.FC = () => {
 
     if (authLoading) return <div className="min-h-screen bg-[#131722] flex items-center justify-center text-white">Loading Security...</div>;
 
-    /* TEMPORARILY DISABLED
     if (!isAdmin) {
         return (
             <div className="min-h-screen bg-[#131722] flex items-center justify-center p-4">
@@ -164,7 +164,6 @@ const AdminPanel: React.FC = () => {
             </div>
         );
     }
-    */
 
     return (
         <div className="min-h-screen bg-[#131722] p-4 md:p-8 pb-32">
