@@ -116,12 +116,11 @@ export const approveDeposit = async (
         // Importing interactively or assuming user exists.
 
         // Let's use the userService helper if possible, but to avoid circular imports, we just update doc directly.
+        // Use increment for atomic update
+        const { increment } = await import('firebase/firestore');
         await updateDoc(userRef, {
-            // We can't use increment without importing it.
-            // Let's trust the calling controller or just do a get/set.
-            // Actually, let's use the proper userService in the UI layer to handle the balance update 
-            // OR do it here. Doing it here is safer for "Business Logic".
-            // We will assume "updateDoc" merges.
+            balance: increment(amount),
+            totalInvested: increment(0), // Keep fields consistent
             hasDeposited: true
         });
 

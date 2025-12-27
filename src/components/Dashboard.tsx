@@ -7,6 +7,7 @@ import ExecutionTerminal from './ExecutionTerminal';
 import LiveTradeSimulator from './LiveTradeSimulator';
 import VIPProgress from './VIPProgress';
 import ReferralTerminal from './ReferralTerminal';
+import StrategyModal from './StrategyModal';
 import { useMarketNotifications } from '../hooks/useMarketNotifications';
 import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../firebase.config';
@@ -114,6 +115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [tradeResult, setTradeResult] = useState<{ status: 'WIN' | 'LOSS', amount: number } | null>(null);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
   const [showReferral, setShowReferral] = useState(false);
+  const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
   const [withdrawStep, setWithdrawStep] = useState<'input' | 'confirm' | 'success'>('input');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');
@@ -714,9 +716,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
+            <div className="flex justify-between items-end mb-4">
+              <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
+              {strategies.length > 4 && (
+                <button
+                  onClick={() => setIsStrategyModalOpen(true)}
+                  className="text-[10px] text-[#f01a64] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
+                >
+                  View All ({strategies.length})
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {strategies.map(plan => {
+              {strategies.slice(0, 4).map(plan => {
                 const isPremium = plan.minRet >= 60;
                 // Locked if: Premium AND Not Deposited AND (Demo Time Over OR Max Demo Trades Reached)
                 const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
@@ -839,6 +852,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       {showReferral && (
         <ReferralTerminal onClose={() => setShowReferral(false)} />
       )}
+
+      <StrategyModal
+        isOpen={isStrategyModalOpen}
+        onClose={() => setIsStrategyModalOpen(false)}
+        strategies={strategies}
+        onSelectStrategy={setSelectedPlanId}
+        userBalance={user?.balance || 0}
+        hasDeposited={!!user?.hasDeposited}
+        isDemoActive={isDemoActive}
+        demoTradeCount={demoTradeCount}
+      />
     </div>
   );
 };
