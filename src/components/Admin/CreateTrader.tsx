@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { addTrader, updateTrader, FirebaseTrader } from '../../services/firebaseService';
-import { uploadImage } from '../../services/storageService';
+// Removed uploadImage import as we are using Base64 bypass
 
 interface CreateTraderProps {
     initialData?: FirebaseTrader | null;
@@ -51,7 +51,7 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    // Track upload promise for "Optimistic Save"
+    // Track upload promise for "Optimistic Save" - kept for compatibility though mostly sync now
     const uploadPromiseRef = React.useRef<Promise<string> | null>(null);
 
     // Load initial data if editing
@@ -65,38 +65,61 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
     // 2. Handlers
     // ----------------------------------------------------------------------
 
+    // Helper: Compress image to Base64 (Bypasses Storage issues)
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    // Resize to reasonably small avatar size (300x300) to check size
+                    const MAX_WIDTH = 300;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        // Compress to JPEG at 0.7 quality serves as a good balance
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(dataUrl);
+                    } else {
+                        reject(new Error('Canvas context failed'));
+                    }
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    };
+
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
 
-        if (file.size > 5 * 1024 * 1024) {
-            setError('Image size too large (max 5MB)');
-            return;
-        }
-
-        // 1. Optimistic Preview
+        // 1. Optimistic Preview (Immediate)
         const previewUrl = URL.createObjectURL(file);
         setForm(prev => ({ ...prev, avatar: previewUrl }));
         setUploading(true);
         setError('');
 
-        // 2. Start Background Upload
-        const promise = uploadImage(file, `traders/${Date.now()}_${file.name}`)
-            .then(url => {
-                setForm(prev => ({ ...prev, avatar: url }));
-                return url;
-            })
-            .catch(err => {
-                console.error(err);
-                setError('Failed to upload image');
-                return '';
-            })
-            .finally(() => {
-                setUploading(false);
-                uploadPromiseRef.current = null;
-            });
-
-        uploadPromiseRef.current = promise;
+        try {
+            // 2. Client-side Compression & Conversion (No Cloud Upload)
+            const base64String = await compressImage(file);
+            setForm(prev => ({ ...prev, avatar: base64String }));
+            setSuccess('Image processed successfully!');
+        } catch (err) {
+            console.error(err);
+            setError('Failed to process image. Try a simpler file.');
+        } finally {
+            setUploading(false);
+            // Clear promise ref as we are done synchronously (effectively)
+            uploadPromiseRef.current = null;
+        }
     };
 
     const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>, field: 'markets' | 'riskMethods') => {
@@ -143,9 +166,16 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
             return;
         }
 
-        // Ensure we don't save a blob URL if upload failed
-        if (form.avatar?.startsWith('blob:')) {
-            setError('Image upload failed or is still processing. Please try again.');
+        // Ensure we don't save a blob URL if process failed (though with Base64 we are mostly safe)
+        if (form.avatar?.startsWith('blob:') && !uploading) {
+            // If it's still blob and not uploading, it means we failed to convert or just stuck
+            // But we might want to allow submitting if they haven't uploaded anything? 
+            // If they uploaded, we want the base64. 
+            // In the new logic, setForm sets base64String. 
+            // If it's still blobUrl, it means compressImage didn't finish or setForm didn't fire?
+            // Actually, setForm in try block sets the base64. 
+            // So if it's blob:, it's likely the optimistic one and we failed.
+            setError('Image processing incomplete. Please wait or try again.');
             setLoading(false);
             return;
         }
@@ -241,7 +271,7 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
                             Cancel
                         </button>
                         <button onClick={handleSubmit} disabled={loading} className="px-6 py-2 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-bold uppercase text-xs shadow-lg transition disabled:opacity-50">
-                            {loading ? (uploading ? 'Uploading Image...' : 'Saving...') : initialData ? 'Update Profile' : 'Publish Trader'}
+                            {loading ? (uploading ? 'Processing Image...' : 'Saving...') : initialData ? 'Update Profile' : 'Publish Trader'}
                         </button>
                     </div>
                 </div>
