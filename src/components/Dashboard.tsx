@@ -277,7 +277,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     const q = query(collection(db, 'strategies'), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
-      setStrategies(data.filter(s => s.isActive));
+      setStrategies(data);
     });
     return () => unsubscribe();
   }, []);
