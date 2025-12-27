@@ -16,7 +16,7 @@ import MarketChart from './components/MarketChart';
 // Admin & Auth Components - Lazy loaded for better performance
 import AuthForms from './components/Auth/AuthForms';
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
-const CreateTrader = lazy(() => import('./components/Admin/CreateTrader'));
+
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
@@ -60,7 +60,13 @@ const MainLayout = () => {
           onInstallRequest={async () => true}
           onStartJourney={() => document.getElementById('traders')?.scrollIntoView()}
           externalShowMentorship={() => { }}
-          onShareClick={() => setShowReferral(true)}
+          onShareClick={() => {
+            if (currentUser) {
+              setShowReferral(true);
+            } else {
+              setShowSignup(true);
+            }
+          }}
         />
 
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 -mt-16 md:-mt-24 relative z-10 mb-8 md:mb-12">
@@ -167,23 +173,7 @@ function App() {
             </Suspense>
           } />
 
-          <Route path="/create-trader" element={
-            <Suspense fallback={<div className="min-h-screen bg-[#131722] text-white flex items-center justify-center">Loading Factory...</div>}>
-              <div className="min-h-screen bg-[#131722] pt-20">
-                <Navbar
-                  onJoinClick={() => { }}
-                  onGalleryClick={() => { }}
-                  user={null}
-                  onLogout={() => { }}
-                  onDashboardClick={() => { }}
-                  onHomeClick={() => window.location.href = '/'}
-                  onSearch={() => { }}
-                  showSearch={false}
-                />
-                <CreateTrader />
-              </div>
-            </Suspense>
-          } />
+
         </Routes>
       </Router>
     </AuthProvider >

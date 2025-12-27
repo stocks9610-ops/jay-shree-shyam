@@ -12,6 +12,7 @@ import { getSettings, updateSettings, PlatformSettings } from '../../services/se
 import { auth } from '../../firebase.config';
 
 import AdminPanel from '../AdminPanel';
+import { uploadImage } from '../../services/storageService';
 
 const AdminDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'withdrawals' | 'settings' | 'content'>('content');
@@ -28,6 +29,8 @@ const AdminDashboard: React.FC = () => {
         pendingWithdrawals: 0,
         totalAmount: 0
     });
+    const [adminProfile, setAdminProfile] = useState<UserData | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const currentUser = auth.currentUser;
 
@@ -56,10 +59,34 @@ const AdminDashboard: React.FC = () => {
                 pendingWithdrawals: withdrawalStats.pending,
                 totalAmount: withdrawalStats.totalAmount
             });
+
+            if (currentUser) {
+                const admin = usersData.find(u => u.uid === currentUser.uid);
+                if (admin) setAdminProfile(admin);
+            }
+
         } catch (err: any) {
             setError(err.message || 'Failed to load data');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleProfileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !currentUser) return;
+
+        try {
+            setIsUploading(true);
+            const photoURL = await uploadImage(file, `admin/avatars/${currentUser.uid}_${Date.now()}`);
+            await updateUserProfile(currentUser.uid, { photoURL });
+            setSuccess('Profile picture updated!');
+            // Update local state immediately for responsiveness
+            setAdminProfile(prev => prev ? { ...prev, photoURL } : null);
+        } catch (err: any) {
+            setError('Failed to upload image: ' + err.message);
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -126,18 +153,47 @@ const AdminDashboard: React.FC = () => {
         <div className="min-h-screen bg-[#131722] p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
-                    <div>
-                        <h1 className="text-4xl font-black text-white mb-2">Admin Dashboard</h1>
-                        <p className="text-gray-400">Manage users, withdrawals, and platform settings</p>
+                {/* Header with Admin Profile */}
+                <div className="mb-8 flex flex-col md:flex-row justify-between items-end gap-6 bg-[#1e222d]/50 p-6 rounded-[2rem] border border-white/5 backdrop-blur-xl">
+                    <div className="flex items-center gap-6 w-full md:w-auto">
+                        <div className="relative group cursor-pointer">
+                            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#f01a64] shadow-[0_0_20px_rgba(240,26,100,0.3)]">
+                                <img
+                                    src={adminProfile?.photoURL || "https://ui-avatars.com/api/?name=Admin&background=random"}
+                                    alt="Admin"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                {isUploading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                )}
+                            </div>
+                            <input
+                                type="file"
+                                onChange={handleProfileUpload}
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                accept="image/*"
+                                disabled={isUploading}
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black text-white uppercase italic tracking-tighter">
+                                Command Center
+                            </h1>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse shadow-[0_0_8px_#00b36b]"></span>
+                                <p className="text-[#00b36b] text-xs font-bold uppercase tracking-widest">System Online</p>
+                            </div>
+                            <p className="text-gray-500 text-[10px] uppercase font-bold mt-1">
+                                Welcome back, {adminProfile?.displayName || 'Admin'}
+                            </p>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => window.location.href = '/create-trader'}
-                        className="bg-[#f01a64] hover:bg-[#d01555] text-white px-6 py-3 rounded-xl font-black uppercase tracking-wider transition shadow-lg flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        Add New Trader
-                    </button>
+
+
                 </div>
 
                 {/* Notifications */}
@@ -201,49 +257,80 @@ const AdminDashboard: React.FC = () => {
                         <div className="md:col-span-2 lg:col-span-4 bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
                             <h3 className="text-xl font-black text-white mb-4">Pending Withdrawals</h3>
                             {pendingWithdrawals.length === 0 ? (
-                                <p className="text-gray-400">No pending withdrawals</p>
+                                <p className="text-gray-500 text-center italic py-8">No pending withdrawals in queue</p>
                             ) : (
                                 <div className="space-y-4">
-                                    {pendingWithdrawals.slice(0, 5).map((withdrawal) => (
-                                        <div key={withdrawal.id} className="bg-[#131722] p-4 rounded-xl border border-[#2a2e39] flex justify-between items-center">
-                                            <div>
-                                                <div className="text-white font-bold">{withdrawal.userName}</div>
-                                                <div className="text-gray-400 text-sm">{withdrawal.userEmail}</div>
-                                                <div className="text-[#00b36b] font-bold mt-1">${withdrawal.amount}</div>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <span className="text-[10px] text-gray-500 font-mono bg-black/30 px-2 py-1 rounded truncate max-w-[150px]">
-                                                        {withdrawal.walletAddress}
-                                                    </span>
+                                    {pendingWithdrawals.slice(0, 5).map((withdrawal) => {
+                                        // Find user context for Smart Card
+                                        const userContext = users.find(u => u.uid === withdrawal.userId);
+                                        const totalDeposited = (userContext?.balance || 0) + (userContext?.totalInvested || 0); // Simplified proxy for demo
+                                        const isHighRisk = withdrawal.amount > totalDeposited * 1.5;
+
+                                        return (
+                                            <div key={withdrawal.id} className={`bg-[#131722] p-6 rounded-2xl border ${isHighRisk ? 'border-red-500/30' : 'border-[#2a2e39]'} flex flex-col md:flex-row justify-between items-center gap-4 hover:border-[#f01a64]/30 transition-colors group`}>
+                                                <div className="flex-1 w-full">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <div className="text-white font-black uppercase text-sm tracking-wide flex items-center gap-2">
+                                                                {withdrawal.userName}
+                                                                {isHighRisk && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded font-black">RISK</span>}
+                                                            </div>
+                                                            <div className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">{withdrawal.userEmail}</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="text-[#00b36b] font-black text-2xl">${withdrawal.amount}</div>
+                                                            <div className="text-gray-600 text-[9px] uppercase font-bold">Requested Amount</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Smart Context Stats */}
+                                                    <div className="flex gap-4 mb-4 py-2 px-3 bg-black/20 rounded-lg border border-white/5">
+                                                        <div>
+                                                            <span className="text-[8px] text-gray-500 uppercase font-black block">Current Bal</span>
+                                                            <span className="text-white text-xs font-bold">${userContext?.balance || 0}</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[8px] text-gray-500 uppercase font-black block">Total Profit</span>
+                                                            <span className="text-[#00b36b] text-xs font-bold">${userContext?.totalProfit || 0}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] text-gray-400 font-mono bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 truncate max-w-[200px] select-all">
+                                                            {withdrawal.walletAddress}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(withdrawal.walletAddress);
+                                                                alert('Address copied!');
+                                                            }}
+                                                            className="text-[10px] bg-[#f01a64]/10 text-[#f01a64] px-3 py-1.5 rounded-lg border border-[#f01a64]/20 hover:bg-[#f01a64] hover:text-white transition uppercase font-black"
+                                                        >
+                                                            Copy
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex gap-2 w-full md:w-auto">
+                                                    <button
+                                                        onClick={() => handleApproveWithdrawal(withdrawal.id!)}
+                                                        className="flex-1 md:flex-none px-6 py-3 bg-[#00b36b] hover:bg-[#009e5f] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition"
+                                                    >
+                                                        Approve
+                                                    </button>
                                                     <button
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(withdrawal.walletAddress);
-                                                            alert('Address copied!');
+                                                            const reason = prompt('Rejection reason:');
+                                                            if (reason) handleRejectWithdrawal(withdrawal.id!, reason);
                                                         }}
-                                                        className="text-[10px] text-[#f01a64] hover:text-white transition-colors uppercase font-black"
+                                                        className="flex-1 md:flex-none px-6 py-3 bg-red-600/10 border border-red-600/30 hover:bg-red-600 text-red-500 hover:text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition"
                                                     >
-                                                        Copy
+                                                        Reject
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={() => handleApproveWithdrawal(withdrawal.id!)}
-                                                    className="px-4 py-2 bg-[#00b36b] hover:bg-green-600 text-white rounded-xl font-bold text-sm"
-                                                >
-                                                    Approve
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        const reason = prompt('Rejection reason:');
-                                                        if (reason) handleRejectWithdrawal(withdrawal.id!, reason);
-                                                    }}
-                                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -289,144 +376,200 @@ const AdminDashboard: React.FC = () => {
                 {/* Withdrawals Tab */}
                 {activeTab === 'withdrawals' && (
                     <div className="bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
-                        <h3 className="text-2xl font-black text-white mb-6">All Withdrawals</h3>
+                        <h3 className="text-2xl font-black text-white mb-6">Withdrawal History</h3>
                         <div className="space-y-4">
-                            {withdrawals.map((withdrawal) => (
-                                <div key={withdrawal.id} className="bg-[#131722] p-4 rounded-xl border border-[#2a2e39]">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="text-white font-bold">{withdrawal.userName}</div>
-                                            <div className="text-gray-400 text-sm">{withdrawal.userEmail}</div>
-                                            <div className="text-[#00b36b] font-bold mt-1">${withdrawal.amount}</div>
-                                            <div className="text-gray-500 text-xs mt-1">
-                                                {withdrawal.requestedAt.toDate().toLocaleString()}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-3 bg-black/20 p-2 rounded-lg border border-white/5">
-                                                <div className="flex-1">
-                                                    <div className="text-[10px] text-gray-500 uppercase font-black mb-1">TRC20 Address</div>
-                                                    <div className="text-xs text-white font-mono break-all">{withdrawal.walletAddress}</div>
+                            {withdrawals.map((withdrawal) => {
+                                const userContext = users.find(u => u.uid === withdrawal.userId);
+                                return (
+                                    <div key={withdrawal.id} className="bg-[#131722] p-6 rounded-2xl border border-[#2a2e39] hover:border-white/10 transition-colors">
+                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div>
+                                                        <div className="text-white font-black uppercase text-sm">{withdrawal.userName}</div>
+                                                        <div className="text-gray-500 text-[10px] font-bold uppercase">{withdrawal.userEmail}</div>
+                                                    </div>
+                                                    <div className="text-right md:hidden">
+                                                        <div className="text-[#00b36b] font-black text-xl">${withdrawal.amount}</div>
+                                                    </div>
                                                 </div>
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(withdrawal.walletAddress);
-                                                        alert('Address copied!');
-                                                    }}
-                                                    className="bg-[#1e222d] hover:bg-[#2a2e39] text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase transition-colors"
-                                                >
-                                                    Copy
-                                                </button>
+
+                                                <div className="flex flex-wrap gap-4 mt-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                                    <div>
+                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address (TRC20)</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <code className="text-[10px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all">{withdrawal.walletAddress}</code>
+                                                            <button
+                                                                onClick={() => navigator.clipboard.writeText(withdrawal.walletAddress)}
+                                                                className="text-gray-500 hover:text-white"
+                                                                title="Copy Address"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
+                                                    <div>
+                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Time</span>
+                                                        <span className="text-[10px] text-white font-medium">{withdrawal.requestedAt.toDate().toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
+                                                    <div>
+                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Total Balance</span>
+                                                        <span className="text-[10px] text-white font-medium">${userContext?.balance || 0}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col items-end gap-2">
+                                                <div className="hidden md:block text-[#00b36b] font-black text-3xl">${withdrawal.amount}</div>
+                                                <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                                    withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
+                                                        'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                    }`}>
+                                                    {withdrawal.status}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${withdrawal.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
-                                                withdrawal.status === 'approved' ? 'bg-green-500/20 text-green-500' :
-                                                    'bg-red-500/20 text-red-500'
-                                                }`}>
-                                                {withdrawal.status}
-                                            </span>
-                                        </div>
+                                        {withdrawal.notes && (
+                                            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-gray-400 italic">
+                                                <span className="text-red-500 font-bold not-italic mr-2">ADMIN NOTE:</span>
+                                                {withdrawal.notes}
+                                            </div>
+                                        )}
                                     </div>
-                                    {withdrawal.notes && (
-                                        <div className="mt-2 text-gray-400 text-sm">Note: {withdrawal.notes}</div>
-                                    )}
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 )}
 
                 {/* Settings Tab */}
                 {activeTab === 'settings' && settings && (
-                    <div className="bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
-                        <h3 className="text-2xl font-black text-white mb-6">Platform Settings</h3>
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-gray-400 font-bold mb-2">USDT TRC20 Wallet Address</label>
-                                <input
-                                    type="text"
-                                    value={settings.trc20Address || settings.adminWalletAddress || ''}
-                                    onChange={(e) => setSettings({ ...settings, trc20Address: e.target.value })}
-                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white mb-4"
-                                    placeholder="Enter TRC20 Address (Starts with T)"
-                                />
+                    <div className="bg-[#1e222d] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+                        <div className="bg-gradient-to-r from-[#1e222d] to-[#131722] p-8 border-b border-white/5">
+                            <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Global Control Settings</h3>
+                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-2">Manage Deposit Routes & Platform Fees</p>
+                        </div>
 
-                                <label className="block text-gray-400 font-bold mb-2">USDT ERC20 Wallet Address</label>
-                                <input
-                                    type="text"
-                                    value={settings.erc20Address || ''}
-                                    onChange={(e) => setSettings({ ...settings, erc20Address: e.target.value })}
-                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white mb-4"
-                                    placeholder="Enter ERC20 Address (Starts with 0x)"
-                                />
+                        <div className="p-8 space-y-10">
+                            {/* Deposit Links Section */}
+                            <section>
+                                <h4 className="text-[#f01a64] text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-[2px] bg-[#f01a64]"></span> Deposit Gateway Routes
+                                </h4>
+                                <div className="space-y-6">
+                                    <div className="group relative">
+                                        <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT TRC20 (Primary)</label>
+                                        <div className="flex gap-4">
+                                            <input
+                                                type="text"
+                                                value={settings.trc20Address || settings.adminWalletAddress || ''}
+                                                onChange={(e) => setSettings({ ...settings, trc20Address: e.target.value })}
+                                                className="flex-1 px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-mono text-sm focus:border-[#f01a64] transition outline-none group-focus-within:border-[#f01a64]"
+                                                placeholder="T..."
+                                            />
+                                            {/* Preview Card */}
+                                            <div className="hidden lg:block w-32 p-3 bg-white rounded-xl shadow-lg transform -rotate-2 border-4 border-white">
+                                                <div className="bg-black w-full h-24 mb-2 rounded-lg flex items-center justify-center text-[8px] text-white/50 overflow-hidden">
+                                                    [QR Code]
+                                                </div>
+                                                <div className="h-1.5 w-16 bg-gray-200 rounded-full mb-1"></div>
+                                                <div className="h-1.5 w-10 bg-gray-200 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <label className="block text-gray-400 font-bold mb-2">USDT BEP20 Wallet Address</label>
-                                <input
-                                    type="text"
-                                    value={settings.bep20Address || ''}
-                                    onChange={(e) => setSettings({ ...settings, bep20Address: e.target.value })}
-                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white"
-                                    placeholder="Enter BEP20 Address (Starts with 0x)"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-gray-400 font-bold mb-2">Min Withdrawal</label>
-                                    <input
-                                        type="number"
-                                        value={settings.minWithdrawal}
-                                        onChange={(e) => setSettings({ ...settings, minWithdrawal: parseFloat(e.target.value) })}
-                                        className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white"
-                                    />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">USDT ERC20 (Backup)</label>
+                                            <input
+                                                type="text"
+                                                value={settings.erc20Address || ''}
+                                                onChange={(e) => setSettings({ ...settings, erc20Address: e.target.value })}
+                                                className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-mono text-sm focus:border-[#00b36b] transition outline-none"
+                                                placeholder="0x..."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">BNB BEP20 (Low Fee)</label>
+                                            <input
+                                                type="text"
+                                                value={settings.bep20Address || ''}
+                                                onChange={(e) => setSettings({ ...settings, bep20Address: e.target.value })}
+                                                className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-mono text-sm focus:border-amber-500 transition outline-none"
+                                                placeholder="0x..."
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+                            </section>
 
-                                <div>
-                                    <label className="block text-gray-400 font-bold mb-2">Max Withdrawal</label>
-                                    <input
-                                        type="number"
-                                        value={settings.maxWithdrawal}
-                                        onChange={(e) => setSettings({ ...settings, maxWithdrawal: parseFloat(e.target.value) })}
-                                        className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white"
-                                    />
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+
+                            {/* Financial Paramters */}
+                            <section>
+                                <h4 className="text-[#00b36b] text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-[2px] bg-[#00b36b]"></span> Financial Parameters
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Min Withdrawal ($)</label>
+                                        <input
+                                            type="number"
+                                            value={settings.minWithdrawal}
+                                            onChange={(e) => setSettings({ ...settings, minWithdrawal: parseFloat(e.target.value) })}
+                                            className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-black text-lg focus:border-white/20 transition outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Max Withdrawal ($)</label>
+                                        <input
+                                            type="number"
+                                            value={settings.maxWithdrawal}
+                                            onChange={(e) => setSettings({ ...settings, maxWithdrawal: parseFloat(e.target.value) })}
+                                            className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-black text-lg focus:border-white/20 transition outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 font-bold text-xs uppercase tracking-wider mb-2">Platform Fee (%)</label>
+                                        <input
+                                            type="number"
+                                            value={settings.platformFee}
+                                            onChange={(e) => setSettings({ ...settings, platformFee: parseFloat(e.target.value) })}
+                                            className="w-full px-6 py-4 bg-black/40 border border-[#2a2e39] rounded-2xl text-white font-black text-lg focus:border-white/20 transition outline-none"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            </section>
+                        </div>
 
-                            <div>
-                                <label className="block text-gray-400 font-bold mb-2">Platform Fee (%)</label>
-                                <input
-                                    type="number"
-                                    value={settings.platformFee}
-                                    onChange={(e) => setSettings({ ...settings, platformFee: parseFloat(e.target.value) })}
-                                    className="w-full px-4 py-3 bg-[#131722] border border-[#2a2e39] rounded-xl text-white"
-                                />
-                            </div>
+                        <button
+                            onClick={() => handleUpdateSettings(settings)}
+                            disabled={loading}
+                            className="w-full py-4 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-black uppercase tracking-wider transition disabled:opacity-50"
+                        >
+                            {loading ? 'Saving...' : 'Save Settings'}
+                        </button>
 
+                        <div className="pt-8 border-t border-[#2a2e39] mt-8">
+                            <h4 className="text-white font-bold mb-4">Database Tools</h4>
                             <button
-                                onClick={() => handleUpdateSettings(settings)}
+                                onClick={handleSeedData}
                                 disabled={loading}
-                                className="w-full py-4 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-black uppercase tracking-wider transition disabled:opacity-50"
+                                className="w-full py-3 bg-[#2a2e39] hover:bg-[#363c4e] text-gray-300 rounded-xl font-bold transition flex items-center justify-center gap-2"
                             >
-                                {loading ? 'Saving...' : 'Save Settings'}
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                </svg>
+                                Seed/Reset Initial Data
                             </button>
-
-                            <div className="pt-8 border-t border-[#2a2e39] mt-8">
-                                <h4 className="text-white font-bold mb-4">Database Tools</h4>
-                                <button
-                                    onClick={handleSeedData}
-                                    disabled={loading}
-                                    className="w-full py-3 bg-[#2a2e39] hover:bg-[#363c4e] text-gray-300 rounded-xl font-bold transition flex items-center justify-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                    </svg>
-                                    Seed/Reset Initial Data
-                                </button>
-                            </div>
                         </div>
                     </div>
+
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

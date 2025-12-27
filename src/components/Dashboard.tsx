@@ -142,6 +142,43 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     fetchSettings();
   }, []);
 
+  // --- Engagement Features Logic ---
+  const [pulseMessage, setPulseMessage] = useState({ text: "Alex just withdrew $450 via USDT", type: "withdraw" });
+  const [streakDays] = useState(4); // Mocked for demo
+
+  useEffect(() => {
+    const messages = [
+      { text: "Sarah started 'Macro Core' strategy", type: "trade" },
+      { text: "Michael just deposited $2,000", type: "deposit" },
+      { text: "1,240 Traders online now", type: "info" },
+      { text: "David withdrew $850 via USDT", type: "withdraw" },
+      { text: "New 'Quantum' Strategy signals 89% accuracy", type: "news" }
+    ];
+    let index = 0;
+    const interval = setInterval(() => {
+      index = (index + 1) % messages.length;
+      setPulseMessage(messages[index]);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText("https://jay-shree-shyam.com/ref/USER123");
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+    alert("Referral Link Copied! Share it with friends.");
+  };
+
+  const handleSocialShare = (platform: 'whatsapp' | 'telegram') => {
+    const text = "Join me on this trading platform and get a $200 bonus! 🚀";
+    const url = "https://jay-shree-shyam.com/ref/USER123";
+    if (platform === 'whatsapp') {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, '_blank');
+    } else {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+    }
+  };
+
   const handleNetworkChange = (network: typeof NETWORKS[0]) => {
     setSelectedNetwork(network);
     if (platformSettings) {
@@ -499,28 +536,105 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         onDepositClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
       />
 
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* VIP Progress Widget */}
-        <VIPProgress
-          currentBalance={Math.floor(user?.balance || 0)}
-          onDeposit={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-        />
+      {/* Feature 2: Live Community Pulse */}
+      <div className="max-w-xl mx-auto mb-6">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full py-2 px-6 flex items-center justify-center gap-3 shadow-lg">
+          <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse shadow-[0_0_8px_#00b36b]"></div>
+          <p key={pulseMessage.text} className="text-[10px] md:text-xs text-gray-300 font-medium animate-in fade-in slide-in-from-bottom-2 duration-500">
+            {pulseMessage.text}
+          </p>
+        </div>
+      </div>
 
-        {/* Share & Earn Widget */}
-        <div onClick={() => setShowReferral(true)} className="bg-gradient-to-r from-[#f01a64]/20 to-[#f01a64]/5 border border-[#f01a64]/30 p-6 rounded-3xl cursor-pointer group hover:bg-[#f01a64]/20 transition-all active:scale-95 relative overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-[#f01a64]/20 to-transparent skew-x-12 opacity-50 group-hover:opacity-100 transition-opacity"></div>
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#f01a64] rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(240,26,100,0.4)] group-hover:scale-110 transition-transform">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* VIP Progress Widget (Existing) */}
+          <div className="lg:col-span-2">
+            <VIPProgress
+              currentBalance={Math.floor(user?.balance || 0)}
+              onDeposit={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            />
+          </div>
+
+          {/* Feature 1: Daily Streak Widget */}
+          <div className="bg-[#1e222d] border border-white/5 rounded-3xl p-6 flex flex-col justify-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white font-black uppercase text-xs tracking-widest">Daily Streak</h3>
+                <span className="text-orange-500 font-black text-xl">{streakDays} <span className="text-[10px] text-gray-500">DAYS</span></span>
               </div>
-              <div>
-                <h3 className="text-white font-black uppercase text-lg italic tracking-tighter">Invite Friends & Earn <span className="text-[#f01a64]">$200</span></h3>
-                <p className="text-gray-400 text-xs font-bold">Get instant trading capital for every referral</p>
+              <div className="flex justify-between items-center gap-1">
+                {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                  <div key={day} className={`flex flex-col items-center gap-1`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${day <= streakDays ? 'bg-orange-500 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.4)]' : 'bg-white/5 border-white/10 text-gray-600'}`}>
+                      <svg className={`w-4 h-4 ${day <= streakDays ? 'text-white' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
+                    </div>
+                    <span className="text-[8px] font-bold text-gray-500">Day {day}</span>
+                  </div>
+                ))}
               </div>
+              <p className="text-[9px] text-gray-400 mt-4 text-center font-medium">Log in daily to boost your profit by <span className="text-orange-500">5%</span></p>
             </div>
-            <div className="bg-[#f01a64] text-white px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg group-hover:shadow-[0_0_20px_rgba(240,26,100,0.6)] transition-all">
-              Get Link
+          </div>
+        </div>
+
+        {/* Feature 3: Viral Card (Share & Earn Redesign) */}
+        <div className="bg-gradient-to-r from-[#1e222d] to-[#131722] border border-white/10 p-1 rounded-3xl relative overflow-hidden shadow-2xl">
+          {/* Animated Border Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-purple-600 to-[#f01a64] opacity-20 animate-pulse"></div>
+
+          <div className="bg-[#131722] rounded-[1.3rem] p-6 relative z-10 h-full">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+
+              {/* Left: Text & Progress */}
+              <div className="flex-1 w-full">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-[#f01a64]/20 p-2 rounded-lg text-[#f01a64]">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
+                  </div>
+                  <div>
+                    <h3 className="text-white font-black uppercase text-lg italic tracking-tighter">Invite & Earn $200</h3>
+                    <p className="text-gray-400 text-[10px] font-bold">Unlocks instantly after 3 successful referrals</p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
+                    <span className="text-white">Progress</span>
+                    <span className="text-[#f01a64]">1/3 Friends</span>
+                  </div>
+                  <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                    <div className="h-full w-1/3 bg-gradient-to-r from-[#f01a64] to-purple-600 shadow-[0_0_10px_#f01a64]"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                <button
+                  onClick={() => handleSocialShare('whatsapp')}
+                  className="flex-1 sm:flex-auto py-3 px-5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => handleSocialShare('telegram')}
+                  className="flex-1 sm:flex-auto py-3 px-5 bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123 .836.761z" /></svg>
+                  Telegram
+                </button>
+                <button
+                  onClick={handleCopyLink}
+                  className="flex-1 sm:flex-auto py-3 px-6 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Copy
+                </button>
+              </div>
             </div>
           </div>
         </div>

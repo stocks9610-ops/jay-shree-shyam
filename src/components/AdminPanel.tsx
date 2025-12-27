@@ -169,13 +169,8 @@ const AdminPanel: React.FC = () => {
         <div className="min-h-screen bg-[#131722] p-4 md:p-8 pb-32">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-black text-white uppercase tracking-tight">Command Center</h1>
-                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
-                            Welcome, <span className="text-[#f01a64]">{userProfile?.displayName}</span>
-                        </p>
-                    </div>
+                {/* Internal Tabs */}
+                <div className="flex justify-end mb-6">
                     <div className="flex bg-[#1e222d] p-1 rounded-xl border border-white/5">
                         <button onClick={() => setActiveTab('traders')} className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'traders' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Traders</button>
                         <button onClick={() => setActiveTab('strategies')} className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'strategies' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Strategies</button>

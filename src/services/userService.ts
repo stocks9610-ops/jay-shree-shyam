@@ -27,6 +27,7 @@ export interface UserData {
     status: 'active' | 'suspended';
 
     // Extended fields
+    photoURL?: string;
     phone?: string;
     hasDeposited: boolean;
     wins: number;
@@ -69,6 +70,7 @@ export const createUserProfile = async (
             status: 'active',
 
             // Initial values for extended fields
+            photoURL: '',
             hasDeposited: false,
             wins: 0,
             losses: 0,
