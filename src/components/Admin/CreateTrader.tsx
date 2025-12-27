@@ -47,15 +47,33 @@ const CreateTrader: React.FC = () => {
         }
     };
 
-    const processFile = (file: File) => {
-        // Convert to Base64 for simplicity in this demo (Ideal: Upload to Storage)
+    const [isUploading, setIsUploading] = useState(false);
+
+    const processFile = async (file: File) => {
+        // Optimistic Preview
         const reader = new FileReader();
         reader.onloadend = () => {
-            const base64String = reader.result as string;
-            setImagePreview(base64String);
-            setImageUrl(base64String);
+            setImagePreview(reader.result as string);
         };
         reader.readAsDataURL(file);
+
+        // Actual Upload
+        setIsUploading(true);
+        setSaveStatus('idle');
+        try {
+            const { uploadImage } = await import('../../services/storageService');
+            const url = await uploadImage(file, `traders/${Date.now()}_${file.name}`);
+            setImageUrl(url);
+            console.log("Image uploaded:", url);
+        } catch (error: any) {
+            console.error("Upload failed:", error);
+            setSaveStatus('error');
+            // Allow alert here since we don't have a global toast in this sub-component yet
+            alert(`Upload Failed: ${error.code || error.message || 'Unknown error'}. Please try a smaller image.`);
+            setImagePreview(null);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const handleSave = async () => {
@@ -137,12 +155,19 @@ const CreateTrader: React.FC = () => {
                         {imagePreview ? (
                             <img src={imagePreview} alt="Preview" className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-xl" />
                         ) : (
-                            <div className="space-y-4">
-                                <div className="w-20 h-20 bg-white/5 rounded-full mx-auto flex items-center justify-center">
-                                    <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            isUploading ? (
+                                <div className="space-y-4">
+                                    <div className="w-12 h-12 border-4 border-[#f01a64] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                                    <p className="text-[#f01a64] font-bold uppercase text-xs animate-pulse">Uploading to Cloud...</p>
                                 </div>
-                                <p className="text-gray-400 font-bold uppercase text-xs">Drop Profile Pic Here</p>
-                            </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full mx-auto flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                    </div>
+                                    <p className="text-gray-400 font-bold uppercase text-xs">Drop Profile Pic Here</p>
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -386,7 +411,7 @@ const CreateTrader: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
