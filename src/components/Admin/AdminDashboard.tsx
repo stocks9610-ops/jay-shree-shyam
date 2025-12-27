@@ -9,16 +9,18 @@ import {
     getWithdrawalStats
 } from '../../services/withdrawalService';
 import { getSettings, updateSettings, PlatformSettings } from '../../services/settingsService';
+import { getPendingDeposits, approveDeposit, rejectDeposit, Deposit } from '../../services/depositService';
 import { auth } from '../../firebase.config';
 
 import AdminPanel from '../AdminPanel';
-import { uploadImage } from '../../services/storageService';
+
 
 const AdminDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'withdrawals' | 'settings' | 'content'>('content');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'deposits' | 'withdrawals' | 'settings' | 'content'>('content');
     const [users, setUsers] = useState<UserData[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [pendingWithdrawals, setPendingWithdrawals] = useState<Withdrawal[]>([]);
+    const [pendingDeposits, setPendingDeposits] = useState<Deposit[]>([]);
     const [settings, setSettings] = useState<PlatformSettings | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -30,7 +32,7 @@ const AdminDashboard: React.FC = () => {
         totalAmount: 0
     });
     const [adminProfile, setAdminProfile] = useState<UserData | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+
 
     const currentUser = auth.currentUser;
 
@@ -41,18 +43,20 @@ const AdminDashboard: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [usersData, withdrawalsData, pendingData, settingsData, withdrawalStats] = await Promise.all([
+            const [usersData, withdrawalsData, pendingData, settingsData, withdrawalStats, depositStats] = await Promise.all([
                 getAllUsers(),
                 getAllWithdrawals(),
                 getPendingWithdrawals(),
                 getSettings(),
-                getWithdrawalStats()
+                getWithdrawalStats(),
+                getPendingDeposits()
             ]);
 
             setUsers(usersData);
             setWithdrawals(withdrawalsData);
             setPendingWithdrawals(pendingData);
             setSettings(settingsData);
+            setPendingDeposits(depositStats as unknown as Deposit[]); // depositStats is actually the array from getPendingDeposits
             setStats({
                 totalUsers: usersData.length,
                 totalWithdrawals: withdrawalStats.total,
@@ -72,23 +76,7 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handleProfileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !currentUser) return;
 
-        try {
-            setIsUploading(true);
-            const photoURL = await uploadImage(file, `admin/avatars/${currentUser.uid}_${Date.now()}`);
-            await updateUserProfile(currentUser.uid, { photoURL });
-            setSuccess('Profile picture updated!');
-            // Update local state immediately for responsiveness
-            setAdminProfile(prev => prev ? { ...prev, photoURL } : null);
-        } catch (err: any) {
-            setError('Failed to upload image: ' + err.message);
-        } finally {
-            setIsUploading(false);
-        }
-    };
 
     const handleApproveWithdrawal = async (withdrawalId: string) => {
         if (!currentUser) return;
@@ -135,6 +123,37 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleApproveDeposit = async (deposit: Deposit) => {
+        if (!currentUser) return;
+        try {
+            setLoading(true);
+            await approveDeposit(deposit.id!, deposit.userId, deposit.amount, currentUser.uid);
+            setSuccess(`Deposit of $${deposit.amount} approved!`);
+            await loadData();
+        } catch (err: any) {
+            setError(err.message || 'Failed to approve deposit');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRejectDeposit = async (depositId: string) => {
+        if (!currentUser) return;
+        const reason = prompt('Reason for rejection:');
+        if (!reason) return;
+
+        try {
+            setLoading(true);
+            await rejectDeposit(depositId, currentUser.uid, reason);
+            setSuccess('Deposit rejected.');
+            await loadData();
+        } catch (err: any) {
+            setError(err.message || 'Failed to reject deposit');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSeedData = async () => {
         if (!confirm('This will upload initial trader data to Firebase. Continue?')) return;
         try {
@@ -164,20 +183,6 @@ const AdminDashboard: React.FC = () => {
                                     className="w-full h-full object-cover"
                                 />
                             </div>
-                            <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                {isUploading ? (
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                ) : (
-                                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                )}
-                            </div>
-                            <input
-                                type="file"
-                                onChange={handleProfileUpload}
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                accept="image/*"
-                                disabled={isUploading}
-                            />
                         </div>
                         <div>
                             <h1 className="text-3xl font-black text-white uppercase italic tracking-tighter">
@@ -213,7 +218,7 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto">
-                    {(['dashboard', 'users', 'withdrawals', 'settings', 'content'] as const).map((tab) => (
+                    {(['dashboard', 'users', 'deposits', 'withdrawals', 'settings', 'content'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -222,7 +227,7 @@ const AdminDashboard: React.FC = () => {
                                 : 'bg-[#1e222d] text-gray-400 hover:text-white'
                                 }`}
                         >
-                            {tab === 'content' ? 'Traders & Strategies' : tab}
+                            {tab === 'content' ? 'Traders' : tab}
                         </button>
                     ))}
                 </div>
@@ -369,6 +374,78 @@ const AdminDashboard: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                )}
+
+                {/* Deposits Tab (New) */}
+                {activeTab === 'deposits' && (
+                    <div className="bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
+                        <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                            Pending Deposits
+                            <span className="bg-[#f01a64] text-white text-xs px-2 py-1 rounded-lg">{pendingDeposits.length}</span>
+                        </h3>
+
+                        {pendingDeposits.length === 0 ? (
+                            <p className="text-gray-500 text-center italic py-12">No pending deposits found.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6">
+                                {pendingDeposits.map((deposit) => (
+                                    <div key={deposit.id} className="bg-[#131722] p-6 rounded-2xl border border-[#2a2e39] flex flex-col md:flex-row gap-6 hover:border-white/10 transition">
+                                        {/* Proof Image */}
+                                        <div className="w-full md:w-48 h-48 bg-black/40 rounded-xl overflow-hidden border border-white/5 relative group">
+                                            <img
+                                                src={deposit.proofUrl}
+                                                alt="Proof"
+                                                className="w-full h-full object-cover"
+                                                onClick={() => window.open(deposit.proofUrl, '_blank')}
+                                            />
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer" onClick={() => window.open(deposit.proofUrl, '_blank')}>
+                                                <span className="text-xs text-white uppercase font-bold">View Full</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Details */}
+                                        <div className="flex-1 space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h4 className="text-white font-black text-lg">{deposit.userName}</h4>
+                                                    <p className="text-gray-500 text-xs font-bold uppercase">{deposit.userEmail}</p>
+                                                    <span className="inline-block mt-2 px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase border border-blue-500/20">
+                                                        {deposit.network}
+                                                    </span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-[#00b36b] font-black text-3xl">
+                                                        ${deposit.amount > 0 ? deposit.amount : <span className="text-yellow-500 text-xl">Review</span>}
+                                                    </div>
+                                                    <p className="text-gray-600 text-[9px] uppercase font-bold">Declared Amount</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-4">
+                                                <button
+                                                    onClick={() => {
+                                                        const amount = prompt("Confirm Amount to Credit ($):", deposit.amount.toString());
+                                                        if (amount) {
+                                                            handleApproveDeposit({ ...deposit, amount: parseFloat(amount) });
+                                                        }
+                                                    }}
+                                                    className="flex-1 px-6 py-3 bg-[#00b36b] hover:bg-[#009e5f] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition"
+                                                >
+                                                    Verify & Credit
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRejectDeposit(deposit.id!)}
+                                                    className="px-6 py-3 bg-red-600/10 border border-red-600/30 hover:bg-red-600 text-red-500 hover:text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition"
+                                                >
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 

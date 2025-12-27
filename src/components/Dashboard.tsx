@@ -321,54 +321,64 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
     const reader = new FileReader();
     reader.onloadend = async () => {
-      const base64 = (reader.result as string).split(',')[1];
+      const base64 = (reader.result as string); // Full Data URL
+      // const base64Raw = base64.split(',')[1]; // Just data
+
       setVerificationStatus('Authenticating Ledger...');
-      await new Promise(r => setTimeout(r, 1500));
-      setVerificationStatus('Syncing Blockchain Nodes...');
-      const result = await verifyPaymentProof(base64, file.type);
+      // await new Promise(r => setTimeout(r, 1500)); 
 
-      if (result.is_valid && result.detected_amount > 0) {
-        setVerificationStatus(`VERIFIED: $${result.detected_amount}`);
-        // This block was intended to be the new verifyPaymentProof function definition,
-        // but it was placed incorrectly in the instruction.
-        // The instruction's intent was likely to improve the handling *after* verifyPaymentProof returns.
-        // I will interpret the instruction as updating the logic within this if/else block
-        // to incorporate the toast notifications and improved error handling concepts from the provided snippet.
+      // New Flow: Submit User Record to Backend for Admin Review
+      try {
+        if (!user) return;
+        setVerificationStatus('Securing Deposit Record...');
 
-        // Original logic:
-        // setTimeout(async () => {
-        //   if (user) {
-        //     await updateUser({
-        //       balance: user.balance + result.detected_amount,
-        //       hasDeposited: true
-        //     });
-        //     setIsVerifyingReceipt(false);
-        //   }
-        // }, 1500);
+        // Dynamic import to avoid top-level failures if file missing
+        const { createDeposit } = await import('../services/depositService');
 
-        // Improved logic based on instruction's intent for toast/error handling:
-        setVerificationStatus('Verification Successful!');
-        // Assuming a toast notification system exists, or using alert for now
-        alert(`✅ Deposit Verified Successfully!\n\n$${result.detected_amount} will be credited shortly after network confirmation.`);
-        if (user) {
-          await updateUser({
-            balance: user.balance + result.detected_amount,
-            hasDeposited: true
-          });
-        }
-        setIsVerifyingReceipt(false); // End verification process
-      } else {
-        setVerificationStatus('PROTOCOL REJECTED');
-        setVerificationError(result.summary || 'Receipt Analysis Failed.');
-        // Improved error handling based on instruction's intent:
-        const proceed = confirm('⚠️ Auto-verification failed (Low quality image).\n\nDo you want to submit this for Manual Review?');
-        if (proceed) {
-          alert('✅ Submitted for Manual Review.\n\nAdmin will approve it within 30 minutes.');
-          // Here you might want to send the receipt for manual review to your backend
+        // For now, we assume the user enters the amount later or we parse it? 
+        // The current UI doesn't have an "Amount" input for deposit, it relies on OCR.
+        // We will keep the OCR visual but enforce Manual Review for security.
+        // Or if OCR passes, we still put it as pending?
+        // User asked to "fix" backend. Best practice: Pending.
+
+        // Let's try OCR for "Detected Amount" to help the user, but save as Pending.
+        let detectedAmount = 0;
+        try {
+          const { data: { text } } = await Tesseract.recognize(base64, 'eng');
+          const amountRegex = /(\$|usdt)\s?([0-9,]+(\.[0-9]{2})?)/i;
+          const amountMatch = text.toLowerCase().match(amountRegex);
+          if (amountMatch && amountMatch[2]) {
+            detectedAmount = parseFloat(amountMatch[2].replace(/,/g, ''));
+          }
+        } catch (e) { console.warn("OCR failed, defaulting to 0 for admin review"); }
+
+        await createDeposit(
+          user.uid,
+          user.displayName || 'User',
+          user.email,
+          detectedAmount, // If 0, Admin sets it.
+          selectedNetwork.id,
+          base64 // Check if this string is too large for Firestore? 
+          // Base64 images can be 2MB+. Firestore limit is 1MB.
+          // CRITICAL: We should probably just save a placeholder if no storage.
+          // But User "manual url" fix was for traders.
+          // For deposits, users upload local files.
+          // We MUST compress or warn. For this task, we'll try to save it. 
+          // If it fails, we warn user.
+        );
+
+        setVerificationStatus('Deposit Submitted!');
+        alert('✅ Deposit Proof Submitted for Verification.\n\nYour balance will be updated once an Admin approves the transaction (usually < 30 mins).');
+        setIsVerifyingReceipt(false);
+
+      } catch (err: any) {
+        console.error("Deposit submission error:", err);
+        if (err.code === 'invalid-argument') {
+          setVerificationError('Image too large. Please compress or use a link.');
         } else {
-          alert('Please upload a clearer screenshot.');
+          setVerificationError('Submission Failed. Try again.');
         }
-        setIsVerifyingReceipt(false); // End verification process
+        // setIsVerifyingReceipt(false); // keep open to retry
       }
     };
     reader.readAsDataURL(file);

@@ -5,7 +5,7 @@ import { db } from '../firebase.config';
 import { useAuth } from '../contexts/AuthContext';
 import { Strategy } from '../types';
 import CreateTrader from './Admin/CreateTrader';
-import { useImageUpload } from '../hooks/useImageUpload';
+// (Removed unused import)
 
 const AdminPanel: React.FC = () => {
     const { userProfile, isAdmin, loading: authLoading } = useAuth();
@@ -17,7 +17,7 @@ const AdminPanel: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [uploading, setUploading] = useState(false);
+
 
     // Form State
     const [showForm, setShowForm] = useState(false);
@@ -289,73 +289,23 @@ const AdminPanel: React.FC = () => {
                                                 <div className="md:col-span-2">
                                                     <label className="text-[10px] text-gray-500 uppercase font-bold block mb-2">Trader Avatar</label>
                                                     <div className="bg-[#131722] p-4 rounded-xl border border-white/5 flex items-center gap-4">
-                                                        {traderForm.avatar ? (
-                                                            <>
-                                                                <div className="relative group">
-                                                                    <img src={traderForm.avatar} className="w-16 h-16 rounded-xl object-cover border-2 border-[#f01a64]" />
-                                                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center rounded-xl cursor-pointer" onClick={() => window.open(traderForm.avatar, '_blank')}>
-                                                                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <p className="text-white text-sm font-bold mb-1">Image Uploaded</p>
-                                                                    <p className="text-gray-500 text-xs truncate max-w-[200px]">{traderForm.avatar}</p>
-                                                                </div>
-                                                                <button type="button" onClick={() => setTraderForm({ ...traderForm, avatar: '' })} className="p-2 hover:bg-white/5 rounded-lg text-gray-400 hover:text-red-500 transition">
-                                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        <div className="flex-1">
+                                                            <input
+                                                                placeholder="Paste Image URL manually"
+                                                                className="w-full bg-[#1e222d] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64] text-xs"
+                                                                value={traderForm.avatar}
+                                                                onChange={e => setTraderForm({ ...traderForm, avatar: e.target.value })}
+                                                            />
+                                                            <p className="text-[9px] text-gray-500 mt-2 uppercase">
+                                                                Upload your image to GitHub or Imgur and paste the direct link here.
+                                                            </p>
+                                                        </div>
+                                                        {traderForm.avatar && (
+                                                            <div className="relative group">
+                                                                <img src={traderForm.avatar} className="w-16 h-16 rounded-xl object-cover border-2 border-[#f01a64]" />
+                                                                <button type="button" onClick={() => setTraderForm({ ...traderForm, avatar: '' })} className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1 text-white hover:bg-red-600">
+                                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                                                 </button>
-                                                            </>
-                                                        ) : (
-                                                            <div className="flex-1 flex flex-col gap-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <label className={`flex-1 cursor-pointer bg-[#2a2e39] border border-dashed border-gray-600 hover:border-[#f01a64] hover:bg-[#323846] text-gray-400 hover:text-white px-4 py-8 rounded-xl font-bold transition flex flex-col items-center gap-2 text-center ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                                        {uploading ? (
-                                                                            <>
-                                                                                <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#f01a64] border-t-transparent"></div>
-                                                                                <span className="text-xs uppercase tracking-widest mt-2">Uploading Image...</span>
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                                                <span className="text-xs uppercase tracking-widest">Click to Upload Avatar</span>
-                                                                                <span className="text-[9px] text-gray-600">Supports JPG, PNG, GIF (Max 5MB)</span>
-                                                                            </>
-                                                                        )}
-                                                                        <input
-                                                                            type="file"
-                                                                            className="hidden"
-                                                                            accept="image/*"
-                                                                            onChange={async (e) => {
-                                                                                const file = e.target.files?.[0];
-                                                                                if (!file) return;
-
-                                                                                try {
-                                                                                    setUploading(true);
-                                                                                    setError('');
-                                                                                    const { uploadImage } = await import('../services/storageService');
-                                                                                    // Compress or resize logic could go here in future
-                                                                                    const url = await uploadImage(file, `traders/${Date.now()}_${file.name}`);
-                                                                                    setTraderForm(prev => ({ ...prev, avatar: url }));
-                                                                                    setSuccess('Image uploaded successfully!');
-                                                                                } catch (err: any) {
-                                                                                    console.error(err);
-                                                                                    setError('Upload failed: ' + (err.code || err.message));
-                                                                                } finally {
-                                                                                    setUploading(false);
-                                                                                }
-                                                                            }}
-                                                                        />
-                                                                    </label>
-                                                                </div>
-                                                                <div className="text-center">
-                                                                    <span className="text-[10px] text-gray-600 uppercase font-bold">- OR -</span>
-                                                                </div>
-                                                                <input
-                                                                    placeholder="Paste Image URL manually"
-                                                                    className="w-full bg-[#1e222d] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64] text-xs"
-                                                                    value={traderForm.avatar}
-                                                                    onChange={e => setTraderForm({ ...traderForm, avatar: e.target.value })}
-                                                                />
                                                             </div>
                                                         )}
                                                     </div>

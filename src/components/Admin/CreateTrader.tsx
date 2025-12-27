@@ -1,377 +1,346 @@
 
 import React, { useState } from 'react';
-import { db } from '../../firebase.config';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { useImageUpload } from '../../hooks/useImageUpload';
-import ImageUploadZone from '../shared/ImageUploadZone';
+import { addTrader, FirebaseTrader } from '../../services/firebaseService';
 
 const CreateTrader: React.FC = () => {
-    // Form state
-    const [name, setName] = useState('');
-    const [bio, setBio] = useState('');
-    const [winRate, setWinRate] = useState(95);
-    const [profitShare, setProfitShare] = useState(20);
-    const [specialization, setSpecialization] = useState('Crypto');
-    const [rank, setRank] = useState('Silver');
-    const [country, setCountry] = useState('USA');
-    const [verificationStatus, setVerificationStatus] = useState('Platform Verified Trader');
-    const [performanceBadge, setPerformanceBadge] = useState('Consistent Winner');
-    const [usdtAddress, setUsdtAddress] = useState('');
-    const [socials, setSocials] = useState({ instagram: '', telegram: '', twitter: '', youtube: '' });
-
-    // Save state
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-    const [saveError, setSaveError] = useState<string>('');
-
-    // Image upload using shared hook
-    const imageUpload = useImageUpload({ uploadPath: 'traders' });
-
-    // Validate USDT TRC20 address
-    const validateTRC20 = (address: string): boolean => {
-        if (!address) return true; // Optional field
-        return /^T[a-zA-Z0-9]{33}$/.test(address);
+    // ----------------------------------------------------------------------
+    // 1. Initial State
+    // ----------------------------------------------------------------------
+    const initialTraderState: Omit<FirebaseTrader, 'id' | 'createdAt' | 'updatedAt'> = {
+        name: '',
+        avatar: '', // Manual URL input
+        // Stats
+        roi: 0,
+        drawdown: 0,
+        followers: 0,
+        weeks: 0,
+        totalProfit: 0,
+        winRate: 0,
+        // Meta
+        strategy: '',
+        type: 'Trader', // Default
+        experienceYears: 0,
+        markets: ['Crypto', 'Forex'], // Default
+        riskScore: 5,
+        avgDuration: '1 Day',
+        riskMethods: ['Stop Loss', 'Take Profit'],
+        bio: '',
+        category: 'crypto', // Default
+        copyTradeId: '',
+        youtubeLink: '',
+        rank: 'Silver',
+        country: 'USA',
+        verificationStatus: 'Platform Verified Trader',
+        performanceBadge: 'Consistent Winner',
+        specialization: 'Crypto',
+        socials: {
+            instagram: '',
+            telegram: '',
+            twitter: '',
+            youtube: ''
+        },
+        usdtAddress: ''
     };
 
-    const handleSave = async () => {
-        // Validate required fields
-        if (!name.trim()) {
-            setSaveError('Please enter trader name');
-            setSaveStatus('error');
+    const [form, setForm] = useState(initialTraderState);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    // ----------------------------------------------------------------------
+    // 2. Handlers
+    // ----------------------------------------------------------------------
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        // Basic Validation
+        if (!form.name || !form.avatar || !form.copyTradeId) {
+            setError('Please fill in Name, Avatar URL, and Copy Trade ID.');
+            setLoading(false);
             return;
         }
-
-        if (!imageUpload.imageUrl) {
-            setSaveError('Please upload a profile image');
-            setSaveStatus('error');
-            return;
-        }
-
-        // Validate USDT address if provided
-        if (usdtAddress && !validateTRC20(usdtAddress)) {
-            setSaveError('Invalid TRC20 address. Must start with "T" and be 34 characters.');
-            setSaveStatus('error');
-            return;
-        }
-
-        setIsSaving(true);
-        setSaveStatus('idle');
-        setSaveError('');
 
         try {
-            await addDoc(collection(db, 'traders'), {
-                name: name.trim(),
-                bio: bio.trim() || `Expert trader specializing in high-frequency algorithmic scalping. Consistent ${winRate}% win rate.`,
-                avatar: imageUpload.imageUrl,
-                winRate,
-                profitShare,
-                pnl: 0,
-                followers: 0,
-                rank,
-                country,
-                verificationStatus,
-                performanceBadge,
-                socials,
-                minCapital: 100,
-                totalCopied: 0,
-                category: specialization.toLowerCase(),
-                roi: 0,
-                drawdown: 0,
-                weeks: 0,
-                strategy: `${specialization} Algorithmic Trading`,
-                type: 'Trader',
-                experienceYears: 5,
-                markets: [specialization],
-                riskScore: 5,
-                avgDuration: '1-3 days',
-                riskMethods: ['Risk Management', 'Position Sizing'],
-                copyTradeId: `CT-${Date.now().toString().slice(-4)}-${name.substring(0, 3).toUpperCase()}`,
-                totalProfit: 0,
-                isTrending: false,
-                usdtAddress: usdtAddress.trim(),
-                createdAt: Timestamp.now(),
-                updatedAt: Timestamp.now()
-            });
-
-            setSaveStatus('success');
-
-            // Reset form after successful save
-            setName('');
-            setBio('');
-            setUsdtAddress('');
-            setWinRate(95);
-            setProfitShare(20);
-            setRank('Silver');
-            setSocials({ instagram: '', telegram: '', twitter: '', youtube: '' });
-            imageUpload.clearImage();
-
+            await addTrader(form);
+            setSuccess(`Trader "${form.name}" created successfully!`);
+            setForm(initialTraderState); // Reset form
         } catch (err: any) {
-            console.error('Save failed:', err);
-            setSaveStatus('error');
-            setSaveError(err.message || 'Failed to save trader. Please try again.');
+            console.error('Error creating trader:', err);
+            setError('Failed to create trader. Please try again.');
         } finally {
-            setIsSaving(false);
+            setLoading(false);
         }
     };
 
-    // Determine if save button should be disabled
-    const isSaveDisabled = !name.trim() || !imageUpload.imageUrl || isSaving || imageUpload.isUploading;
+    const handleSocialChange = (key: keyof typeof form.socials, value: string) => {
+        setForm(prev => ({
+            ...prev,
+            socials: {
+                ...prev.socials,
+                [key]: value
+            }
+        }));
+    };
 
+    // ----------------------------------------------------------------------
+    // 3. Render
+    // ----------------------------------------------------------------------
     return (
-        <div className="max-w-4xl mx-auto p-6 space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Editor Side */}
-                <div className="space-y-6">
-                    {/* Image Upload Zone */}
-                    <ImageUploadZone
-                        imagePreview={imageUpload.imagePreview}
-                        isUploading={imageUpload.isUploading}
-                        isDragging={imageUpload.isDragging}
-                        error={imageUpload.error}
-                        onDragOver={imageUpload.handleDragOver}
-                        onDragLeave={imageUpload.handleDragLeave}
-                        onDrop={imageUpload.handleDrop}
-                        onFileSelect={imageUpload.handleFileSelect}
-                        onClear={imageUpload.clearImage}
-                        inputId="trader-image-input"
-                    />
+        <div className="bg-[#1e222d] rounded-[2.5rem] border border-white/5 p-8 shadow-2xl relative overflow-hidden">
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#f01a64]/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                    <div className="space-y-4">
+            <div className="flex items-center justify-between mb-8 relative z-10">
+                <div>
+                    <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Trader Factory</h2>
+                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Assemble New Trading Logic</p>
+                </div>
+                <div className="w-10 h-10 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64]">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                </div>
+            </div>
+
+            {/* Notifications */}
+            {error && (
+                <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    {error}
+                </div>
+            )}
+            {success && (
+                <div className="mb-6 bg-[#00b36b]/10 border border-[#00b36b]/30 text-[#00b36b] px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    {success}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+
+                {/* --- Section 1: Identity & Visuals --- */}
+                <div className="bg-black/20 p-6 rounded-2xl border border-white/5 space-y-6">
+                    <h3 className="text-[#f01a64] text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-6 h-[2px] bg-[#f01a64]"></span> Identity Matrix
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Name & ID */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-2">Trader Name</label>
+                                <input
+                                    className="w-full bg-[#131722] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] transition text-sm"
+                                    placeholder="e.g. Alex Morgan"
+                                    value={form.name}
+                                    onChange={e => setForm({ ...form, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-2">Copy Trade ID</label>
+                                <div className="flex items-center bg-[#131722] border border-white/5 rounded-xl overflow-hidden focus-within:border-[#f01a64] transition">
+                                    <span className="bg-white/5 p-4 text-gray-500 font-mono text-xs border-r border-white/5">ID-</span>
+                                    <input
+                                        className="flex-1 bg-transparent p-4 text-white font-mono text-sm outline-none"
+                                        placeholder="88X-99"
+                                        value={form.copyTradeId}
+                                        onChange={e => setForm({ ...form, copyTradeId: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Visual Avatar (Manual URL) */}
                         <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Trader Name *</label>
+                            <label className="text-[10px] text-gray-500 uppercase font-bold block mb-2">Avatar Source URL</label>
+                            <div className="bg-[#131722] p-4 rounded-xl border border-white/5 flex gap-4 items-start">
+                                <div className="flex-1 space-y-2">
+                                    <input
+                                        className="w-full bg-[#1e222d] border border-white/5 p-3 rounded-lg text-xs text-gray-300 outline-none focus:border-[#f01a64] font-mono"
+                                        placeholder="https://..."
+                                        value={form.avatar}
+                                        onChange={e => setForm({ ...form, avatar: e.target.value })}
+                                    />
+                                    <p className="text-[9px] text-gray-600 leading-relaxed">
+                                        Paste a direct link to a square image (JPG/PNG).
+                                        <br />Recommended: 400x400px.
+                                    </p>
+                                </div>
+                                <div className="w-20 h-20 bg-black/40 rounded-lg border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                    {form.avatar ? (
+                                        <img src={form.avatar} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                                    ) : (
+                                        <span className="text-[8px] text-gray-600 uppercase text-center">No Preview</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bio */}
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-bold block mb-2">Strategic Biography</label>
+                        <textarea
+                            rows={3}
+                            className="w-full bg-[#131722] border border-white/5 p-4 rounded-xl text-gray-300 text-sm outline-none focus:border-[#f01a64] transition resize-none"
+                            placeholder="Describe the trading style..."
+                            value={form.bio}
+                            onChange={e => setForm({ ...form, bio: e.target.value })}
+                        />
+                    </div>
+                </div>
+
+                {/* --- Section 2: Performance Metrics --- */}
+                <div className="bg-black/20 p-6 rounded-2xl border border-white/5 space-y-6">
+                    <h3 className="text-[#00b36b] text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                        <span className="w-6 h-[2px] bg-[#00b36b]"></span> Performance Core
+                    </h3>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-[#131722] p-4 rounded-xl border border-white/5 hover:border-[#00b36b]/30 transition group">
+                            <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1 group-focus-within:text-[#00b36b]">Win Rate %</label>
                             <input
-                                type="text"
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64]"
-                                placeholder="e.g. Alex Quant"
+                                type="number"
+                                className="w-full bg-transparent text-xl font-black text-white outline-none"
+                                value={form.winRate}
+                                onChange={e => setForm({ ...form, winRate: Number(e.target.value) })}
                             />
                         </div>
+                        <div className="bg-[#131722] p-4 rounded-xl border border-white/5 hover:border-[#00b36b]/30 transition group">
+                            <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1 group-focus-within:text-[#00b36b]">Total ROI %</label>
+                            <input
+                                type="number"
+                                className="w-full bg-transparent text-xl font-black text-white outline-none"
+                                value={form.roi}
+                                onChange={e => setForm({ ...form, roi: Number(e.target.value) })}
+                            />
+                        </div>
+                        <div className="bg-[#131722] p-4 rounded-xl border border-white/5 hover:border-[#00b36b]/30 transition group">
+                            <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1 group-focus-within:text-[#00b36b]">Profit ($)</label>
+                            <input
+                                type="number"
+                                className="w-full bg-transparent text-xl font-black text-white outline-none"
+                                value={form.totalProfit}
+                                onChange={e => setForm({ ...form, totalProfit: Number(e.target.value) })}
+                            />
+                        </div>
+                        <div className="bg-[#131722] p-4 rounded-xl border border-white/5 hover:border-[#00b36b]/30 transition group">
+                            <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1 group-focus-within:text-[#00b36b]">Followers</label>
+                            <input
+                                type="number"
+                                className="w-full bg-transparent text-xl font-black text-white outline-none"
+                                value={form.followers}
+                                onChange={e => setForm({ ...form, followers: Number(e.target.value) })}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- Section 3: Configuration & Socials --- */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Classification */}
+                    <div className="bg-black/20 p-6 rounded-2xl border border-white/5 space-y-4">
+                        <h3 className="text-blue-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                            <span className="w-6 h-[2px] bg-blue-500"></span> Classification
+                        </h3>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Win Rate (%)</label>
-                                <input
-                                    type="range"
-                                    min="50"
-                                    max="100"
-                                    value={winRate}
-                                    onChange={e => setWinRate(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#f01a64]"
-                                />
-                                <div className="text-right text-[#00b36b] font-black">{winRate}%</div>
+                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-2">Category</label>
+                                <select
+                                    className="w-full bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none focus:border-blue-500"
+                                    value={form.category}
+                                    onChange={e => setForm({ ...form, category: e.target.value as any })}
+                                >
+                                    <option value="crypto">Crypto</option>
+                                    <option value="forex">Forex</option>
+                                    <option value="gold">Gold (Comm)</option>
+                                    <option value="binary">Binary</option>
+                                </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Profit Share (%)</label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="50"
-                                    value={profitShare}
-                                    onChange={e => setProfitShare(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#f01a64]"
-                                />
-                                <div className="text-right text-white font-black">{profitShare}%</div>
+                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-2">Country</label>
+                                <select
+                                    className="w-full bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none focus:border-blue-500"
+                                    value={form.country}
+                                    onChange={e => setForm({ ...form, country: e.target.value })}
+                                >
+                                    <option value="USA">USA</option>
+                                    <option value="UK">UK</option>
+                                    <option value="UAE">UAE</option>
+                                    <option value="India">India</option>
+                                    <option value="Germany">Germany</option>
+                                </select>
                             </div>
                         </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Specialization</label>
-                            <select
-                                value={specialization}
-                                onChange={e => setSpecialization(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] appearance-none"
-                            >
-                                <option value="Crypto">Crypto</option>
-                                <option value="Forex">Forex</option>
-                                <option value="Gold">Gold</option>
-                                <option value="Binary">Binary</option>
-                                <option value="Commodity">Commodity</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Rank / Badge</label>
-                            <select
-                                value={rank}
-                                onChange={e => setRank(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] appearance-none"
-                            >
-                                <option value="🥇 Top 1 Trader">🥇 Top 1 Trader</option>
-                                <option value="🥈 Top 3 Trader">🥈 Top 3 Trader</option>
-                                <option value="Top 5 Trader">Top 5 Trader</option>
-                                <option value="Top 10 Trader">Top 10 Trader</option>
-                                <option value="Elite Ranked Trader">Elite Ranked Trader</option>
-                                <option value="Silver">Silver</option>
-                                <option value="Gold">Gold</option>
-                                <option value="Platinum">Platinum</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Country</label>
-                            <select
-                                value={country}
-                                onChange={e => setCountry(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] appearance-none"
-                            >
-                                <option value="USA">🇺🇸 USA</option>
-                                <option value="Pakistan">🇵🇰 Pakistan</option>
-                                <option value="UAE">🇦🇪 UAE</option>
-                                <option value="Nigeria">🇳🇬 Nigeria</option>
-                                <option value="UK">🇬🇧 UK</option>
-                                <option value="Austria">🇦🇹 Austria</option>
-                                <option value="Australia">🇦🇺 Australia</option>
-                                <option value="India">🇮🇳 India</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Verification Badge</label>
-                            <select
-                                value={verificationStatus}
-                                onChange={e => setVerificationStatus(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] appearance-none"
-                            >
-                                <option value="Platform Verified Trader">🛡️ Platform Verified Trader</option>
-                                <option value="KYC Verified Trader">🛡️ KYC Verified Trader</option>
-                                <option value="Identity Verified Trader">🛡️ Identity Verified Trader</option>
-                                <option value="Admin Approved Trader">🛡️ Admin Approved Trader</option>
-                                <option value="Trade History Verified">🛡️ Trade History Verified</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Performance Badge</label>
-                            <select
-                                value={performanceBadge}
-                                onChange={e => setPerformanceBadge(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64] appearance-none"
-                            >
-                                <option value="100% Win Rate (Short-Term)">📈 100% Win Rate</option>
-                                <option value="95%+ Win Rate">📈 95%+ Win Rate</option>
-                                <option value="Consistent Winner">📈 Consistent Winner</option>
-                                <option value="Risk Control Master">📈 Risk Control Master</option>
-                                <option value="Low Drawdown Trader">📈 Low Drawdown Trader</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">USDT Wallet Address (TRC20)</label>
-                            <input
-                                type="text"
-                                value={usdtAddress}
-                                onChange={e => setUsdtAddress(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white font-bold outline-none focus:border-[#f01a64]"
-                                placeholder="T..."
-                            />
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Rank Badge</label>
+                                <input className="w-full bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none" value={form.rank} onChange={e => setForm({ ...form, rank: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Strategy Name</label>
+                                <input className="w-full bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none" value={form.strategy} onChange={e => setForm({ ...form, strategy: e.target.value })} />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-[10px] uppercase font-black text-gray-500 mb-2">Bio (Optional)</label>
-                            <textarea
-                                value={bio}
-                                onChange={e => setBio(e.target.value)}
-                                className="w-full bg-[#1e222d] border border-white/5 p-4 rounded-xl text-white outline-none focus:border-[#f01a64] h-24 text-sm"
-                                placeholder="Leave empty for auto-generated bio..."
-                            ></textarea>
+                    {/* Social Uplink */}
+                    <div className="bg-black/20 p-6 rounded-2xl border border-white/5 space-y-4">
+                        <h3 className="text-purple-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 mb-4">
+                            <span className="w-6 h-[2px] bg-purple-500"></span> Social Uplink
+                        </h3>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-[#0088cc]/10 text-[#0088cc] flex items-center justify-center">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12.268 12.268 0 0 0-.62 0zM18.9 7.02l-2.086 10a1.8 1.8 0 0 1-1.385 1.258 2.052 2.052 0 0 1-1.632-.5l-4-3.056-1.916 1.916a.91.91 0 0 1-.225.13l.668-3.927 7.056-6.6a.555.555 0 0 0-.776-.78l-8.8 5.672-3.8-1.228A2.21 2.21 0 0 1 2.924 7.5a2.583 2.583 0 0 1 1.284-1.12l14.162-5.46a2.035 2.035 0 0 1 1.07.24 1.54 1.54 0 0 1 .53.86z" /></svg>
+                                </div>
+                                <input
+                                    className="flex-1 bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none focus:border-[#0088cc]"
+                                    placeholder="Telegram Link"
+                                    value={form.socials?.telegram || ''}
+                                    onChange={e => handleSocialChange('telegram', e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-[#d62976]/10 text-[#d62976] flex items-center justify-center">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.069-4.85.069-3.204 0-3.584-.012-4.849-.069-3.229-.149-4.771-1.664-4.919-4.919-.059-1.265-.069-1.644-.069-4.849 0-3.204.013-3.583.069-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>
+                                </div>
+                                <input
+                                    className="flex-1 bg-[#131722] border border-white/5 p-3 rounded-lg text-white text-xs outline-none focus:border-[#d62976]"
+                                    placeholder="Instagram Link"
+                                    value={form.socials?.instagram || ''}
+                                    onChange={e => handleSocialChange('instagram', e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Error Message */}
-                    {saveError && (
-                        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-bold">
-                            {saveError}
-                        </div>
-                    )}
-
-                    {/* Save Button */}
+                <div className="pt-8 border-t border-white/10 flex items-center justify-end gap-6">
                     <button
-                        onClick={handleSave}
-                        disabled={isSaveDisabled}
-                        className="w-full py-4 bg-[#f01a64] hover:bg-[#d61556] disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg"
+                        type="button"
+                        onClick={() => setForm(initialTraderState)}
+                        className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black uppercase text-xs tracking-widest transition"
                     >
-                        {isSaving ? 'Deploying to Network...' : imageUpload.isUploading ? 'Uploading Image...' : 'Create Trader Profile'}
+                        Reset Factory
                     </button>
-
-                    {/* Success Message */}
-                    {saveStatus === 'success' && (
-                        <p className="text-[#00b36b] text-center font-black uppercase text-xs">
-                            ✓ Trader successfully added!
-                        </p>
-                    )}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-10 py-4 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-[0_0_20px_rgba(240,26,100,0.4)] hover:shadow-[0_0_30px_rgba(240,26,100,0.6)] active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? 'Compiling Logic...' : 'Initialize Trader'}
+                    </button>
                 </div>
 
-                {/* Live Preview Side */}
-                <div className="bg-[#131722] p-8 rounded-[3rem] border border-white/5 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(240,26,100,0.1),transparent)] pointer-events-none"></div>
-                    <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-white font-black uppercase text-lg">Live Preview</h3>
-                        <span className="bg-[#00b36b]/20 text-[#00b36b] px-3 py-1 rounded-full text-[10px] font-black uppercase">Active</span>
-                    </div>
-
-                    {/* The Card */}
-                    <div className="bg-[#1e222d] rounded-3xl p-6 border border-white/5 shadow-2xl relative group">
-                        <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-white text-[10px] font-black border border-white/10 uppercase">
-                            {rank}
-                        </div>
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-16 h-16 rounded-full border-2 border-[#f01a64] p-1 relative">
-                                <img
-                                    src={imageUpload.imagePreview || 'https://via.placeholder.com/150?text=?'}
-                                    alt="Trader"
-                                    className="w-full h-full rounded-full object-cover bg-gray-800"
-                                />
-                            </div>
-                            <div>
-                                <h4 className="text-white font-black text-lg">{name || 'Trader Name'}</h4>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></span>
-                                    <span className="text-gray-400 text-xs font-bold uppercase">Online Now</span>
-                                    <span className="text-xs ml-2">
-                                        {country === 'USA' ? '🇺🇸' : country === 'Pakistan' ? '🇵🇰' : country === 'UAE' ? '🇦🇪' : country === 'Nigeria' ? '🇳🇬' : country === 'UK' ? '🇬🇧' : country === 'Austria' ? '🇦🇹' : country === 'Australia' ? '🇦🇺' : country === 'India' ? '🇮🇳' : ''}
-                                    </span>
-                                </div>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                    <span className="text-[8px] bg-[#00b36b]/10 text-[#00b36b] px-1 rounded border border-[#00b36b]/20">
-                                        {verificationStatus}
-                                    </span>
-                                    <span className="text-[8px] bg-blue-500/10 text-blue-500 px-1 rounded border border-blue-500/20">
-                                        {performanceBadge}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 mb-6">
-                            <div className="bg-black/20 rounded-xl p-3 text-center">
-                                <div className="text-[9px] text-gray-500 uppercase font-black">Win Rate</div>
-                                <div className="text-[#00b36b] font-black">{winRate}%</div>
-                            </div>
-                            <div className="bg-black/20 rounded-xl p-3 text-center">
-                                <div className="text-[9px] text-gray-500 uppercase font-black">Profit Share</div>
-                                <div className="text-white font-black">{profitShare}%</div>
-                            </div>
-                            <div className="bg-black/20 rounded-xl p-3 text-center">
-                                <div className="text-[9px] text-gray-500 uppercase font-black">Copiers</div>
-                                <div className="text-white font-black">0</div>
-                            </div>
-                        </div>
-
-                        <p className="text-gray-400 text-xs leading-relaxed mb-6">
-                            {bio || `Expert ${specialization} trader specializing in high-frequency algorithmic scalping. Matches your investment style automatically.`}
-                        </p>
-
-                        <button className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-white font-black uppercase text-[10px] group-hover:bg-[#f01a64] group-hover:border-[#f01a64] transition-all">
-                            Copy Strategy
-                        </button>
-                    </div>
-                </div>
-            </div>
+            </form>
         </div>
     );
 };
 
 export default CreateTrader;
+
