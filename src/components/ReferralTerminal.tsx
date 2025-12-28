@@ -20,12 +20,17 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
-  const handleDispatch = () => {
+  const handleDispatch = (platform: 'telegram' | 'whatsapp') => {
     setIsDispatching(true);
     const text = `🚀 I'm earning passive USDT with CopyTrade! \n\nUse my Institutional Access Node to get a $1,000 Signup Bonus instantly. \n\nLink: ${referralLink}`;
-    const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
 
-    window.open(telegramUrl, '_blank');
+    if (platform === 'telegram') {
+      const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
+      window.open(telegramUrl, '_blank');
+    } else {
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + referralLink)}`;
+      window.open(whatsappUrl, '_blank');
+    }
 
     // Simulate network detection
     setTimeout(async () => {
@@ -53,7 +58,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
 
       const reward = 200;
       await updateUser({
-        balance: (user?.balance || 0) + reward,
+        bonusBalance: (user?.bonusBalance || 0) + reward, // Add to Welcome Bonus
         referralEarnings: (user?.referralEarnings || 0) + reward,
         pendingClaims: (user?.pendingClaims || 0) - 1,
         referralCount: (user?.referralCount || 0) + 1
@@ -129,19 +134,30 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
                 </h3>
 
                 <p className="text-gray-500 text-[10px] font-bold uppercase tracking-tight max-w-[280px] mx-auto leading-relaxed italic">
-                  "No caps on earnings. Payouts are settled instantly into your trading balance."
+                  "No caps on earnings. Payouts are settled instantly into your Welcome Bonus balance."
                 </p>
 
                 <div className="pt-6 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleDispatch}
-                    disabled={isDispatching}
-                    className="bg-[#0088cc] hover:bg-[#0077b5] text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isDispatching ? (
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : 'Share to Telegram'}
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleDispatch('telegram')}
+                      disabled={isDispatching}
+                      className="bg-[#0088cc] hover:bg-[#0077b5] text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isDispatching ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      ) : 'Telegram'}
+                    </button>
+                    <button
+                      onClick={() => handleDispatch('whatsapp')}
+                      disabled={isDispatching}
+                      className="bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isDispatching ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      ) : 'WhatsApp'}
+                    </button>
+                  </div>
 
                   <button
                     onClick={handleClaim}

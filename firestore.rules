@@ -22,13 +22,16 @@ service cloud.firestore {
 
     // Users
     match /users/{userId} {
-      allow read: if isAuthenticated(); // Anyone logged in can read basic profiles (needed for leaderboards/social)
-      allow create: if isAuthenticated() && request.auth.uid == userId; // User creates own profile on signup
+      // Privacy FIX: Only the owner or an admin can read the full profile
+      // This protects emails, wallet addresses, and balances from being leaked.
+      allow read: if isOwner(userId) || isAdmin();
       
-      // Update restrictions:
-      // 1. Owner can update fields EXCEPT 'role' and 'balance' (unless simulated in frontend, but backend should ideally block balance)
-      //    For this specific app, we allow balance updates from client for the simulation game.
-      // 2. Admin can update everything
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Update Policy:
+      // 1. Owner can update fields (including balance for the simulation game) 
+      //    BUT STRICTLY BLOCKED from changing their own 'role'.
+      // 2. Admin can update everything.
       allow update: if isAdmin() || (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
       
       allow delete: if isAdmin();

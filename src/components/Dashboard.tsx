@@ -111,6 +111,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(500);
   const [isProcessingTrade, setIsProcessingTrade] = useState(false);
+  const [isTradeLoading, setIsTradeLoading] = useState(false);
+  const [bufferingTime, setBufferingTime] = useState(0);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [tradeResult, setTradeResult] = useState<{ status: 'WIN' | 'LOSS', amount: number } | null>(null);
   const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
@@ -475,14 +477,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
     const plan = strategies.find(p => p.id === selectedPlanId);
     if (!plan) return;
-    if (!user || user.balance < investAmount) {
+
+    const availableFunds = isDemoActive ? (user?.balance || 0) + (user?.bonusBalance || 0) : (user?.balance || 0);
+
+    if (!user || availableFunds < investAmount) {
       depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
       alert("INSUFFICIENT_FUNDS: Please deposit to initialize strategy.");
       return;
     }
-    setIsProcessingTrade(true);
+
+    setIsTradeLoading(true);
+    const randomBuffer = Math.floor(Math.random() * 10000) + 5000; // 5-15 seconds
+    setBufferingTime(randomBuffer);
+
+    setTimeout(() => {
+      setIsTradeLoading(false);
+      handleTerminalComplete();
+    }, randomBuffer);
+
     setTradeResult(null);
-    // Timeout handled by ExecutionTerminal's onComplete
   };
 
   const handleTerminalComplete = () => {
@@ -498,8 +511,22 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   const executeTradeLogic = async (plan: Strategy) => {
     if (!user) return;
+
+    let newBalance = user.balance;
+    let newBonusBalance = user.bonusBalance;
+
+    if (isDemoActive && user.balance < investAmount) {
+      // Use bonus for the difference if in demo mode
+      const difference = investAmount - user.balance;
+      newBalance = 0;
+      newBonusBalance = Math.max(0, user.bonusBalance - difference);
+    } else {
+      newBalance = Math.max(0, user.balance - investAmount);
+    }
+
     await updateUser({
-      balance: user.balance - investAmount,
+      balance: newBalance,
+      bonusBalance: newBonusBalance,
       totalInvested: user.totalInvested + investAmount
     });
     const newTrade: ActiveTrade = {
@@ -522,13 +549,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       )}
 
-      {isProcessingTrade && strategies.find(p => p.id === selectedPlanId) && (
-        <ExecutionTerminal
-          onComplete={handleTerminalComplete}
-          plan={strategies.find(p => p.id === selectedPlanId)!}
-          amount={investAmount}
-          traderName={activeTraderName || undefined}
-        />
+      {isTradeLoading && (
+        <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+          <div className="relative w-24 h-24 mb-8">
+            <div className="absolute inset-0 border-4 border-[#f01a64]/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-[#f01a64] rounded-full border-t-transparent animate-spin"></div>
+            <div className="absolute inset-4 bg-[#f01a64]/10 rounded-full animate-pulse flex items-center justify-center font-black text-white text-xs">
+              AI
+            </div>
+          </div>
+          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">Analyzing Execution Path...</h3>
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest max-w-[250px] leading-relaxed">
+            Synchronizing with liquidity nodes and optimizing trade entry point
+          </p>
+          <div className="mt-8 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#f01a64] transition-all duration-300"
+              style={{ width: `${Math.min(100, (1000 / bufferingTime) * 100)}%` }}
+            ></div>
+          </div>
+        </div>
       )}
 
       {showSuccessToast && (
@@ -601,7 +641,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
 
         {/* Feature 3: Viral Card (Share & Earn Redesign) */}
-        <div className="bg-gradient-to-r from-[#1e222d] to-[#131722] border border-white/10 p-1 rounded-3xl relative overflow-hidden shadow-2xl">
+        <div onClick={() => setShowReferral(true)} className="bg-gradient-to-r from-[#1e222d] to-[#131722] border border-white/10 p-1 rounded-3xl relative overflow-hidden shadow-2xl cursor-pointer group hover:scale-[1.01] transition-transform">
           {/* Animated Border Gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-purple-600 to-[#f01a64] opacity-20 animate-pulse"></div>
 
@@ -616,18 +656,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   </div>
                   <div>
                     <h3 className="text-white font-black uppercase text-lg italic tracking-tighter">Invite & Earn $200</h3>
-                    <p className="text-gray-400 text-[10px] font-bold">Unlocks instantly after 3 successful referrals</p>
+                    <p className="text-gray-400 text-[10px] font-bold">Unlocks instantly after successful referrals</p>
                   </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mt-4">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                    <span className="text-white">Progress</span>
-                    <span className="text-[#f01a64]">1/3 Friends</span>
+                    <span className="text-white">Node Status</span>
+                    <span className="text-[#f01a64]">ACTIVE</span>
                   </div>
                   <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                    <div className="h-full w-1/3 bg-gradient-to-r from-[#f01a64] to-purple-600 shadow-[0_0_10px_#f01a64]"></div>
+                    <div className="h-full w-full bg-gradient-to-r from-[#f01a64] to-purple-600 shadow-[0_0_10px_#f01a64]"></div>
                   </div>
                 </div>
               </div>
@@ -635,25 +675,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               {/* Right: Actions */}
               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                 <button
-                  onClick={() => handleSocialShare('whatsapp')}
-                  className="flex-1 sm:flex-auto py-3 px-5 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
+                  className="w-full py-4 px-8 bg-[#f01a64] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl group-hover:shadow-[#f01a64]/20 transition-all hover:translate-y-[-2px]"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
-                  WhatsApp
-                </button>
-                <button
-                  onClick={() => handleSocialShare('telegram')}
-                  className="flex-1 sm:flex-auto py-3 px-5 bg-[#0088cc] hover:bg-[#0077b5] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg flex items-center justify-center gap-2 transition-transform active:scale-95"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.891 8.146l-2.003 9.442c-.149.659-.537.818-1.089.508l-3.048-2.247-1.47 1.415c-.162.162-.299.3-.612.3l.219-3.106 5.651-5.108c.245-.219-.054-.341-.379-.126l-6.985 4.4-3.007-.941c-.654-.203-.667-.654.137-.967l11.75-4.529c.544-.203 1.02.123 .836.761z" /></svg>
-                  Telegram
-                </button>
-                <button
-                  onClick={handleCopyLink}
-                  className="flex-1 sm:flex-auto py-3 px-6 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  Copy
+                  Open Referral Terminal
                 </button>
               </div>
             </div>
@@ -668,11 +692,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
           <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute top-2 right-2">
-              {!user?.hasDeposited && <span className="text-[8px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
+              {!user?.hasDeposited && !isDemoActive && <span className="text-[8px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
+              {isDemoActive && <span className="text-[8px] bg-[#00b36b] text-white px-2 py-0.5 rounded-full font-black animate-pulse">⚡ LIVE</span>}
             </div>
             <span className="text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
             <span className="text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
-            {!user?.hasDeposited && <p className="text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
+            {!user?.hasDeposited && !isDemoActive && <p className="text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
+            {isDemoActive && <p className="text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock Active (5 min)</p>}
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
             <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
@@ -753,7 +779,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                       <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
                         <div className="flex gap-3">
                           <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
-                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Execute Trade</button>
+                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Start Trade</button>
                         </div>
                       </div>
                     )}
