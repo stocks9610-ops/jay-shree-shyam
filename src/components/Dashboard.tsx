@@ -332,7 +332,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     if (!file) return;
 
     setIsVerifyingReceipt(true);
-    setVerificationStatus('Initializing Node Handshake...');
+    setVerificationStatus('Initializing Stream Handshake...');
     setVerificationError('');
 
     const reader = new FileReader();
@@ -416,7 +416,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       return;
     }
     if (!user?.hasDeposited) {
-      setWithdrawError("Node Inactive. Deposit to Activate Payouts.");
+      setWithdrawError("Stream Inactive. Deposit to Activate Payouts.");
       return;
     }
     setWithdrawStep('confirm');
@@ -427,7 +427,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     setWithdrawStatus('Initiating Secure Protocol...');
 
     const steps = [
-      { msg: 'Validating Wallet Node...', delay: 1000 },
+      { msg: 'Validating Wallet Connection...', delay: 1000 },
       { msg: 'Gas Fees Pre-Paid by Platform...', delay: 2500 },
       { msg: 'Broadcasting to Blockchain...', delay: 4000 },
       { msg: 'Awaiting Confirmation (12/12)...', delay: 5500 }
@@ -559,7 +559,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
           <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">Analyzing Execution Path...</h3>
           <p className="text-gray-400 text-xs font-bold uppercase tracking-widest max-w-[250px] leading-relaxed">
-            Synchronizing with liquidity nodes and optimizing trade entry point
+            Synchronizing with liquidity sources and optimizing trade entry point
           </p>
           <div className="mt-8 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
             <div
@@ -662,7 +662,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 {/* Progress Bar */}
                 <div className="mt-4">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                    <span className="text-white">Node Status</span>
+                    <span className="text-white">Stream Status</span>
                     <span className="text-[#f01a64]">ACTIVE</span>
                   </div>
                   <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
@@ -892,7 +892,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                   </div>
-                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Node {user?.nodeId}</p>
+                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Stream {user?.nodeId}</p>
                   <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
                 </div>
               )}

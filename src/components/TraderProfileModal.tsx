@@ -189,7 +189,7 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
             {trader.usdtAddress && (
               <div className="bg-[#1e222d] p-5 rounded-2xl border border-[#2a2e39] relative overflow-hidden group">
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Trading Node</h4>
+                  <h4 className="text-[9px] md:text-[10px] text-gray-500 font-black uppercase tracking-widest">Active Trading Stream</h4>
                   <span className="text-[8px] md:text-[9px] text-[#f01a64] font-black uppercase">Verified TRC20</span>
                 </div>
                 <div className="flex items-center gap-3 bg-black/40 p-3 rounded-xl border border-white/5">
@@ -211,7 +211,7 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
             <div className="bg-[#1e222d] rounded-2xl border border-[#2a2e39] p-5 relative overflow-hidden group">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-[9px] md:text-[10px] text-gray-400 font-black uppercase tracking-widest">Growth Analytics</h4>
-                <span className="text-[8px] md:text-[9px] text-[#00b36b] bg-[#00b36b]/10 px-2 py-0.5 rounded font-black uppercase">Institutional</span>
+                <span className="text-[8px] md:text-[9px] text-[#00b36b] bg-[#00b36b]/10 px-2 py-0.5 rounded font-black uppercase">Elite</span>
               </div>
               <div className="h-24 md:h-32 w-full relative">
                 <svg viewBox="0 0 100 40" className="w-full h-full overflow-visible" preserveAspectRatio="none">

@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Optimized Throughput</span>
                 </div>
                 <div>
-                  <span className="text-white font-black text-2xl block">Secure Nodes</span>
+                  <span className="text-white font-black text-2xl block">Secure Streams</span>
                   <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Distributed Privacy</span>
                 </div>
               </div>

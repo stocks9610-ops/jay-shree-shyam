@@ -22,7 +22,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
 
   const handleDispatch = (platform: 'telegram' | 'whatsapp') => {
     setIsDispatching(true);
-    const text = `💎 I'm generating consistent passive yield on ZuluTrade Institutional! \n\nGet exclusive access to my private trading node and claim your $1,000 onboarding bonus immediately. \n\nJoin the elite: ${referralLink}`;
+    const text = `💎 I'm generating consistent passive yield on ZuluTrade Elite! \n\nGet exclusive access to my private trading stream and claim your $1,000 onboarding bonus immediately. \n\nJoin the elite: ${referralLink}`;
 
     if (platform === 'telegram') {
       const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
@@ -74,7 +74,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl animate-in fade-in">
       {!user ? (
-        <div className="text-white">Loading Node Data...</div>
+        <div className="text-white">Loading Trading Stream Data...</div>
       ) : (
         <div className="bg-[#1e222d] w-[95%] max-w-lg h-auto max-h-[90vh] rounded-[2rem] sm:rounded-[3rem] border border-white/10 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,1)] flex flex-col">
 
@@ -91,21 +91,21 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
 
           <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-8 no-scrollbar pb-[calc(2rem+env(safe-area-inset-bottom))]">
 
-            {/* Node Status HUD */}
+            {/* Stream Status HUD */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-black/40 border border-white/5 p-5 rounded-3xl">
                 <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Earned</span>
                 <span className="text-xl font-black text-[#00b36b] font-mono">${(user.referralEarnings || 0).toLocaleString()}</span>
               </div>
               <div className="bg-black/40 border border-white/5 p-5 rounded-3xl">
-                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest block mb-1">Alpha Node ID</span>
+                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest block mb-1">Alpha Stream ID</span>
                 <span className="text-xl font-black text-white font-mono">{user.nodeId}</span>
               </div>
             </div>
 
             {/* Unique Link Box */}
             <div className="space-y-3">
-              <label className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] ml-1">Your Institutional Link</label>
+              <label className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] ml-1">Your Prime Link</label>
               <div className="flex gap-2">
                 <div className="flex-1 bg-black border border-white/10 rounded-2xl p-4 md:p-5 text-[10px] md:text-xs text-gray-400 font-mono break-all leading-tight shadow-inner">
                   {referralLink}
@@ -177,7 +177,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
             <div className="text-center pt-4">
               <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] leading-relaxed">
                 Verified Affiliate Protocol v7.0 <br />
-                <span className="text-gray-700">Encrypted Referral Dispatch via Node {user.nodeId}</span>
+                <span className="text-gray-700">Encrypted Referral Dispatch via Stream {user.nodeId}</span>
               </p>
             </div>
 

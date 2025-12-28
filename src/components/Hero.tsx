@@ -38,7 +38,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
             "Automated Alpha Generation",
             "Daily USDT Settlements",
             "On-Chain Transparency",
-            "Institutional Grade Security",
+            "Professional-Tier Security",
             "Quant Research Terminal"
           ].map((benefit, i) => (
             <div key={i} className="flex items-center gap-1.5 bg-[#1e222d]/80 border border-[#2a2e39] px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm">
@@ -51,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
         </div>
 
         <p className="max-w-3xl mx-auto text-sm md:text-xl text-gray-300 mb-10 px-6 font-bold leading-relaxed tracking-wide drop-shadow-lg">
-          Achieve sovereign wealth. Mirror institutional-grade strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT Yield Daily.</span>
+          Achieve sovereign wealth. Mirror professional-tier strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT Yield Daily.</span>
         </p>
 
         <div className="flex flex-col lg:flex-row items-center justify-center gap-4 px-4">
@@ -77,7 +77,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
                 <img src="https://upload.wikimedia.org/wikipedia/commons/9/9b/Google_Meet_icon_%282020%29.svg" alt="Meet" className="w-3 h-3 md:w-4 md:h-4" />
               </div>
               <div className="text-left">
-                <span className="block text-[6px] md:text-[7px] text-[#00b36b] font-black uppercase tracking-[0.3em]">Institutional</span>
+                <span className="block text-[6px] md:text-[7px] text-[#00b36b] font-black uppercase tracking-[0.3em]">Premium-Tier</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-[9px] md:text-[10px] font-black text-white tracking-widest uppercase">Live Class</span>
                   <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-[#00b36b] rounded-full animate-pulse shadow-[0_0_8px_#00b36b]"></div>
