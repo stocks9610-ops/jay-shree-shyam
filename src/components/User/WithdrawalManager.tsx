@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { getUserProfile, UserData } from '../../services/userService';
 import { createWithdrawal } from '../../services/withdrawalService';
@@ -76,7 +77,8 @@ const WithdrawalManager: React.FC = () => {
                 userProfile.email,
                 userProfile.displayName,
                 withdrawAmount,
-                userProfile.walletAddress
+                userProfile.walletAddress,
+                'TRC20' // Default network
             );
 
             setSuccess('Withdrawal request submitted! Waiting for admin approval.');
@@ -162,7 +164,7 @@ const WithdrawalManager: React.FC = () => {
                                     <div>
                                         <div className="text-[#00b36b] font-bold text-lg">${withdrawal.amount}</div>
                                         <div className="text-gray-500 text-xs">
-                                            {withdrawal.requestedAt.toDate().toLocaleString()}
+                                            {withdrawal.requestedAt instanceof Timestamp ? withdrawal.requestedAt.toDate().toLocaleString() : 'Just now'}
                                         </div>
                                     </div>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${withdrawal.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :

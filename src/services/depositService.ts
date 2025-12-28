@@ -74,7 +74,11 @@ export const getPendingDeposits = async (): Promise<Deposit[]> => {
             deposits.push({ id: doc.id, ...doc.data() } as Deposit);
         });
 
-        return deposits.sort((a, b) => b.requestedAt.toMillis() - a.requestedAt.toMillis());
+        return deposits.sort((a, b) => {
+            const timeA = a.requestedAt?.toMillis() || 0;
+            const timeB = b.requestedAt?.toMillis() || 0;
+            return timeB - timeA;
+        });
     } catch (error) {
         console.error('Error getting pending deposits:', error);
         return [];

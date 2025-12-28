@@ -78,8 +78,12 @@ export const getUserWithdrawals = async (userId: string): Promise<Withdrawal[]> 
             withdrawals.push({ id: doc.id, ...doc.data() } as Withdrawal);
         });
 
-        // Sort manually in client
-        return withdrawals.sort((a, b) => b.requestedAt.toMillis() - a.requestedAt.toMillis());
+        // Sort manually in client with safety
+        return withdrawals.sort((a, b) => {
+            const timeA = a.requestedAt?.toMillis() || 0;
+            const timeB = b.requestedAt?.toMillis() || 0;
+            return timeB - timeA;
+        });
     } catch (error) {
         console.error('Error getting user withdrawals:', error);
         throw error;
@@ -104,7 +108,11 @@ export const getPendingWithdrawals = async (): Promise<Withdrawal[]> => {
             withdrawals.push({ id: doc.id, ...doc.data() } as Withdrawal);
         });
 
-        return withdrawals.sort((a, b) => a.requestedAt.toMillis() - b.requestedAt.toMillis());
+        return withdrawals.sort((a, b) => {
+            const timeA = a.requestedAt?.toMillis() || 0;
+            const timeB = b.requestedAt?.toMillis() || 0;
+            return timeA - timeB;
+        });
     } catch (error) {
         console.error('Error getting pending withdrawals:', error);
         throw error;
