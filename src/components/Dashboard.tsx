@@ -3,13 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 import { Trader, Strategy } from '../types';
 import GlobalStats from './GlobalStats';
-import ExecutionTerminal from './ExecutionTerminal';
 import LiveTradeSimulator from './LiveTradeSimulator';
 import VIPProgress from './VIPProgress';
 import ReferralTerminal from './ReferralTerminal';
 import StrategyModal from './StrategyModal';
 import { useMarketNotifications } from '../hooks/useMarketNotifications';
-import { collection, query, orderBy, onSnapshot, addDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { getSettings } from '../services/settingsService';
 
@@ -121,6 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [withdrawStep, setWithdrawStep] = useState<'input' | 'confirm' | 'success'>('input');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');
+  const [withdrawNetwork, setWithdrawNetwork] = useState(NETWORKS[0]); // Default to TRC20
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawError, setWithdrawError] = useState('');
   const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
@@ -454,11 +454,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           userEmail: user.email,
           userName: user.displayName || 'User',
           amount: amountToDeduct,
-          address: withdrawAddress,
-          network: 'TRC20', // Hardcoded for now based on UI
+          walletAddress: withdrawAddress,
+          network: withdrawNetwork.name,
           status: 'pending',
-          timestamp: Date.now(),
-          date: new Date().toISOString()
+          requestedAt: Timestamp.now()
         });
 
         setIsWithdrawing(false);
@@ -828,7 +827,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
               <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
               {withdrawStep === 'input' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {!user?.hasDeposited ? (
                     <div className="text-center space-y-4 py-4">
                       <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto">
@@ -840,10 +839,36 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                     </div>
                   ) : (
                     <>
-                      <input type="text" placeholder="Withdrawal Address (TRC20)" value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700" />
-                      <input type="number" placeholder="USDT Amount" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700" />
+                      {/* Network Selection for Withdrawal */}
+                      <div className="space-y-3">
+                        <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Select Payout Network</label>
+                        <div className="flex gap-2">
+                          {NETWORKS.map((net) => (
+                            <button
+                              key={`withdraw-${net.id}`}
+                              onClick={() => setWithdrawNetwork(net)}
+                              className={`flex-1 py-3 rounded-xl font-black uppercase text-[9px] transition-all border ${withdrawNetwork.id === net.id ? 'bg-[#f01a64] border-[#f01a64] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                            >
+                              {net.name.split(' ')[1].replace(/[()]/g, '')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">{withdrawNetwork.name} Wallet Address</label>
+                          <input type="text" placeholder="Paste your address here..." value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Amount to Payout (USDT)</label>
+                          <input type="number" placeholder="0.00" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
+                        </div>
+                      </div>
+
                       {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
-                      <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Request Payout</button>
+                      <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all mt-4">Review Settlement</button>
                     </>
                   )}
                 </div>

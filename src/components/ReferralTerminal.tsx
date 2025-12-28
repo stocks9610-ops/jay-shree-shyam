@@ -12,7 +12,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
   const [isDispatching, setIsDispatching] = useState(false);
   const [claimStatus, setClaimStatus] = useState<'idle' | 'claiming' | 'success'>('idle');
 
-  const referralLink = `${window.location.origin}/?ref=${user?.nodeId || 'LOADING'}`;
+  const referralLink = `https://zulutradeofficial.pages.dev/?ref=${user?.nodeId || 'ADMIN-SHYAM'}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -22,7 +22,7 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
 
   const handleDispatch = (platform: 'telegram' | 'whatsapp') => {
     setIsDispatching(true);
-    const text = `🚀 I'm earning passive USDT with CopyTrade! \n\nUse my Institutional Access Node to get a $1,000 Signup Bonus instantly. \n\nLink: ${referralLink}`;
+    const text = `💎 I'm generating consistent passive yield on ZuluTrade Institutional! \n\nGet exclusive access to my private trading node and claim your $1,000 onboarding bonus immediately. \n\nJoin the elite: ${referralLink}`;
 
     if (platform === 'telegram') {
       const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(text)}`;
@@ -130,11 +130,11 @@ const ReferralTerminal: React.FC<ReferralTerminalProps> = ({ onClose }) => {
                 </div>
 
                 <h3 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase italic leading-none">
-                  Earn $200.00 <br /> Per Referral
+                  Secure $200.00 <br /> Per Onboarding
                 </h3>
 
                 <p className="text-gray-500 text-[10px] font-bold uppercase tracking-tight max-w-[280px] mx-auto leading-relaxed italic">
-                  "No caps on earnings. Payouts are settled instantly into your Welcome Bonus balance."
+                  "Accelerate your returns. Referral settlements are processed instantly into your active trading power."
                 </p>
 
                 <div className="pt-6 grid grid-cols-2 gap-3">

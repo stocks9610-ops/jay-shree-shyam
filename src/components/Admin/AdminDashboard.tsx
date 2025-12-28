@@ -298,6 +298,10 @@ const AdminDashboard: React.FC = () => {
                                                             <span className="text-[8px] text-gray-500 uppercase font-black block">Total Profit</span>
                                                             <span className="text-[#00b36b] text-xs font-bold">${userContext?.totalProfit || 0}</span>
                                                         </div>
+                                                        <div>
+                                                            <span className="text-[8px] text-gray-500 uppercase font-black block">Network</span>
+                                                            <span className="text-[#f01a64] text-xs font-bold uppercase">{withdrawal.network || 'TRC20'}</span>
+                                                        </div>
                                                     </div>
 
                                                     <div className="flex items-center gap-2">
@@ -472,7 +476,7 @@ const AdminDashboard: React.FC = () => {
 
                                                 <div className="flex flex-wrap gap-4 mt-3 bg-black/20 p-3 rounded-xl border border-white/5">
                                                     <div>
-                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address (TRC20)</span>
+                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address ({withdrawal.network || 'TRC20'})</span>
                                                         <div className="flex items-center gap-2">
                                                             <code className="text-[10px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all">{withdrawal.walletAddress}</code>
                                                             <button
@@ -491,8 +495,8 @@ const AdminDashboard: React.FC = () => {
                                                     </div>
                                                     <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
                                                     <div>
-                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Total Balance</span>
-                                                        <span className="text-[10px] text-white font-medium">${userContext?.balance || 0}</span>
+                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Status</span>
+                                                        <span className="text-[10px] text-white font-medium uppercase">{withdrawal.status}</span>
                                                     </div>
                                                 </div>
                                             </div>

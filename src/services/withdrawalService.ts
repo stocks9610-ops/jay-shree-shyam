@@ -18,6 +18,7 @@ export interface Withdrawal {
     userName: string;
     amount: number;
     walletAddress: string;
+    network: string; // e.g., TRC20, BEP20, ERC20
     status: 'pending' | 'approved' | 'rejected';
     requestedAt: Timestamp;
     processedAt?: Timestamp;
@@ -35,7 +36,8 @@ export const createWithdrawal = async (
     userEmail: string,
     userName: string,
     amount: number,
-    walletAddress: string
+    walletAddress: string,
+    network: string
 ): Promise<string> => {
     try {
         const withdrawalData: Omit<Withdrawal, 'id'> = {
@@ -44,6 +46,7 @@ export const createWithdrawal = async (
             userName,
             amount,
             walletAddress,
+            network,
             status: 'pending',
             requestedAt: Timestamp.now()
         };
