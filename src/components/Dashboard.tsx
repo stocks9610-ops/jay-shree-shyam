@@ -273,7 +273,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   // Fetch Strategies from Firebase
   useEffect(() => {
-    const q = query(collection(db, 'strategies'), orderBy('order', 'asc'));
+    const q = query(collection(db, STRATEGIES_COLLECTION), orderBy('order', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Strategy));
       setStrategies(data);
@@ -446,7 +446,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         await updateUser({ balance: user.balance - amountToDeduct });
 
         // 2. Create Withdrawal Record
-        await addDoc(collection(db, 'withdrawals'), {
+        await addDoc(collection(db, WITHDRAWALS_COLLECTION), {
           userId: user.uid,
           userEmail: user.email,
           userName: user.displayName || 'User',

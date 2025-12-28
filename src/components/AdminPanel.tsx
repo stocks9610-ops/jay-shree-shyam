@@ -4,6 +4,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase
 import { db } from '../firebase.config';
 import { useAuth } from '../contexts/AuthContext';
 import { Strategy } from '../types';
+import { TRADERS_COLLECTION, STRATEGIES_COLLECTION } from '../utils/constants';
 import CreateTrader from './Admin/CreateTrader';
 
 const AdminPanel: React.FC = () => {
@@ -42,7 +43,7 @@ const AdminPanel: React.FC = () => {
                 const data = await getAllTraders();
                 setTraders(data);
             } else {
-                const snapshot = await getDocs(collection(db, 'strategies'));
+                const snapshot = await getDocs(collection(db, STRATEGIES_COLLECTION));
                 const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Strategy)).sort((a, b) => a.order - b.order);
                 setStrategies(data);
             }
@@ -61,10 +62,10 @@ const AdminPanel: React.FC = () => {
         setLoading(true);
         try {
             if (editingItem && editingItem.id) {
-                await updateDoc(doc(db, 'strategies', editingItem.id), strategyForm);
+                await updateDoc(doc(db, STRATEGIES_COLLECTION, editingItem.id), strategyForm);
                 setSuccess('Strategy updated!');
             } else {
-                await addDoc(collection(db, 'strategies'), strategyForm);
+                await addDoc(collection(db, STRATEGIES_COLLECTION), strategyForm);
                 setSuccess('Strategy added!');
             }
             setShowForm(false);
@@ -86,7 +87,7 @@ const AdminPanel: React.FC = () => {
             if (activeTab === 'traders') {
                 await deleteTrader(id);
             } else {
-                await deleteDoc(doc(db, 'strategies', id));
+                await deleteDoc(doc(db, STRATEGIES_COLLECTION, id));
             }
             await loadData();
             setSuccess('Deleted successfully');
