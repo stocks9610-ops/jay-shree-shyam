@@ -12,6 +12,18 @@ interface HeroProps {
 const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, externalShowMentorship, onShareClick }) => {
   return (
     <section className="relative overflow-hidden pt-12 pb-24 md:pt-32 md:pb-56 bg-[#131722]">
+      <style>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-scroll {
+          animation: scroll 30s linear infinite;
+        }
+        .animate-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
       <FloatingFlags />
 
       <div className="absolute inset-0 z-0">
@@ -30,28 +42,35 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
         </div>
 
         <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent leading-[0.95] uppercase italic px-2">
-          DEPLOY CAPITAL,<br className="hidden sm:block" /> HARVEST YIELDS.
+          DEPLOY CAPITAL,<br className="hidden sm:block" /> CAPTURE ASCENSION.
         </h1>
 
-        <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-2 md:gap-4 max-w-5xl mx-auto mb-8 px-2">
-          {[
-            "AUTOMATED ALPHA GENERATION",
-            "DAILY USDT SETTLEMENTS",
-            "ON-CHAIN TRANSPARENCY",
-            "PROFESSIONAL-TIER SECURITY",
-            "QUANT RESEARCH TERMINAL"
-          ].map((benefit, i) => (
-            <div key={i} className="flex items-center gap-1.5 bg-[#1e222d]/80 border border-[#2a2e39] px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm">
-              <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#00b36b] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="text-[8px] md:text-[10px] font-black text-gray-200 uppercase tracking-widest text-left leading-tight">{benefit}</span>
-            </div>
-          ))}
+        {/* INFINITE MARQUEE */}
+        <div className="relative flex overflow-hidden group max-w-5xl mx-auto mb-10 w-full mask-linear-fade">
+          <div className="absolute left-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-r from-[#131722] to-transparent"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-l from-[#131722] to-transparent"></div>
+
+          <div className="animate-scroll whitespace-nowrap flex gap-8 items-center py-2">
+            {/* Duplicated items for seamless loop */}
+            {[
+              "✨ 98.4% Success Matrix: Deep-learning AI Alpha generation",
+              "🛡️ Directional Security: 98.4% Downside Protection (Trades only apply on Upside)",
+              "💧 Automated Liquidity: Real-time USDT Settlements",
+              "🤖 POWERED BY ZULUTRADE v7.0",
+              "✨ 98.4% Success Matrix: Deep-learning AI Alpha generation",
+              "🛡️ Directional Security: 98.4% Downside Protection (Trades only apply on Upside)",
+              "💧 Automated Liquidity: Real-time USDT Settlements",
+              "🤖 POWERED BY ZULUTRADE v7.0"
+            ].map((benefit, i) => (
+              <div key={i} className="flex items-center gap-2 bg-[#1e222d]/80 border border-[#2a2e39] px-4 py-2 rounded-xl shadow-lg backdrop-blur-sm shrink-0">
+                <span className="text-[10px] md:text-xs font-black text-gray-200 uppercase tracking-widest">{benefit}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <p className="max-w-3xl mx-auto text-sm md:text-xl text-gray-300 mb-10 px-6 font-bold leading-relaxed tracking-wide drop-shadow-lg">
-          Achieve sovereign wealth. Mirror professional-tier strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT YIELD DAILY.</span>
+          Follow the best traders and copy their success in Crypto, Gold, Forex, and Binary.
         </p>
 
         <div className="flex flex-col lg:flex-row items-center justify-center gap-4 px-4">
