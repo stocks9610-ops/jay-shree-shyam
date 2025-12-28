@@ -681,28 +681,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
 
         <GlobalStats />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
-            <span className={`text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="bg-[#1e222d] border border-white/5 p-4 md:p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
+            <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
+            <span className={`text-lg md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
           </div>
-          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-6 rounded-3xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-4 md:p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute top-2 right-2">
-              {!user?.hasDeposited && !isDemoActive && <span className="text-[8px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
-              {isDemoActive && <span className="text-[8px] bg-[#00b36b] text-white px-2 py-0.5 rounded-full font-black animate-pulse">⚡ LIVE</span>}
+              {!user?.hasDeposited && !isDemoActive && <span className="text-[7px] md:text-[8px] bg-amber-500 text-black px-1.5 md:px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
+              {isDemoActive && <span className="text-[7px] md:text-[8px] bg-[#00b36b] text-white px-1.5 md:px-2 py-0.5 rounded-full font-black animate-pulse">⚡ LIVE</span>}
             </div>
-            <span className="text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
-            <span className="text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
-            {!user?.hasDeposited && !isDemoActive && <p className="text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
-            {isDemoActive && <p className="text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock Active (5 min)</p>}
+            <span className="text-[8px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
+            <span className="text-lg md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
+            {!user?.hasDeposited && !isDemoActive && <p className="text-[7px] md:text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
+            {isDemoActive && <p className="text-[7px] md:text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock (5m)</p>}
           </div>
-          <div className="bg-[#1e222d] border border-white/5 p-6 rounded-3xl">
-            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
-            <span className="text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
+          <div className="bg-[#1e222d] border border-white/5 p-4 md:p-6 rounded-3xl">
+            <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
+            <span className="text-lg md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-6 rounded-3xl flex items-center justify-between shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
-            <span className="text-sm font-black text-white uppercase italic">Add Funds</span>
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-4 md:p-6 rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
+            <span className="text-xs md:text-sm font-black text-white uppercase italic">Add Funds</span>
+            <svg className="h-4 w-4 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 

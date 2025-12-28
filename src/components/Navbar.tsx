@@ -16,6 +16,7 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLogout, onDashboardClick, onHomeClick, onSearch, showSearch }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showTerminateConfirm, setShowTerminateConfirm] = useState(false);
   const [isTerminating, setIsTerminating] = useState(false);
@@ -130,6 +131,16 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
         </div>
 
         <div className="flex items-center gap-2 md:gap-4 ml-auto lg:ml-0">
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="md:hidden p-2 text-gray-400 hover:text-[#f01a64] transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showMobileMenu ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+          </button>
+
           {user ? (
             <div className="relative" ref={menuRef}>
               <button
@@ -283,6 +294,35 @@ const Navbar: React.FC<NavbarProps> = ({ onJoinClick, onGalleryClick, user, onLo
               )}
               <p className="text-[8px] text-gray-600 font-black uppercase tracking-[0.2em] italic">Security Protocol: AES-256</p>
             </div>
+          </div>
+        </div>
+      )}
+      {showMobileMenu && (
+        <div className="md:hidden fixed top-[70px] left-0 right-0 bg-[#1e222d] border-b border-[#2a2e39] shadow-2xl z-[55] animate-in slide-in-from-top-2">
+          <div className="flex flex-col p-4 space-y-2">
+            <button
+              onClick={(e) => { handleLinkClick(e, onHomeClick); setShowMobileMenu(false); }}
+              className="flex items-center gap-3 p-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+              <span className="font-bold uppercase tracking-wider text-xs">Marketplace</span>
+            </button>
+            <button
+              onClick={(e) => { handleLinkClick(e, onGalleryClick); setShowMobileMenu(false); }}
+              className="flex items-center gap-3 p-3 text-gray-400 hover:text-[#f01a64] hover:bg-[#f01a64]/10 rounded-xl transition-all"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+              <span className="font-bold uppercase tracking-wider text-xs">Success Hall</span>
+            </button>
+            {user && (
+              <button
+                onClick={(e) => { handleLinkClick(e, onDashboardClick); setShowMobileMenu(false); }}
+                className="flex items-center gap-3 p-3 text-gray-400 hover:text-[#00b36b] hover:bg-[#00b36b]/10 rounded-xl transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                <span className="font-bold uppercase tracking-wider text-xs">Dashboard</span>
+              </button>
+            )}
           </div>
         </div>
       )}
