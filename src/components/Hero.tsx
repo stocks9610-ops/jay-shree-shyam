@@ -35,11 +35,11 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
 
         <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-2 md:gap-4 max-w-5xl mx-auto mb-8 px-2">
           {[
-            "Automated Alpha Generation",
-            "Daily USDT Settlements",
-            "On-Chain Transparency",
-            "Professional-Tier Security",
-            "Quant Research Terminal"
+            "AUTOMATED ALPHA GENERATION",
+            "DAILY USDT SETTLEMENTS",
+            "ON-CHAIN TRANSPARENCY",
+            "PROFESSIONAL-TIER SECURITY",
+            "QUANT RESEARCH TERMINAL"
           ].map((benefit, i) => (
             <div key={i} className="flex items-center gap-1.5 bg-[#1e222d]/80 border border-[#2a2e39] px-3 py-2 rounded-xl shadow-lg backdrop-blur-sm">
               <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-[#00b36b] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
         </div>
 
         <p className="max-w-3xl mx-auto text-sm md:text-xl text-gray-300 mb-10 px-6 font-bold leading-relaxed tracking-wide drop-shadow-lg">
-          Achieve sovereign wealth. Mirror professional-tier strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT Yield Daily.</span>
+          Achieve sovereign wealth. Mirror professional-tier strategies and generate passive <span className="text-[#f01a64] uppercase font-black text-base md:text-2xl border-b-2 border-[#f01a64]">USDT YIELD DAILY.</span>
         </p>
 
         <div className="flex flex-col lg:flex-row items-center justify-center gap-4 px-4">
