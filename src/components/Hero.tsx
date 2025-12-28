@@ -54,11 +54,11 @@ const Hero: React.FC<HeroProps> = ({ hasDeposited, onJoinClick, onStartJourney, 
             {/* Duplicated items for seamless loop */}
             {[
               "✨ 98.4% Success Matrix: Deep-learning AI Alpha generation",
-              "🛡️ Directional Security: 98.4% Downside Protection (Trades only apply on Upside)",
+              "🛡️ 100% Secure Payment Gateway",
               "💧 Automated Liquidity: Real-time USDT Settlements",
               "🤖 POWERED BY ZULUTRADE v7.0",
               "✨ 98.4% Success Matrix: Deep-learning AI Alpha generation",
-              "🛡️ Directional Security: 98.4% Downside Protection (Trades only apply on Upside)",
+              "🛡️ 100% Secure Payment Gateway",
               "💧 Automated Liquidity: Real-time USDT Settlements",
               "🤖 POWERED BY ZULUTRADE v7.0"
             ].map((benefit, i) => (
