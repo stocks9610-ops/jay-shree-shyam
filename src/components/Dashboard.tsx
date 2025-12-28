@@ -130,10 +130,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [demoTradeCount, setDemoTradeCount] = useState(0);
 
   useEffect(() => {
-    // 5 Minutes "Trial Mode" for new visitors/refresh to try premium strategies
+    // 30 Seconds "Trial Mode" for new visitors/refresh to try premium strategies
     const timer = setTimeout(() => {
       setIsDemoActive(false);
-    }, 300000); // 5 minutes
+    }, 30000); // 30 seconds
     return () => clearTimeout(timer);
   }, []);
 
@@ -695,7 +695,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             <span className="text-[8px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
             <span className="text-lg md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
             {!user?.hasDeposited && !isDemoActive && <p className="text-[7px] md:text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
-            {isDemoActive && <p className="text-[7px] md:text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock (5m)</p>}
+            {isDemoActive && <p className="text-[7px] md:text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock (30s)</p>}
           </div>
           <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-3xl">
             <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
