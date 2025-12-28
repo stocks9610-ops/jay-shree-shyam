@@ -13,6 +13,8 @@ import SuccessGallery from './components/SuccessGallery';
 import SignupModal from './components/SignupModal';
 import ReferralTerminal from './components/ReferralTerminal';
 import MarketChart from './components/MarketChart';
+import MobileBottomNav from './components/MobileBottomNav';
+
 
 // Admin & Auth Components - Lazy loaded for better performance
 import AuthForms from './components/Auth/AuthForms';
@@ -107,6 +109,7 @@ const MainLayout = () => {
           onClose={() => setShowReferral(false)}
         />
       )}
+      <MobileBottomNav />
     </div>
   );
 };
@@ -133,6 +136,7 @@ const DashboardLayout = () => {
       }>
         <Dashboard />
       </Suspense>
+      <MobileBottomNav />
     </>
   );
 };

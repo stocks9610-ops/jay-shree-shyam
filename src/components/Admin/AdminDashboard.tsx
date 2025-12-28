@@ -27,6 +27,7 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [withdrawalFilter, setWithdrawalFilter] = useState<'all' | 'pending' | 'processed'>('all');
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalWithdrawals: 0,
@@ -479,12 +480,54 @@ const AdminDashboard: React.FC = () => {
                 {/* Withdrawals Tab */}
                 {activeTab === 'withdrawals' && (
                     <div className="bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
-                        <h3 className="text-2xl font-black text-white mb-6">Withdrawal History</h3>
-                        <div className="space-y-4">
-                            {withdrawals.length === 0 ? (
-                                <p className="text-gray-500 text-center italic py-12">No withdrawal history found.</p>
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h3 className="text-2xl font-black text-white">Withdrawal History</h3>
+
+                            {/* Status Filter Buttons */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setWithdrawalFilter('all')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition ${withdrawalFilter === 'all'
+                                        ? 'bg-[#f01a64] text-white shadow-lg'
+                                        : 'bg-[#131722] text-gray-400 hover:text-white border border-[#2a2e39]'
+                                        }`}
+                                >
+                                    All ({withdrawals.length})
+                                </button>
+                                <button
+                                    onClick={() => setWithdrawalFilter('pending')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition ${withdrawalFilter === 'pending'
+                                        ? 'bg-yellow-500 text-white shadow-lg'
+                                        : 'bg-[#131722] text-gray-400 hover:text-white border border-[#2a2e39]'
+                                        }`}
+                                >
+                                    Pending ({withdrawals.filter(w => w.status === 'pending').length})
+                                </button>
+                                <button
+                                    onClick={() => setWithdrawalFilter('processed')}
+                                    className={`px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider transition ${withdrawalFilter === 'processed'
+                                        ? 'bg-[#00b36b] text-white shadow-lg'
+                                        : 'bg-[#131722] text-gray-400 hover:text-white border border-[#2a2e39]'
+                                        }`}
+                                >
+                                    Processed ({withdrawals.filter(w => w.status !== 'pending').length})
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            {withdrawals.filter(w => {
+                                if (withdrawalFilter === 'all') return true;
+                                if (withdrawalFilter === 'pending') return w.status === 'pending';
+                                return w.status !== 'pending'; // processed
+                            }).length === 0 ? (
+                                <p className="text-gray-500 text-center italic py-12">No {withdrawalFilter} withdrawals found.</p>
                             ) : (
-                                withdrawals.map((withdrawal) => {
+                                withdrawals.filter(w => {
+                                    if (withdrawalFilter === 'all') return true;
+                                    if (withdrawalFilter === 'pending') return w.status === 'pending';
+                                    return w.status !== 'pending';
+                                }).map((withdrawal) => {
                                     const userContext = users.find(u => u.uid === withdrawal.userId);
                                     let displayDate = 'Unknown Date';
                                     try {
@@ -496,58 +539,59 @@ const AdminDashboard: React.FC = () => {
                                     }
 
                                     return (
-                                        <div key={withdrawal.id} className="bg-[#131722] p-6 rounded-2xl border border-[#2a2e39] hover:border-white/10 transition-colors">
-                                            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center justify-between mb-2">
+                                        <div key={withdrawal.id} className="bg-[#131722] p-4 rounded-xl border border-[#2a2e39] hover:border-[#f01a64]/30 transition-all">
+                                            <div className="flex flex-col md:flex-row justify-between items-start gap-3">
+                                                <div className="flex-1 w-full">
+                                                    <div className="flex items-start justify-between mb-3">
                                                         <div>
                                                             <div className="text-white font-black uppercase text-sm">{withdrawal.userName}</div>
-                                                            <div className="text-gray-500 text-[10px] font-bold uppercase">{withdrawal.userEmail}</div>
+                                                            <div className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">{withdrawal.userEmail}</div>
                                                         </div>
                                                         <div className="text-right md:hidden">
-                                                            <div className="text-[#00b36b] font-black text-xl">${withdrawal.amount}</div>
+                                                            <div className="text-[#00b36b] font-black text-2xl">${withdrawal.amount}</div>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex flex-wrap gap-4 mt-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-black/30 p-3 rounded-lg border border-white/5">
                                                         <div>
-                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address ({withdrawal.network || 'TRC20'})</span>
+                                                            <span className="text-[8px] text-gray-500 font-black uppercase block mb-1">Wallet ({withdrawal.network || 'TRC20'})</span>
                                                             <div className="flex items-center gap-2">
-                                                                <code className="text-[10px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all">{withdrawal.walletAddress}</code>
+                                                                <code className="text-[9px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all truncate max-w-[200px]">{withdrawal.walletAddress}</code>
                                                                 <button
                                                                     onClick={() => navigator.clipboard.writeText(withdrawal.walletAddress)}
-                                                                    className="text-gray-500 hover:text-white"
+                                                                    className="text-gray-500 hover:text-[#f01a64] transition shrink-0"
                                                                     title="Copy Address"
                                                                 >
-                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
                                                         <div>
-                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Time</span>
-                                                            <span className="text-[10px] text-white font-medium">{displayDate}</span>
+                                                            <span className="text-[8px] text-gray-500 font-black uppercase block mb-1">Requested</span>
+                                                            <span className="text-[9px] text-white font-medium">{displayDate}</span>
                                                         </div>
-                                                        <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
                                                         <div>
-                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Status</span>
-                                                            <span className="text-[10px] text-white font-medium uppercase">{withdrawal.status}</span>
+                                                            <span className="text-[8px] text-gray-500 font-black uppercase block mb-1">Status</span>
+                                                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase ${withdrawal.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
+                                                                    withdrawal.status === 'approved' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
+                                                                        'bg-red-500/20 text-red-500'
+                                                                }`}>{withdrawal.status}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <div className="hidden md:block text-[#00b36b] font-black text-3xl">${withdrawal.amount}</div>
-                                                    <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                        withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
-                                                            'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                                    <div className="hidden md:block text-[#00b36b] font-black text-2xl">${withdrawal.amount}</div>
+                                                    <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                                            withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
+                                                                'bg-red-500/10 text-red-500 border border-red-500/20'
                                                         }`}>
                                                         {withdrawal.status}
                                                     </span>
                                                 </div>
                                             </div>
                                             {withdrawal.notes && (
-                                                <div className="mt-4 pt-3 border-t border-white/5 text-xs text-gray-400 italic">
+                                                <div className="mt-3 pt-3 border-t border-white/5 text-[10px] text-gray-400 italic">
                                                     <span className="text-red-500 font-bold not-italic mr-2">ADMIN NOTE:</span>
                                                     {withdrawal.notes}
                                                 </div>

@@ -267,9 +267,9 @@ const TraderProfileModal: React.FC<TraderProfileModalProps> = ({ trader, current
         <div className="bg-[#1e222d] border-t border-[#2a2e39] p-6 md:p-8 shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {!showDeployConfig ? (
             <div className="flex gap-3">
-              {trader.youtubeLink && (
+              {(trader.youtubeLink || trader.socials?.youtube) && (
                 <button
-                  onClick={() => window.open(trader.youtubeLink, '_blank')}
+                  onClick={() => window.open(trader.youtubeLink || trader.socials?.youtube || '', '_blank')}
                   className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 py-4 rounded-xl font-black text-white text-[9px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   Strategy

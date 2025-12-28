@@ -407,6 +407,22 @@ const CreateTrader: React.FC<CreateTraderProps> = ({ initialData, onSuccess, onC
                                     <input className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white text-xs outline-none focus:border-blue-500" value={form.avgDuration} onChange={e => setForm({ ...form, avgDuration: e.target.value })} />
                                 </div>
                             </div>
+
+                            <div className="grid grid-cols-2 gap-4 mt-4">
+                                <div>
+                                    <label className="text-[9px] text-gray-500 uppercase font-bold block mb-1">Category</label>
+                                    <select
+                                        className="w-full bg-[#131722] border border-white/5 p-2 rounded-lg text-white text-xs outline-none focus:border-blue-500"
+                                        value={form.category}
+                                        onChange={e => setForm({ ...form, category: e.target.value as any })}
+                                    >
+                                        <option value="crypto">Crypto</option>
+                                        <option value="binary">Binary</option>
+                                        <option value="gold">Gold</option>
+                                        <option value="forex">Forex</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

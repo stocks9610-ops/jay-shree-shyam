@@ -538,7 +538,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
 
   return (
-    <div className="bg-[#131722] min-h-screen pt-24 pb-32 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
+    <div className="bg-[#131722] min-h-screen pt-24 pb-32 md:pb-32 pb-24 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
       {(!user) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
           Loading Account Data...
