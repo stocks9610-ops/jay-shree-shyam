@@ -20,16 +20,13 @@ import { TRADERS_COLLECTION, SEGMENTS_COLLECTION, PAYMENT_METHODS_COLLECTION } f
 // Use Trader type directly as it now includes category
 export type FirebaseTrader = Trader;
 
-// Collection reference
-
-
 /**
  * Fetch all traders from Firebase
  */
 export const getAllTraders = async (): Promise<FirebaseTrader[]> => {
     try {
         const tradersRef = collection(db, TRADERS_COLLECTION);
-        const q = query(tradersRef); // orderBy('createdAt', 'desc') removed to prevent index errors temporarily
+        const q = query(tradersRef);
         const querySnapshot = await getDocs(q);
 
         const traders: FirebaseTrader[] = [];
@@ -52,6 +49,9 @@ export const getTraderById = async (traderId: string): Promise<FirebaseTrader | 
         const traderRef = doc(db, TRADERS_COLLECTION, traderId);
         const traderDoc = await getDoc(traderRef);
 
+        if (traderDoc.exists()) {
+            return { id: traderDoc.id, ...traderDoc.data() } as FirebaseTrader;
+        }
         return null;
     } catch (error) {
         console.error('Error fetching trader:', error);
@@ -116,7 +116,7 @@ export const subscribeToTraders = (
 ): (() => void) => {
     try {
         const tradersRef = collection(db, TRADERS_COLLECTION);
-        const q = query(tradersRef); // orderBy removed to ensure data loads without index
+        const q = query(tradersRef);
 
         const unsubscribe = onSnapshot(
             q,
@@ -157,10 +157,8 @@ export const getSegments = async (): Promise<TradingSegment[]> => {
 export const getPaymentMethods = async (): Promise<PaymentMethod[]> => {
     try {
         const pmRef = collection(db, PAYMENT_METHODS_COLLECTION);
-        // Filter by isActive if needed, or do it in frontend
         const q = query(pmRef);
         const snapshot = await getDocs(q);
-        // Map and sort or filter
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod));
     } catch (error) {
         console.error('Error fetching payment methods:', error);
