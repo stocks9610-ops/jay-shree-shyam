@@ -183,8 +183,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   };
 
   const handleSocialShare = (platform: 'whatsapp' | 'telegram') => {
-    const text = "Join me on this trading platform and get a $200 bonus! 🚀";
-    const url = "https://jay-shree-shyam.com/ref/USER123";
+    const text = "Experience the next evolution of wealth. We’ve combined the world’s Top Traders with Cutting-Edge AI to create the ultimate earning ecosystem.\n\n💎 Powered by ZuluTrade.com 💎\n\n🔥 THE NEW AI-HYBRID ADVANTAGE: ✅ Human + AI Mix: The intuition of pro traders meets 98.4% AI precision. ✅ 100% Risk-Free: Your trade ONLY applies when your trader moves UP. No loss on downward moves. ✅ Auto-Alpha: Mirror the 1% while you sleep. ✅ Instant Settlements: Daily USDT yields directly to your wallet.\n\n💰 SHARE & EARN $200 Invite 3 friends to join the cluster and we’ll credit $200 USDT to your capital instantly!\n\n🎫 PROMO CODE: ALPHA2026 👉 GET STARTED:";
+    // URL adapts to whatever domain you are hosting on (e.g., zulu-trade.pages.dev)
+    const url = `${window.location.origin}/ref/USER123`;
     if (platform === 'whatsapp') {
       window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, '_blank');
     } else {
