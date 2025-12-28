@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getFriendlyErrorMessage } from '../../utils/errorMapping';
 import { getAllUsers, UserData, updateUserProfile } from '../../services/userService';
 import {
     getAllWithdrawals,
@@ -71,7 +72,7 @@ const AdminDashboard: React.FC = () => {
             }
 
         } catch (err: any) {
-            setError(err.message || 'Failed to load data');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -88,7 +89,7 @@ const AdminDashboard: React.FC = () => {
             setSuccess('Withdrawal approved successfully!');
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to approve withdrawal');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -113,7 +114,7 @@ const AdminDashboard: React.FC = () => {
             setSuccess('Withdrawal rejected and funds refunded to user balance');
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to reject withdrawal');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -128,7 +129,7 @@ const AdminDashboard: React.FC = () => {
             setSuccess('Settings updated successfully!');
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to update settings');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -142,7 +143,7 @@ const AdminDashboard: React.FC = () => {
             setSuccess(`Deposit of $${deposit.amount} approved!`);
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to approve deposit');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -159,7 +160,7 @@ const AdminDashboard: React.FC = () => {
             setSuccess('Deposit rejected.');
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to reject deposit');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -376,7 +377,7 @@ const AdminDashboard: React.FC = () => {
                                                             setSuccess(`Withdrawals ${!user.hasDeposited ? 'unlocked' : 'locked'} for ${user.displayName}`);
                                                             await loadData();
                                                         } catch (err: any) {
-                                                            setError(err.message || 'Failed to update lock status');
+                                                            setError(getFriendlyErrorMessage(err));
                                                         } finally {
                                                             setLoading(false);
                                                         }

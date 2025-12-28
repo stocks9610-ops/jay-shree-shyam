@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getFriendlyErrorMessage } from '../../utils/errorMapping';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
@@ -56,7 +57,7 @@ const AuthForms: React.FC<AuthFormsProps> = ({ onSuccess }) => {
                 onSuccess(userCredential.user);
             }
         } catch (err: any) {
-            setError(err.message || 'Authentication failed');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }

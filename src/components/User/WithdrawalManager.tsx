@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getFriendlyErrorMessage } from '../../utils/errorMapping';
 import { Timestamp } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { getUserProfile, UserData } from '../../services/userService';
@@ -85,7 +86,7 @@ const WithdrawalManager: React.FC = () => {
             setAmount('');
             await loadData();
         } catch (err: any) {
-            setError(err.message || 'Failed to submit withdrawal request');
+            setError(getFriendlyErrorMessage(err));
         } finally {
             setLoading(false);
         }
