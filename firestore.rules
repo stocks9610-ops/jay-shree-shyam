@@ -32,7 +32,7 @@ service cloud.firestore {
       // 1. Owner can update fields (including balance for the simulation game) 
       //    BUT STRICTLY BLOCKED from changing their own 'role'.
       // 2. Admin can update everything.
-      allow update: if isAdmin() || (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
+      allow update: if isAdmin() || (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'frozenBalance', 'introBalance']));
       
       allow delete: if isAdmin();
     }

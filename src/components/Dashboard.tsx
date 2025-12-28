@@ -538,7 +538,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
 
   return (
-    <div className="bg-[#131722] min-h-screen pt-24 pb-32 md:pb-32 pb-24 px-4 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
+    <div className="bg-[#131722] min-h-screen pt-20 pb-24 md:pt-24 md:pb-32 px-3 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
       {(!user) && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
           Loading Account Data...
@@ -604,7 +604,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       </div>
 
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
           {/* VIP Progress Widget (Existing) */}
           <div className="lg:col-span-2">
             <VIPProgress
@@ -614,12 +614,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
 
           {/* Feature 1: Daily Streak Widget */}
-          <div className="bg-[#1e222d] border border-white/5 rounded-3xl p-6 flex flex-col justify-center relative overflow-hidden group">
+          <div className="bg-[#1e222d] border border-white/5 rounded-3xl p-4 md:p-6 flex flex-col justify-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="relative z-10">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-black uppercase text-xs tracking-widest">Daily Streak</h3>
-                <span className="text-orange-500 font-black text-xl">{streakDays} <span className="text-[10px] text-gray-500">DAYS</span></span>
+                <h3 className="text-white font-black uppercase text-[10px] md:text-xs tracking-widest">Daily Streak</h3>
+                <span className="text-orange-500 font-black text-lg md:text-xl">{streakDays} <span className="text-[10px] text-gray-500">DAYS</span></span>
               </div>
               <div className="flex justify-between items-center gap-1">
                 {[1, 2, 3, 4, 5, 6, 7].map((day) => (
@@ -641,7 +641,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           {/* Animated Border Gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-purple-600 to-[#f01a64] opacity-20 animate-pulse"></div>
 
-          <div className="bg-[#131722] rounded-[1.3rem] p-6 relative z-10 h-full">
+          <div className="bg-[#131722] rounded-[1.3rem] p-4 md:p-6 relative z-10 h-full">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
 
               {/* Left: Text & Progress */}
@@ -651,7 +651,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-white font-black uppercase text-lg italic tracking-tighter">Invite & Earn $200</h3>
+                    <h3 className="text-white font-black uppercase text-base md:text-lg italic tracking-tighter">Invite & Earn $200</h3>
                     <p className="text-gray-400 text-[10px] font-bold">Unlocks instantly after successful referrals</p>
                   </div>
                 </div>
@@ -682,11 +682,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
         <GlobalStats />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <div className="bg-[#1e222d] border border-white/5 p-4 md:p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
+          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
             <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
             <span className={`text-lg md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
           </div>
-          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-4 md:p-6 rounded-3xl relative overflow-hidden">
+          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-3 md:p-6 rounded-3xl relative overflow-hidden">
             <div className="absolute top-2 right-2">
               {!user?.hasDeposited && !isDemoActive && <span className="text-[7px] md:text-[8px] bg-amber-500 text-black px-1.5 md:px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
               {isDemoActive && <span className="text-[7px] md:text-[8px] bg-[#00b36b] text-white px-1.5 md:px-2 py-0.5 rounded-full font-black animate-pulse">⚡ LIVE</span>}
@@ -696,11 +696,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             {!user?.hasDeposited && !isDemoActive && <p className="text-[7px] md:text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
             {isDemoActive && <p className="text-[7px] md:text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock (5m)</p>}
           </div>
-          <div className="bg-[#1e222d] border border-white/5 p-4 md:p-6 rounded-3xl">
+          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-3xl">
             <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
             <span className="text-lg md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-4 md:p-6 rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
+          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-3 md:p-6 rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
             <span className="text-xs md:text-sm font-black text-white uppercase italic">Add Funds</span>
             <svg className="h-4 w-4 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
@@ -756,14 +756,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 // Locked if: Premium AND Not Deposited AND (Demo Time Over OR Max Demo Trades Reached)
                 const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
                 return (
-                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-8 rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-white font-black text-lg uppercase">{plan.name}</h4>
+                      <h4 className="text-white font-black text-base md:text-lg uppercase">{plan.name}</h4>
                       {isLocked && <span className="text-[8px] bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full font-black">🔒 VIP</span>}
                     </div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">{plan.hook}</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 md:mb-6">{plan.hook}</p>
                     <div className="flex justify-between items-end">
-                      <span className="text-[#00b36b] font-black text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
+                      <span className="text-[#00b36b] font-black text-lg md:text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
                       <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
                     </div>
                     {isLocked && (
@@ -786,7 +786,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
 
           <div className="space-y-6">
-            <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[3rem] p-8 shadow-2xl">
+            <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-5 md:p-8 shadow-2xl">
               <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
 
               {/* Network Selector */}
