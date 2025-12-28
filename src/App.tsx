@@ -109,7 +109,7 @@ const MainLayout = () => {
           onClose={() => setShowReferral(false)}
         />
       )}
-      <MobileBottomNav />
+      <MobileBottomNav onGalleryClick={() => setShowGallery(true)} />
     </div>
   );
 };
@@ -136,7 +136,7 @@ const DashboardLayout = () => {
       }>
         <Dashboard />
       </Suspense>
-      <MobileBottomNav />
+      <MobileBottomNav onGalleryClick={() => window.location.href = '/'} />
     </>
   );
 };
