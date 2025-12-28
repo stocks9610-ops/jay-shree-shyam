@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllTraders, deleteTrader, FirebaseTrader } from '../services/firebaseService';
+import { getAllTraders, deleteTrader, FirebaseTrader } from '../services/traderService';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { useAuth } from '../contexts/AuthContext';
@@ -113,92 +113,74 @@ const AdminPanel: React.FC = () => {
         setShowForm(true);
     };
 
-    // --- RENDER HELPERS ---
-
-    if (authLoading) return <div className="min-h-screen bg-[#131722] flex items-center justify-center text-white">Loading Security...</div>;
-
-    if (!isAdmin) {
-        return (
-            <div className="min-h-screen bg-[#131722] flex items-center justify-center p-4">
-                <div className="bg-[#1e222d] p-8 rounded-3xl border border-red-500/30 max-w-md w-full text-center">
-                    <h1 className="text-2xl font-black text-white mb-2">Access Denied</h1>
-                    <p className="text-gray-400 text-sm">You do not have administrative privileges.</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-[#131722] p-4 md:p-8 pb-32">
-            <div className="max-w-7xl mx-auto space-y-8">
+        <div className="space-y-8">
 
-                {/* Internal Tabs */}
-                <div className="flex bg-[#1e222d] p-1 rounded-xl border border-white/5 w-fit">
-                    <button onClick={() => setActiveTab('traders')} className={`px-4 md:px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'traders' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Traders</button>
-                    <button onClick={() => setActiveTab('strategies')} className={`px-4 md:px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'strategies' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Strategies</button>
-                </div>
-
-                {/* Status Messages */}
-                {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-bold">{error}</div>}
-                {success && <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm font-bold">{success}</div>}
-
-                {/* Main Content */}
-                <div className="bg-[#1e222d] rounded-[2.5rem] border border-white/5 p-6 md:p-8 min-h-[500px]">
-                    <div className="flex justify-between items-center mb-8">
-                        <h2 className="text-xl font-black text-white uppercase italic">
-                            {activeTab === 'traders' ? 'Active Traders Database' : 'Profit Strategy Logic'}
-                        </h2>
-                        <button onClick={handleAddNew} className="bg-[#00b36b] hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-green-500/20">
-                            + Add New
-                        </button>
-                    </div>
-
-                    {loading ? (
-                        <div className="text-center py-20 text-gray-500 font-mono animate-pulse">SYNCING DATABASE...</div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* TRADERS LIST */}
-                            {activeTab === 'traders' && traders.map(t => (
-                                <div key={t.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                    <img src={t.avatar} className="w-12 h-12 rounded-xl object-cover" />
-                                    <div className="flex-1 text-center md:text-left">
-                                        <h3 className="text-white font-bold">{t.name}</h3>
-                                        <div className="flex flex-wrap gap-2 justify-center md:justify-start mt-1 items-center">
-                                            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase">{t.category}</span>
-                                            <span className="text-[10px] bg-[#00b36b]/10 text-[#00b36b] px-2 py-0.5 rounded uppercase">ROI {t.roi}%</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleEdit(t)} className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
-                                        <button onClick={() => handleDelete(t.id)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* STRATEGIES LIST */}
-                            {activeTab === 'strategies' && strategies.map(s => (
-                                <div key={s.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                    <div className="w-12 h-12 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64] font-black text-xl">
-                                        {s.order}
-                                    </div>
-                                    <div className="flex-1 text-center md:text-left">
-                                        <h3 className="text-white font-bold">{s.name}</h3>
-                                        <div className="flex gap-2 justify-center md:justify-start mt-1">
-                                            <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase">{s.duration}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleEdit(s)} className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
-                                        <button onClick={() => handleDelete(s.id!)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+            {/* Internal Tabs */}
+            <div className="flex bg-[#1e222d] p-1 rounded-xl border border-white/5 w-fit">
+                <button onClick={() => setActiveTab('traders')} className={`px-4 md:px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'traders' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Traders</button>
+                <button onClick={() => setActiveTab('strategies')} className={`px-4 md:px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${activeTab === 'strategies' ? 'bg-[#f01a64] text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}>Strategies</button>
             </div>
 
-            {/* Modal Form */}
+            {/* Status Messages */}
+            {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm font-bold">{error}</div>}
+            {success && <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-xl text-sm font-bold">{success}</div>}
+
+            {/* Main Content */}
+            <div className="bg-[#1e222d] rounded-[2.5rem] border border-white/5 p-6 md:p-8 min-h-[500px]">
+                <div className="flex justify-between items-center mb-8">
+                    <h2 className="text-xl font-black text-white uppercase italic">
+                        {activeTab === 'traders' ? 'Active Traders Database' : 'Profit Strategy Logic'}
+                    </h2>
+                    <button onClick={handleAddNew} className="bg-[#00b36b] hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg hover:shadow-green-500/20">
+                        + Add New
+                    </button>
+                </div>
+
+                {loading ? (
+                    <div className="text-center py-20 text-gray-500 font-mono animate-pulse">SYNCING DATABASE...</div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* TRADERS LIST */}
+                        {activeTab === 'traders' && traders.map(t => (
+                            <div key={t.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                                <img src={t.avatar} className="w-12 h-12 rounded-xl object-cover" />
+                                <div className="flex-1 text-center md:text-left">
+                                    <h3 className="text-white font-bold">{t.name}</h3>
+                                    <div className="flex flex-wrap gap-2 justify-center md:justify-start mt-1 items-center">
+                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase">{t.category}</span>
+                                        <span className="text-[10px] bg-[#00b36b]/10 text-[#00b36b] px-2 py-0.5 rounded uppercase">ROI {t.roi}%</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleEdit(t)} className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
+                                    <button onClick={() => handleDelete(t.id)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* STRATEGIES LIST */}
+                        {activeTab === 'strategies' && strategies.map(s => (
+                            <div key={s.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
+                                <div className="w-12 h-12 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64] font-black text-xl">
+                                    {s.order}
+                                </div>
+                                <div className="flex-1 text-center md:text-left">
+                                    <h3 className="text-white font-bold">{s.name}</h3>
+                                    <div className="flex gap-2 justify-center md:justify-start mt-1">
+                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase">{s.duration}</span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleEdit(s)} className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
+                                    <button onClick={() => handleDelete(s.id!)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {showForm && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-[#1e222d] w-full max-w-6xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/10 p-1 shadow-2xl">
@@ -235,7 +217,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div >
+        </div>
     );
 };
 

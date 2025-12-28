@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { addTrader, updateTrader, FirebaseTrader } from '../../services/firebaseService';
+import { addTrader, updateTrader, FirebaseTrader } from '../../services/traderService';
 // Removed uploadImage import as we are using Base64 bypass
 
 interface CreateTraderProps {

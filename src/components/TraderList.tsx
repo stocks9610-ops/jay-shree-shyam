@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Trader, TradingSegment } from '../types';
 import TraderProfileModal from './TraderProfileModal';
-import { subscribeToTraders, getSegments } from '../services/firebaseService';
+import { subscribeToTraders, getSegments, FirebaseTrader } from '../services/traderService';
 
 
 const SocialIcons: React.FC<{ color: string }> = ({ color }) => (

@@ -1,4 +1,3 @@
-
 import {
     collection,
     addDoc,
@@ -11,6 +10,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { USERS_COLLECTION, DEPOSITS_COLLECTION } from '../utils/constants';
 
 export interface Deposit {
     id?: string;
@@ -19,15 +19,13 @@ export interface Deposit {
     userEmail: string;
     amount: number;
     network: string; // TRC20, ERC20, etc.
-    proofUrl: string; // URL to the image (could be base64 for now if not using storage, but better as a storage URL ideally. We will use what the FE gives)
+    proofUrl: string; // URL to the image 
     status: 'pending' | 'approved' | 'rejected';
     requestedAt: Timestamp;
     processedAt?: Timestamp;
     processedBy?: string;
     notes?: string;
 }
-
-const DEPOSITS_COLLECTION = 'deposits';
 
 /**
  * Create a new deposit request
@@ -47,7 +45,7 @@ export const createDeposit = async (
             userEmail,
             amount,
             network,
-            proofUrl, // In real app, upload this to Storage first. For now, it might be base64 from FE.
+            proofUrl,
             status: 'pending',
             requestedAt: Timestamp.now()
         };
@@ -68,7 +66,6 @@ export const getPendingDeposits = async (): Promise<Deposit[]> => {
         const q = query(
             collection(db, DEPOSITS_COLLECTION),
             where('status', '==', 'pending')
-            // orderBy('requestedAt', 'desc') // Requires index usually
         );
 
         const snapshot = await getDocs(q);
@@ -77,7 +74,6 @@ export const getPendingDeposits = async (): Promise<Deposit[]> => {
             deposits.push({ id: doc.id, ...doc.data() } as Deposit);
         });
 
-        // Manual sort to avoid index issues if not deployed
         return deposits.sort((a, b) => b.requestedAt.toMillis() - a.requestedAt.toMillis());
     } catch (error) {
         console.error('Error getting pending deposits:', error);
@@ -105,29 +101,12 @@ export const approveDeposit = async (
         });
 
         // 2. Credit User Balance
-        // We import the userService function here to avoid circular dep issues if possible, 
-        // or just duplicate the simple update logic. Better to keep it transactional if possible.
-        const userRef = doc(db, 'users', userId);
-        // We need to read current balance first to increment safely, or use increment().
-        // For simplicity reusing the service logic pattern:
-        // However, we are in a separate file. Let's do a direct Firestore update for atomicity if we could, but here separate.
-
-        // Note: Ideally use a Transaction. For now, sequential.
-        // Importing interactively or assuming user exists.
-
-        // Let's use the userService helper if possible, but to avoid circular imports, we just update doc directly.
-        // Use increment for atomic update
+        const userRef = doc(db, USERS_COLLECTION, userId);
         const { increment } = await import('firebase/firestore');
         await updateDoc(userRef, {
             balance: increment(amount),
-            totalInvested: increment(0), // Keep fields consistent
             hasDeposited: true
         });
-
-        // We will maintain the balance update in the Controller (UI) or here?
-        // Let's do it here to ensure "Approve" = "Money Added".
-        // Use importing from userService might cause circular dependency if userService imports this.
-        // Checking userService... it doesn't seem to import depositService.
 
     } catch (error) {
         console.error('Error approving deposit:', error);

@@ -13,6 +13,7 @@ import {
 import { Trader } from '../types';
 
 import { db } from '../firebase.config';
+import { USERS_COLLECTION } from '../utils/constants';
 
 export interface UserData {
     uid: string;
@@ -41,7 +42,7 @@ export interface UserData {
     totalProfit?: number;
 }
 
-const USERS_COLLECTION = 'users';
+
 
 /**
  * Create a new user profile in Firestore

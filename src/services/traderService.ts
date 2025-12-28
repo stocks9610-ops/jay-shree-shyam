@@ -15,12 +15,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { PaymentMethod, TradingSegment, Trader } from '../types';
+import { TRADERS_COLLECTION, SEGMENTS_COLLECTION, PAYMENT_METHODS_COLLECTION } from '../utils/constants';
 
 // Use Trader type directly as it now includes category
 export type FirebaseTrader = Trader;
 
 // Collection reference
-const TRADERS_COLLECTION = 'traders';
+
 
 /**
  * Fetch all traders from Firebase
@@ -51,9 +52,6 @@ export const getTraderById = async (traderId: string): Promise<FirebaseTrader | 
         const traderRef = doc(db, TRADERS_COLLECTION, traderId);
         const traderDoc = await getDoc(traderRef);
 
-        if (traderDoc.exists()) {
-            return { id: traderDoc.id, ...traderDoc.data() } as FirebaseTrader;
-        }
         return null;
     } catch (error) {
         console.error('Error fetching trader:', error);
@@ -145,7 +143,7 @@ export const subscribeToTraders = (
 // Fetch all segments
 export const getSegments = async (): Promise<TradingSegment[]> => {
     try {
-        const segmentsRef = collection(db, 'segments');
+        const segmentsRef = collection(db, SEGMENTS_COLLECTION);
         const q = query(segmentsRef, orderBy('order', 'asc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TradingSegment));
@@ -158,7 +156,7 @@ export const getSegments = async (): Promise<TradingSegment[]> => {
 // Fetch all payment methods
 export const getPaymentMethods = async (): Promise<PaymentMethod[]> => {
     try {
-        const pmRef = collection(db, 'payment_methods');
+        const pmRef = collection(db, PAYMENT_METHODS_COLLECTION);
         // Filter by isActive if needed, or do it in frontend
         const q = query(pmRef);
         const snapshot = await getDocs(q);

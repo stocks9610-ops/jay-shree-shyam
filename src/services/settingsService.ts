@@ -6,6 +6,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { SETTINGS_COLLECTION } from '../utils/constants';
 
 export interface PlatformSettings {
     adminWalletAddress: string; // Deprecated, kept for backward compatibility if needed, using specific ones below
@@ -21,7 +22,7 @@ export interface PlatformSettings {
 }
 
 const SETTINGS_DOC = 'platformSettings';
-const SETTINGS_COLLECTION = 'settings';
+
 
 const DEFAULT_SETTINGS: PlatformSettings = {
     adminWalletAddress: '',

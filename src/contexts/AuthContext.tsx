@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../firebase.config';
+import { USERS_COLLECTION } from '../utils/constants';
 import { getUserProfile, updateUserProfile, createUserProfile, UserData } from '../services/userService';
 
 interface AuthContextType {
@@ -46,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (user) {
                 try {
                     // Set up real-time listener for user profile
-                    const userRef = doc(db, 'users', user.uid);
+                    const userRef = doc(db, USERS_COLLECTION, user.uid);
                     profileUnsubscribe = onSnapshot(userRef, (doc) => {
                         if (doc.exists()) {
                             setUserProfile(doc.data() as UserData);

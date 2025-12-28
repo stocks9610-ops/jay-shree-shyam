@@ -11,9 +11,9 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "setup-backend": "vite-node scripts/setupBackend.ts",
-    "create-admin": "vite-node scripts/createAdmin.ts",
-    "init-db": "vite-node scripts/initDatabase.ts"
+    "setup-auth": "vite-node scripts/manage.ts setup-admin",
+    "seed": "vite-node scripts/manage.ts init",
+    "manage": "vite-node scripts/manage.ts"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.2",

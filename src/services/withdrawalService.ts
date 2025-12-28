@@ -10,6 +10,7 @@ import {
     Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
+import { WITHDRAWALS_COLLECTION } from '../utils/constants';
 
 export interface Withdrawal {
     id?: string;
@@ -26,7 +27,7 @@ export interface Withdrawal {
     notes?: string;
 }
 
-const WITHDRAWALS_COLLECTION = 'withdrawals';
+
 
 /**
  * Create a new withdrawal request

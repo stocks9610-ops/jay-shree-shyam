@@ -10,7 +10,8 @@ import {
 } from '../../services/withdrawalService';
 import { getSettings, updateSettings, PlatformSettings } from '../../services/settingsService';
 import { getPendingDeposits, approveDeposit, rejectDeposit, Deposit } from '../../services/depositService';
-import { auth } from '../../firebase.config';
+import { auth, db } from '../../firebase.config';
+import { USERS_COLLECTION, WITHDRAWALS_COLLECTION, DEPOSITS_COLLECTION } from '../../utils/constants';
 
 import AdminPanel from '../AdminPanel';
 
@@ -93,13 +94,23 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
-    const handleRejectWithdrawal = async (withdrawalId: string, reason: string) => {
+    const handleRejectWithdrawal = async (withdrawalId: string, userId: string, amount: number, reason: string) => {
         if (!currentUser) return;
 
         try {
             setLoading(true);
+            // 1. Mark as rejected
             await rejectWithdrawal(withdrawalId, currentUser.uid, reason);
-            setSuccess('Withdrawal rejected');
+
+            // 2. Refund balance to user
+            const user = users.find(u => u.uid === userId);
+            if (user) {
+                await updateUserProfile(userId, {
+                    balance: (user.balance || 0) + amount
+                });
+            }
+
+            setSuccess('Withdrawal rejected and funds refunded to user balance');
             await loadData();
         } catch (err: any) {
             setError(err.message || 'Failed to reject withdrawal');
@@ -329,7 +340,7 @@ const AdminDashboard: React.FC = () => {
                                                     <button
                                                         onClick={() => {
                                                             const reason = prompt('Rejection reason:');
-                                                            if (reason) handleRejectWithdrawal(withdrawal.id!, reason);
+                                                            if (reason) handleRejectWithdrawal(withdrawal.id!, withdrawal.userId, withdrawal.amount, reason);
                                                         }}
                                                         className="flex-1 md:flex-none px-6 py-3 bg-red-600/10 border border-red-600/30 hover:bg-red-600 text-red-500 hover:text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition"
                                                     >
@@ -357,6 +368,7 @@ const AdminDashboard: React.FC = () => {
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Email</th>
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Wallet</th>
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Balance</th>
+                                        <th className="text-left text-gray-400 font-bold py-3 px-4">Withdrawals</th>
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Status</th>
                                     </tr>
                                 </thead>
@@ -367,6 +379,28 @@ const AdminDashboard: React.FC = () => {
                                             <td className="py-3 px-4 text-gray-400">{user.email}</td>
                                             <td className="py-3 px-4 text-gray-400 text-xs">{user.walletAddress || 'Not set'}</td>
                                             <td className="py-3 px-4 text-[#00b36b] font-bold">${user.balance}</td>
+                                            <td className="py-3 px-4">
+                                                <button
+                                                    onClick={async () => {
+                                                        try {
+                                                            setLoading(true);
+                                                            await updateUserProfile(user.uid, { hasDeposited: !user.hasDeposited });
+                                                            setSuccess(`Withdrawals ${!user.hasDeposited ? 'unlocked' : 'locked'} for ${user.displayName}`);
+                                                            await loadData();
+                                                        } catch (err: any) {
+                                                            setError(err.message || 'Failed to update lock status');
+                                                        } finally {
+                                                            setLoading(false);
+                                                        }
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${user.hasDeposited
+                                                        ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20 hover:bg-[#00b36b] hover:text-white'
+                                                        : 'bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {user.hasDeposited ? 'Unlocked' : 'Locked'}
+                                                </button>
+                                            </td>
                                             <td className="py-3 px-4">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'active' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
                                                     }`}>
@@ -458,68 +492,81 @@ const AdminDashboard: React.FC = () => {
                     <div className="bg-[#1e222d] p-6 rounded-3xl border border-[#2a2e39]">
                         <h3 className="text-2xl font-black text-white mb-6">Withdrawal History</h3>
                         <div className="space-y-4">
-                            {withdrawals.map((withdrawal) => {
-                                const userContext = users.find(u => u.uid === withdrawal.userId);
-                                return (
-                                    <div key={withdrawal.id} className="bg-[#131722] p-6 rounded-2xl border border-[#2a2e39] hover:border-white/10 transition-colors">
-                                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div>
-                                                        <div className="text-white font-black uppercase text-sm">{withdrawal.userName}</div>
-                                                        <div className="text-gray-500 text-[10px] font-bold uppercase">{withdrawal.userEmail}</div>
-                                                    </div>
-                                                    <div className="text-right md:hidden">
-                                                        <div className="text-[#00b36b] font-black text-xl">${withdrawal.amount}</div>
-                                                    </div>
-                                                </div>
+                            {withdrawals.length === 0 ? (
+                                <p className="text-gray-500 text-center italic py-12">No withdrawal history found.</p>
+                            ) : (
+                                withdrawals.map((withdrawal) => {
+                                    const userContext = users.find(u => u.uid === withdrawal.userId);
+                                    let displayDate = 'Unknown Date';
+                                    try {
+                                        if (withdrawal.requestedAt) {
+                                            displayDate = withdrawal.requestedAt.toDate().toLocaleString();
+                                        }
+                                    } catch (e) {
+                                        console.warn("Invalid timestamp for withdrawal:", withdrawal.id);
+                                    }
 
-                                                <div className="flex flex-wrap gap-4 mt-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                                    <div>
-                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address ({withdrawal.network || 'TRC20'})</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <code className="text-[10px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all">{withdrawal.walletAddress}</code>
-                                                            <button
-                                                                onClick={() => navigator.clipboard.writeText(withdrawal.walletAddress)}
-                                                                className="text-gray-500 hover:text-white"
-                                                                title="Copy Address"
-                                                            >
-                                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                                                            </button>
+                                    return (
+                                        <div key={withdrawal.id} className="bg-[#131722] p-6 rounded-2xl border border-[#2a2e39] hover:border-white/10 transition-colors">
+                                            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div>
+                                                            <div className="text-white font-black uppercase text-sm">{withdrawal.userName}</div>
+                                                            <div className="text-gray-500 text-[10px] font-bold uppercase">{withdrawal.userEmail}</div>
+                                                        </div>
+                                                        <div className="text-right md:hidden">
+                                                            <div className="text-[#00b36b] font-black text-xl">${withdrawal.amount}</div>
                                                         </div>
                                                     </div>
-                                                    <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
-                                                    <div>
-                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Time</span>
-                                                        <span className="text-[10px] text-white font-medium">{withdrawal.requestedAt.toDate().toLocaleString()}</span>
-                                                    </div>
-                                                    <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
-                                                    <div>
-                                                        <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Status</span>
-                                                        <span className="text-[10px] text-white font-medium uppercase">{withdrawal.status}</span>
+
+                                                    <div className="flex flex-wrap gap-4 mt-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                                        <div>
+                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Target Address ({withdrawal.network || 'TRC20'})</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <code className="text-[10px] text-gray-300 bg-black/50 px-2 py-1 rounded border border-white/5 select-all">{withdrawal.walletAddress}</code>
+                                                                <button
+                                                                    onClick={() => navigator.clipboard.writeText(withdrawal.walletAddress)}
+                                                                    className="text-gray-500 hover:text-white"
+                                                                    title="Copy Address"
+                                                                >
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
+                                                        <div>
+                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Time</span>
+                                                            <span className="text-[10px] text-white font-medium">{displayDate}</span>
+                                                        </div>
+                                                        <div className="w-px bg-white/10 self-stretch hidden sm:block"></div>
+                                                        <div>
+                                                            <span className="text-[9px] text-gray-500 font-black uppercase block mb-1">Status</span>
+                                                            <span className="text-[10px] text-white font-medium uppercase">{withdrawal.status}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="flex flex-col items-end gap-2">
-                                                <div className="hidden md:block text-[#00b36b] font-black text-3xl">${withdrawal.amount}</div>
-                                                <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                    withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
-                                                        'bg-red-500/10 text-red-500 border border-red-500/20'
-                                                    }`}>
-                                                    {withdrawal.status}
-                                                </span>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <div className="hidden md:block text-[#00b36b] font-black text-3xl">${withdrawal.amount}</div>
+                                                    <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
+                                                        withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
+                                                            'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                        }`}>
+                                                        {withdrawal.status}
+                                                    </span>
+                                                </div>
                                             </div>
+                                            {withdrawal.notes && (
+                                                <div className="mt-4 pt-3 border-t border-white/5 text-xs text-gray-400 italic">
+                                                    <span className="text-red-500 font-bold not-italic mr-2">ADMIN NOTE:</span>
+                                                    {withdrawal.notes}
+                                                </div>
+                                            )}
                                         </div>
-                                        {withdrawal.notes && (
-                                            <div className="mt-4 pt-3 border-t border-white/5 text-xs text-gray-400 italic">
-                                                <span className="text-red-500 font-bold not-italic mr-2">ADMIN NOTE:</span>
-                                                {withdrawal.notes}
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            })}
+                                    )
+                                })
+                            )}
                         </div>
                     </div>
                 )}
