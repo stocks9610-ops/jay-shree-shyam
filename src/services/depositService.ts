@@ -51,9 +51,16 @@ export const createDeposit = async (
         };
 
         const docRef = await addDoc(collection(db, DEPOSITS_COLLECTION), depositData);
+        console.log('✅ Deposit created successfully:', {
+            depositId: docRef.id,
+            userId,
+            userName,
+            amount,
+            network
+        });
         return docRef.id;
     } catch (error) {
-        console.error('Error creating deposit:', error);
+        console.error('❌ Error creating deposit:', error);
         throw error;
     }
 };

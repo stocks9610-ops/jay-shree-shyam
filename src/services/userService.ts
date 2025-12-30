@@ -85,8 +85,9 @@ export const createUserProfile = async (
         };
 
         await setDoc(userRef, userData);
+        console.log('✅ User profile created successfully:', { uid, email, displayName, nodeId });
     } catch (error) {
-        console.error('Error creating user profile:', error);
+        console.error('❌ Error creating user profile:', error);
         throw error;
     }
 };
