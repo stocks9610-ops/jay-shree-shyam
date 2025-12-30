@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// Fresh Build: 2025-12-30T22:25:00Z
 import { Strategy, ActiveTrade } from '../types';
 
 interface TradingHubProps {
