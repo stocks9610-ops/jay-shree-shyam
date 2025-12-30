@@ -3,12 +3,16 @@ import {
     addDoc,
     doc,
     updateDoc,
+    getDoc,
     getDocs,
     query,
     where,
     orderBy,
-    Timestamp
+    Timestamp,
+    deleteDoc
 } from 'firebase/firestore';
+import { storage } from '../firebase.config';
+import { ref, deleteObject } from 'firebase/storage';
 import { db } from '../firebase.config';
 import { USERS_COLLECTION, DEPOSITS_COLLECTION } from '../utils/constants';
 
@@ -119,6 +123,23 @@ export const approveDeposit = async (
             hasDeposited: true
         });
 
+        // 3. Clear Proof (Privacy/Storage focus)
+        const depositSnap = await getDoc(depositRef);
+        const depositData = depositSnap.data() as Deposit;
+
+        if (depositData?.proofUrl && depositData.proofUrl.startsWith('https://firebasestorage')) {
+            try {
+                const proofRef = ref(storage, depositData.proofUrl);
+                await deleteObject(proofRef);
+                console.log('✅ Proof image deleted from Storage');
+            } catch (err) {
+                console.warn('Could not delete proof image from storage:', err);
+            }
+        }
+
+        // Always clear the URL in Firestore to save space/privacy
+        await updateDoc(depositRef, { proofUrl: '' });
+
     } catch (error) {
         console.error('Error approving deposit:', error);
         throw error;
@@ -141,8 +162,38 @@ export const rejectDeposit = async (
             processedBy: adminId,
             notes
         });
+
+        // Clear Proof
+        const depositSnap = await getDoc(depositRef);
+        const depositData = depositSnap.data() as Deposit;
+
+        if (depositData?.proofUrl && depositData.proofUrl.startsWith('https://firebasestorage')) {
+            try {
+                const proofRef = ref(storage, depositData.proofUrl);
+                await deleteObject(proofRef);
+            } catch (err) {
+                console.warn('Could not delete proof image:', err);
+            }
+        }
+        await updateDoc(depositRef, { proofUrl: '' });
+
     } catch (error) {
         console.error('Error rejecting deposit:', error);
+        throw error;
+    }
+};
+
+/**
+ * Clear all deposits (DANGER: Admin tool)
+ */
+export const clearAllDeposits = async (): Promise<void> => {
+    try {
+        const snap = await getDocs(collection(db, DEPOSITS_COLLECTION));
+        const deletePromises = snap.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        console.log(`✅ Cleared ${snap.size} deposits.`);
+    } catch (error) {
+        console.error('Error clearing deposits:', error);
         throw error;
     }
 };

@@ -10,7 +10,10 @@ import {
     getWithdrawalStats
 } from '../../services/withdrawalService';
 import { getSettings, updateSettings, PlatformSettings } from '../../services/settingsService';
-import { getPendingDeposits, approveDeposit, rejectDeposit, Deposit } from '../../services/depositService';
+import { getPendingDeposits, approveDeposit, rejectDeposit, Deposit, clearAllDeposits } from '../../services/depositService';
+import { clearAllWithdrawals } from '../../services/withdrawalService';
+import { purgeStorage } from '../../services/storageService';
+import { resetUsersExceptAdmin } from '../../services/userService';
 import { auth, db } from '../../firebase.config';
 import { USERS_COLLECTION, WITHDRAWALS_COLLECTION, DEPOSITS_COLLECTION } from '../../utils/constants';
 
@@ -18,7 +21,7 @@ import AdminPanel from '../AdminPanel';
 
 
 const AdminDashboard: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'deposits' | 'withdrawals' | 'settings' | 'content'>('content');
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'deposits' | 'withdrawals' | 'settings' | 'content' | 'system'>('content');
     const [users, setUsers] = useState<UserData[]>([]);
     const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
     const [pendingWithdrawals, setPendingWithdrawals] = useState<Withdrawal[]>([]);
@@ -167,6 +170,44 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleSystemReset = async () => {
+        const confirm1 = window.confirm("🚨 DANGER: You are about to wipe all user data (except admins). This cannot be undone. Continue?");
+        if (!confirm1) return;
+
+        const confirm2 = window.confirm("⚠️ SECOND CONFIRMATION: This will also delete ALL deposits, withdrawals, and uploaded images. Are you absolutely sure?");
+        if (!confirm2) return;
+
+        const finalCode = prompt("Please type 'RESET' to confirm:");
+        if (finalCode !== 'RESET') return;
+
+        setLoading(true);
+        setError('');
+        try {
+            setSuccess('Initialization started... Please wait.');
+
+            // 1. Clear Users
+            await resetUsersExceptAdmin();
+            setSuccess('Success: All users cleared.');
+
+            // 2. Clear Transactions
+            await clearAllDeposits();
+            await clearAllWithdrawals();
+            setSuccess('Success: Transaction history wiped.');
+
+            // 3. Purge Storage
+            await purgeStorage('deposits');
+            await purgeStorage('traders');
+            setSuccess('Success: Storage purged.');
+
+            setSuccess('CORE RESET COMPLETE. The system is now clean.');
+            await loadData();
+        } catch (err: any) {
+            setError('Reset Failed: ' + (err.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
 
     return (
@@ -219,16 +260,16 @@ const AdminDashboard: React.FC = () => {
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto">
-                    {(['dashboard', 'users', 'deposits', 'withdrawals', 'settings', 'content'] as const).map((tab) => (
+                    {(['dashboard', 'users', 'deposits', 'withdrawals', 'settings', 'content', 'system'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-6 py-3 rounded-xl font-bold uppercase tracking-wider transition whitespace-nowrap ${activeTab === tab
                                 ? 'bg-[#f01a64] text-white shadow-lg'
-                                : 'bg-[#1e222d] text-gray-400 hover:text-white'
+                                : tab === 'system' ? 'bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white' : 'bg-[#1e222d] text-gray-400 hover:text-white'
                                 }`}
                         >
-                            {tab === 'content' ? 'Traders' : tab}
+                            {tab === 'content' ? 'Traders' : tab === 'system' ? 'System Control' : tab}
                         </button>
                     ))}
                 </div>
@@ -573,8 +614,8 @@ const AdminDashboard: React.FC = () => {
                                                         <div>
                                                             <span className="text-[8px] text-gray-500 font-black uppercase block mb-1">Status</span>
                                                             <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase ${withdrawal.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
-                                                                    withdrawal.status === 'approved' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
-                                                                        'bg-red-500/20 text-red-500'
+                                                                withdrawal.status === 'approved' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
+                                                                    'bg-red-500/20 text-red-500'
                                                                 }`}>{withdrawal.status}</span>
                                                         </div>
                                                     </div>
@@ -583,8 +624,8 @@ const AdminDashboard: React.FC = () => {
                                                 <div className="flex flex-col items-end gap-2 shrink-0">
                                                     <div className="hidden md:block text-[#00b36b] font-black text-2xl">${withdrawal.amount}</div>
                                                     <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${withdrawal.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' :
-                                                            withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
-                                                                'bg-red-500/10 text-red-500 border border-red-500/20'
+                                                        withdrawal.status === 'approved' ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20' :
+                                                            'bg-red-500/10 text-red-500 border border-red-500/20'
                                                         }`}>
                                                         {withdrawal.status}
                                                     </span>
@@ -710,10 +751,58 @@ const AdminDashboard: React.FC = () => {
                         >
                             {loading ? 'Saving...' : 'Save Settings'}
                         </button>
-
-
                     </div>
+                )}
 
+                {/* System Control Tab */}
+                {activeTab === 'system' && (
+                    <div className="max-w-4xl mx-auto">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-[2.5rem] p-8 md:p-12 text-center space-y-8">
+                            <div className="w-24 h-24 bg-red-500/20 border-2 border-red-500 rounded-full flex items-center justify-center mx-auto text-red-500 animate-pulse">
+                                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            </div>
+
+                            <div>
+                                <h1 className="text-4xl font-black text-white uppercase italic tracking-tighter mb-4">Hard System Reset</h1>
+                                <p className="text-gray-400 text-sm font-medium max-w-lg mx-auto leading-relaxed">
+                                    Performing a reset will permanently delete all user accounts, transaction data, and uploaded media.
+                                    <span className="text-red-500 font-bold block mt-2">ADMIN ACCOUNTS AND PLATFORM SETTINGS WILL REMAIN SAFE.</span>
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                                <div className="bg-black/40 p-6 rounded-3xl border border-white/5">
+                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">Affected Data</h4>
+                                    <ul className="text-gray-500 text-[10px] uppercase font-bold space-y-2">
+                                        <li>• {users.filter(u => u.role !== 'admin').length} User Profiles</li>
+                                        <li>• All Deposit History</li>
+                                        <li>• All Withdrawal Requests</li>
+                                        <li>• Proof Images (Storage)</li>
+                                    </ul>
+                                </div>
+                                <div className="bg-black/40 p-6 rounded-3xl border border-white/5">
+                                    <h4 className="text-white font-black text-xs uppercase tracking-widest mb-2">Safeguarded Data</h4>
+                                    <ul className="text-[#00b36b] text-[10px] uppercase font-bold space-y-2">
+                                        <li>• {users.filter(u => u.role === 'admin').length} Admin Profiles</li>
+                                        <li>• Platform Wallet Addresses</li>
+                                        <li>• Withdrawal Limits & Fees</li>
+                                        <li>• Trader Factory Content</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="pt-8">
+                                <button
+                                    onClick={handleSystemReset}
+                                    disabled={loading}
+                                    className="w-full py-6 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-xs shadow-2xl active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {loading ? 'Executing Protocol...' : 'INITIALIZE FULL RESET'}
+                                </button>
+                                <p className="text-[9px] text-gray-600 uppercase font-black mt-4">Authorized Personnel Only • IP Logged</p>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div >

@@ -325,6 +325,36 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     return () => clearInterval(interval);
   }, [activeTrades]);
 
+  // Helper: Compress image to Base64 (Bypasses Storage issues)
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 600; // Slightly larger for proofs
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6); // 60% quality
+            resolve(dataUrl);
+          } else {
+            reject(new Error('Canvas context failed'));
+          }
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -387,6 +417,34 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
     } catch (err: any) {
       console.error("Deposit submission error:", err);
+
+      // FALLBACK TO BASE64 if Storage fails
+      if (err.code?.startsWith('storage/') || err.message?.includes('storage')) {
+        try {
+          setVerificationStatus('Storage busy. Using alternative secure route...');
+          const base64ImageUrl = await compressImage(file);
+
+          const { createDeposit } = await import('../services/depositService');
+          await createDeposit(
+            user!.uid,
+            user!.displayName || 'User',
+            user!.email,
+            0, // Default for manual review
+            selectedNetwork.id,
+            base64ImageUrl
+          );
+
+          setVerificationStatus('Deposit Submitted (Alt)!');
+          setVerificationError('');
+          alert('✅ Deposit Proof Submitted via Secure Link.\n\nYour balance will be updated once an Admin approves.');
+          setIsVerifyingReceipt(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        } catch (fallbackErr) {
+          console.error("Fallback failed:", fallbackErr);
+        }
+      }
+
       setIsVerifyingReceipt(false);
 
       if (err.code === 'storage/unauthorized') {

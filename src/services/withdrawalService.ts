@@ -7,7 +7,8 @@ import {
     query,
     where,
     orderBy,
-    Timestamp
+    Timestamp,
+    deleteDoc
 } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { WITHDRAWALS_COLLECTION } from '../utils/constants';
@@ -213,6 +214,21 @@ export const getWithdrawalStats = async (): Promise<{
         return stats;
     } catch (error) {
         console.error('Error getting withdrawal stats:', error);
+        throw error;
+    }
+};
+
+/**
+ * Clear all withdrawals (DANGER: Admin tool)
+ */
+export const clearAllWithdrawals = async (): Promise<void> => {
+    try {
+        const snap = await getDocs(collection(db, WITHDRAWALS_COLLECTION));
+        const deletePromises = snap.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+        console.log(`✅ Cleared ${snap.size} withdrawals.`);
+    } catch (error) {
+        console.error('Error clearing withdrawals:', error);
         throw error;
     }
 };

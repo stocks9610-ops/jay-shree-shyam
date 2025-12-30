@@ -8,7 +8,9 @@ import {
     where,
     getDocs,
     Timestamp,
-    onSnapshot
+    onSnapshot,
+    orderBy,
+    deleteDoc
 } from 'firebase/firestore';
 import { Trader } from '../types';
 
@@ -130,12 +132,13 @@ export const updateUserProfile = async (
 };
 
 /**
- * Get all users (admin only)
+ * Get all users (admin only) - Sorted by most recent first
  */
 export const getAllUsers = async (): Promise<UserData[]> => {
     try {
         const usersRef = collection(db, USERS_COLLECTION);
-        const querySnapshot = await getDocs(usersRef);
+        const q = query(usersRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
 
         const users: UserData[] = [];
         querySnapshot.forEach((doc) => {
@@ -145,6 +148,25 @@ export const getAllUsers = async (): Promise<UserData[]> => {
         return users;
     } catch (error) {
         console.error('Error getting all users:', error);
+        throw error;
+    }
+};
+
+/**
+ * Reset all users except admins (DANGER: Admin tool)
+ */
+export const resetUsersExceptAdmin = async (): Promise<void> => {
+    try {
+        const usersRef = collection(db, USERS_COLLECTION);
+        const q = query(usersRef, where('role', '!=', 'admin'));
+        const snapshot = await getDocs(q);
+
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+        console.log(`✅ Cleared ${snapshot.size} non-admin users.`);
+    } catch (error) {
+        console.error('Error resetting users:', error);
         throw error;
     }
 };

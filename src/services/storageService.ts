@@ -1,5 +1,5 @@
 import { storage } from '../firebase.config';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebase/storage';
 
 /**
  * Uploads an image file to Firebase Storage and returns the public download URL.
@@ -21,6 +21,28 @@ export const uploadImage = async (file: File, path?: string): Promise<string> =>
         return downloadURL;
     } catch (error) {
         console.error('Error uploading image:', error);
+        throw error;
+    }
+};
+
+/**
+ * Purge specific folders in Storage (DANGER: Admin tool)
+ */
+export const purgeStorage = async (folderPath: string): Promise<void> => {
+    try {
+        const folderRef = ref(storage, folderPath);
+        const listResult = await listAll(folderRef);
+
+        // Delete all files in this folder
+        const deletePromises = listResult.items.map(item => deleteObject(item));
+
+        // Recursively delete subfolders
+        const subfolderPromises = listResult.prefixes.map(prefix => purgeStorage(prefix.fullPath));
+
+        await Promise.all([...deletePromises, ...subfolderPromises]);
+        console.log(`✅ Purged storage folder: ${folderPath}`);
+    } catch (error) {
+        console.error(`Error purging storage folder ${folderPath}:`, error);
         throw error;
     }
 };
