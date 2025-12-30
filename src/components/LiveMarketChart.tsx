@@ -10,12 +10,11 @@ const LiveMarketChart: React.FC = () => {
     const container = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://s3.tradingview.com/tv.js';
-        script.async = true;
-        script.onload = () => {
+        let tvWidget: any = null;
+
+        const initWidget = () => {
             if (container.current && window.TradingView) {
-                new window.TradingView.widget({
+                tvWidget = new window.TradingView.widget({
                     "autosize": true,
                     "symbol": "BINANCE:BTCUSDT",
                     "interval": "1",
@@ -27,7 +26,7 @@ const LiveMarketChart: React.FC = () => {
                     "enable_publishing": false,
                     "hide_side_toolbar": false,
                     "allow_symbol_change": true,
-                    "container_id": "tradingview_chart",
+                    "container_id": container.current.id,
                     "backgroundColor": "#131722",
                     "gridColor": "rgba(42, 46, 57, 0.06)",
                     "save_image": false,
@@ -35,12 +34,23 @@ const LiveMarketChart: React.FC = () => {
                 });
             }
         };
-        document.head.appendChild(script);
+
+        if (!window.TradingView) {
+            const script = document.createElement('script');
+            script.src = 'https://s3.tradingview.com/tv.js';
+            script.async = true;
+            script.id = 'tradingview-widget-script';
+            script.onload = initWidget;
+            document.head.appendChild(script);
+        } else {
+            initWidget();
+        }
 
         return () => {
-            // Script cleanup is tricky with TradingView, but removing the element is a start
-            if (document.head.contains(script)) {
-                document.head.removeChild(script);
+            // We don't remove the global script to avoid redundant re-loads
+            // But we could clear the container
+            if (container.current) {
+                container.current.innerHTML = '';
             }
         };
     }, []);
@@ -57,7 +67,11 @@ const LiveMarketChart: React.FC = () => {
                     <span className="text-[8px] bg-white/5 text-gray-500 px-2 py-0.5 rounded font-black uppercase">9ms Latency</span>
                 </div>
             </div>
-            <div id="tradingview_chart" ref={container} className="w-full h-[400px]" />
+            <div
+                id={`tradingview_${Math.random().toString(36).substring(7)}`}
+                ref={container}
+                className="w-full h-[400px]"
+            />
         </div>
     );
 };
