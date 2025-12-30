@@ -5,13 +5,14 @@ import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
 // Replace these values with your Firebase project credentials
+// Hardcoded for production stability to resolve missing env vars
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+    apiKey: "AIzaSyBx4i-LJcCuYNWfYU_TfXA6_LXcY263RbA",
+    authDomain: "jay-shree-shyam0back.firebaseapp.com",
+    projectId: "jay-shree-shyam0back",
+    storageBucket: "jay-shree-shyam0back.firebasestorage.app",
+    messagingSenderId: "1084861244978",
+    appId: "1:1084861244978:web:f535f95ee2d4ce030a3e2b"
 };
 
 // Initialize Firebase
