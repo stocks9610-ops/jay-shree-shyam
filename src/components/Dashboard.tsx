@@ -12,6 +12,12 @@ import { useMarketNotifications } from '../hooks/useMarketNotifications';
 import { collection, query, orderBy, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase.config';
 import { getSettings } from '../services/settingsService';
+import {
+  subscribeToNotifications,
+  markAsRead,
+  deleteNotification,
+  UserNotification
+} from '../services/notificationService';
 
 interface DashboardProps {
   onSwitchTrader?: () => void;
@@ -123,6 +129,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [withdrawStatus, setWithdrawStatus] = useState(''); // New state for animation steps
   const [depositAddress, setDepositAddress] = useState(NETWORKS[0].address);
   const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS[0]);
+  const [depositAmt, setDepositAmt] = useState<string>('500');
+  const [txid, setTxid] = useState<string>('');
   const marketNotification = useMarketNotifications();
 
   // --- Demo / Trial Mode Logic ---
@@ -142,6 +150,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   // --- Settings & Address Logic ---
   const [platformSettings, setPlatformSettings] = useState<any>(null);
+
+  // User Notifications State
+  const [userNotifications, setUserNotifications] = useState<UserNotification[]>([]);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const unreadCount = userNotifications.filter(n => !n.isRead).length;
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -175,6 +188,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Handle Notifications Subscription
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const unsubscribe = subscribeToNotifications(user.uid, (notifs) => {
+      setUserNotifications(notifs);
+
+      // Auto-show panel if there's a new unread alert
+      const hasNewUnread = notifs.some(n => !n.isRead);
+      if (hasNewUnread && notifs.length > userNotifications.length) {
+        setShowNotifPanel(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  const handleMarkNotifRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+    } catch (err) {
+      console.error("Failed to mark read:", err);
+    }
+  };
+
+  const handleDeleteNotif = async (id: string) => {
+    try {
+      await deleteNotification(id);
+    } catch (err) {
+      console.error("Failed to delete alert:", err);
+    }
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText("https://jay-shree-shyam.com/ref/USER123");
     setCopySuccess(true);
@@ -184,7 +230,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   const handleSocialShare = (platform: 'whatsapp' | 'telegram') => {
     const text = SHARE_MESSAGE_TEXT;
-    // URL adapts to whatever domain you are hosting on (e.g., zulu-trade.pages.dev)
     const url = `${window.location.origin}/ref/USER123`;
     if (platform === 'whatsapp') {
       window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + url)}`, '_blank');
@@ -205,14 +250,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
   };
 
-  // Enhanced Finish Trade Logic with Guaranteed Win (for now)
   const finishTrade = async (trade: ActiveTrade) => {
-    // Forced Win Logic for "Smart Win"
     const isWin = true;
     if (!user) return;
 
     if (isWin) {
-      // Calculate profit based on Plan's standard ROI
       const roi = trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet);
       const profit = trade.investAmount * (roi / 100);
 
@@ -220,11 +262,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         balance: user.balance + trade.investAmount + profit,
         totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
         wins: user.wins + 1,
-        totalProfit: (user.totalProfit || 0) + profit // Track total profit if field exists, otherwise just balance
+        totalProfit: (user.totalProfit || 0) + profit
       });
       setTradeResult({ status: 'WIN', amount: profit });
     } else {
-      // Logic kept for fallback if we later enable losses
       await updateUser({
         totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
         losses: user.losses + 1
@@ -233,33 +274,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
     setTimeout(() => setTradeResult(null), 5000);
   };
-
-  // Live PnL Ticker Effect
-  useEffect(() => {
-    if (activeTrades.length === 0) return;
-
-    const interval = setInterval(() => {
-      setActiveTrades(prevTrades =>
-        prevTrades.map(trade => {
-          // Calculate target profit
-          const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
-          const targetProfit = trade.investAmount * (targetRoi / 100);
-
-          // Current PnL based on progress
-          const safeProgress = Math.min(trade.progress, 100);
-          const currentEstimatedPnL = (targetProfit * safeProgress) / 100;
-
-          // Add slight randomness to make it look "live"
-          const jitter = (Math.random() * 0.5) - 0.25;
-          const livePnL = Math.max(0, currentEstimatedPnL + jitter);
-
-          return { ...trade, currentPnL: livePnL };
-        })
-      );
-    }, 100); // Tick every 100ms
-
-    return () => clearInterval(interval);
-  }, [activeTrades.length]);
 
   const depositSectionRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -459,6 +473,57 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
   };
 
+  const handleTXIDSubmit = async () => {
+    if (!txid || txid.length < 10) {
+      setVerificationError('Please enter a valid Transaction Hash (TXID).');
+      return;
+    }
+    if (!user) return;
+
+    setIsVerifyingReceipt(true);
+    setVerificationStatus('Broadcasting TXID to ledger...');
+    setVerificationError('');
+
+    try {
+      const { createDeposit } = await import('../services/depositService');
+      await createDeposit(
+        user.uid,
+        user.displayName || 'User',
+        user.email,
+        parseFloat(depositAmt) || 0,
+        selectedNetwork.id,
+        `TXID:${txid}` // Store TXID as the "proofUrl" with a prefix
+      );
+
+      setVerificationStatus('Submission Recorded!');
+      alert('✅ Transaction Hash Submitted.\n\nOur system is now verifying the block confirmations. Your balance will update automatically once confirmed.');
+      setTxid('');
+      setIsVerifyingReceipt(false);
+    } catch (err: any) {
+      console.error("TXID submission error:", err);
+      setVerificationError('Failed to record TXID. Please try again.');
+      setIsVerifyingReceipt(false);
+    }
+  };
+
+  const handleTrustWalletPay = () => {
+    const amt = depositAmt || "0";
+    let asset = "";
+
+    // Universal Asset Identifiers for Trust Wallet
+    if (selectedNetwork.id === 'TRX') asset = "c195_tTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+    else if (selectedNetwork.id === 'ETH') asset = "c60_t0xdAC17F958D2ee523a2206206994597C13D831ec7";
+    else if (selectedNetwork.id === 'BNB') asset = "c714_t0x55d398326f99059fF775485246999027B3197955"; // USDT BEP20
+
+    if (!asset) {
+      alert("Direct pay not available for this network. Please copy address manually.");
+      return;
+    }
+
+    const url = `trust://send?asset=${asset}&address=${depositAddress}&amount=${amt}`;
+    window.location.href = url;
+  };
+
   const validateWithdrawal = () => {
     setWithdrawError('');
     const amount = Number(withdrawAmount);
@@ -635,23 +700,67 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       )}
 
-      {/* Market Opportunity Notification */}
-      {marketNotification && (
-        <div className={`fixed top-24 right-4 z-[220] max-w-sm w-full p-4 rounded-2xl shadow-2xl animate-in slide-in-from-right-4 border backdrop-blur-md ${marketNotification.type === 'opportunity' ? 'bg-[#00b36b]/10 border-[#00b36b]/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-          <div className="flex gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${marketNotification.type === 'opportunity' ? 'bg-[#00b36b]/20 text-[#00b36b]' : 'bg-amber-500/20 text-amber-500'}`}>
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+      {/* Manual Admin Notifications Panel */}
+      <div className={`fixed top-24 left-4 z-[220] max-w-sm w-full transition-all duration-500 ${unreadCount > 0 || showNotifPanel ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
+        <div className="bg-[#1e222d] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden backdrop-blur-xl">
+          <div className="p-5 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-[#1e222d] to-[#131722]">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <svg className="w-5 h-5 text-[#f01a64]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e222d]"></span>}
+              </div>
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">System Notifications</h4>
             </div>
-            <div>
-              <h4 className={`text-xs font-black uppercase tracking-widest mb-1 ${marketNotification.type === 'opportunity' ? 'text-[#00b36b]' : 'text-amber-500'}`}>{marketNotification.title}</h4>
-              <p className="text-white text-[10px] leading-relaxed">{marketNotification.message}</p>
-              {marketNotification.type === 'opportunity' && (
-                <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="mt-2 text-[9px] bg-[#00b36b] text-white px-3 py-1 rounded-lg font-bold uppercase tracking-wide hover:bg-[#009e5f]">Deposit & Trade</button>
-              )}
-            </div>
+            <button onClick={() => setShowNotifPanel(false)} className="text-gray-500 hover:text-white transition">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+
+          <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+            {userNotifications.length === 0 ? (
+              <div className="p-10 text-center">
+                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest italic">Inbox Zero</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {userNotifications.map(notif => (
+                  <div key={notif.id} className={`p-5 transition-colors relative group ${notif.isRead ? 'bg-transparent' : 'bg-white/5'}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${notif.type === 'alert' ? 'bg-red-500/20 text-red-500' :
+                        notif.type === 'warning' ? 'bg-amber-500/20 text-amber-500' :
+                          notif.type === 'success' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
+                            'bg-blue-500/20 text-blue-500'
+                        }`}>
+                        {notif.type}
+                      </span>
+                      <span className="text-[7px] text-gray-600 font-bold">{notif.createdAt?.toDate().toLocaleDateString()}</span>
+                    </div>
+                    <h5 className={`text-xs font-black mb-1 ${notif.isRead ? 'text-gray-400' : 'text-white'}`}>{notif.title}</h5>
+                    <p className="text-[10px] text-gray-500 leading-relaxed pr-6">{notif.message}</p>
+
+                    <div className="mt-3 flex gap-2">
+                      {!notif.isRead && (
+                        <button
+                          onClick={() => handleMarkNotifRead(notif.id!)}
+                          className="text-[8px] font-black uppercase tracking-widest text-[#f01a64] hover:text-white transition"
+                        >
+                          Mark as Read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteNotif(notif.id!)}
+                        className="text-[8px] font-black uppercase tracking-widest text-gray-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
 
 
@@ -871,16 +980,68 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
                 </button>
               </div>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Deposit Amount (USDT)</label>
+                  <input
+                    type="number"
+                    value={depositAmt}
+                    onChange={e => setDepositAmt(e.target.value)}
+                    className="w-full bg-black/40 border border-white/5 p-4 rounded-xl text-white text-xs font-black outline-none focus:border-[#00b36b] transition-colors"
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleTrustWalletPay}
+                    className="py-4 bg-[#3375BB] text-white rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 hover:bg-[#28609a] transition-all active:scale-95 shadow-lg"
+                  >
+                    <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="" className="w-3 h-3 invert" />
+                    Trust Wallet
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                  >
+                    Upload Proof
+                  </button>
+                </div>
+              </div>
+
+              <div className="h-px bg-white/5 w-full mb-6"></div>
+
+              <div className="space-y-4">
+                <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] px-1">Alternative: Transaction Hash (TXID)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={txid}
+                    onChange={e => setTxid(e.target.value)}
+                    className="flex-1 bg-black/40 border border-white/5 p-4 rounded-xl text-white text-[10px] font-mono outline-none focus:border-[#f01a64] transition-colors"
+                    placeholder="Paste TXID / Hash here..."
+                  />
+                  <button
+                    onClick={handleTXIDSubmit}
+                    disabled={isVerifyingReceipt || !txid}
+                    className="px-6 bg-[#f01a64] text-white rounded-xl font-black uppercase text-[9px] tracking-widest disabled:opacity-50 transition-all active:scale-95"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-              <button onClick={() => fileInputRef.current?.click()} disabled={isVerifyingReceipt} className="w-full py-5 bg-[#f01a64] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] disabled:opacity-50 shadow-xl transition-all active:scale-95">
-                {isVerifyingReceipt ? (
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>{verificationStatus}</span>
-                  </div>
-                ) : 'Confirm Transaction'}
-              </button>
+
               {verificationError && <p className="text-red-500 text-[10px] font-black mt-3 text-center uppercase tracking-tighter">{verificationError}</p>}
+
+              {isVerifyingReceipt && (
+                <div className="mt-4 p-4 bg-white/5 rounded-xl flex items-center gap-3">
+                  <div className="w-4 h-4 border-2 border-[#f01a64] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{verificationStatus}</span>
+                </div>
+              )}
             </div>
 
             <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
@@ -959,9 +1120,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
       </div>
-      {showReferral && (
-        <ReferralTerminal onClose={() => setShowReferral(false)} />
-      )}
+      {
+        showReferral && (
+          <ReferralTerminal onClose={() => setShowReferral(false)} />
+        )
+      }
 
       <StrategyModal
         isOpen={isStrategyModalOpen}
@@ -973,7 +1136,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         isDemoActive={isDemoActive}
         demoTradeCount={demoTradeCount}
       />
-    </div>
+    </div >
   );
 };
 

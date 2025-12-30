@@ -14,6 +14,7 @@ import { getPendingDeposits, approveDeposit, rejectDeposit, Deposit, clearAllDep
 import { clearAllWithdrawals } from '../../services/withdrawalService';
 import { purgeStorage } from '../../services/storageService';
 import { resetUsersExceptAdmin } from '../../services/userService';
+import { sendNotification } from '../../services/notificationService';
 import { auth, db } from '../../firebase.config';
 import { USERS_COLLECTION, WITHDRAWALS_COLLECTION, DEPOSITS_COLLECTION } from '../../utils/constants';
 
@@ -30,6 +31,11 @@ const AdminDashboard: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+
+    // Notification State
+    const [notifyingUser, setNotifyingUser] = useState<UserData | null>(null);
+    const [notifForm, setNotifForm] = useState({ title: '', message: '', type: 'info' as any });
+
     const [withdrawalFilter, setWithdrawalFilter] = useState<'all' | 'pending' | 'processed'>('all');
     const [stats, setStats] = useState({
         totalUsers: 0,
@@ -170,6 +176,27 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handlePurgeDeposits = async () => {
+        const confirm1 = window.confirm("⚠️ You are about to wipe ALL deposit history and proof images. Continue?");
+        if (!confirm1) return;
+
+        const finalCode = prompt("Type 'PURGE' to confirm:");
+        if (finalCode !== 'PURGE') return;
+
+        setLoading(true);
+        setError('');
+        try {
+            await clearAllDeposits();
+            await purgeStorage('deposits');
+            setSuccess('Success: All deposit records and proofs cleared.');
+            await loadData();
+        } catch (err: any) {
+            setError('Purge Failed: ' + (err.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSystemReset = async () => {
         const confirm1 = window.confirm("🚨 DANGER: You are about to wipe all user data (except admins). This cannot be undone. Continue?");
         if (!confirm1) return;
@@ -203,6 +230,26 @@ const AdminDashboard: React.FC = () => {
             await loadData();
         } catch (err: any) {
             setError('Reset Failed: ' + (err.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendNotification = async () => {
+        if (!notifyingUser) return;
+        if (!notifForm.title || !notifForm.message) {
+            setError('Please provide title and message.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await sendNotification(notifyingUser.uid, notifForm.title, notifForm.message, notifForm.type);
+            setSuccess(`Notification sent to ${notifyingUser.displayName}`);
+            setNotifyingUser(null);
+            setNotifForm({ title: '', message: '', type: 'info' });
+        } catch (err: any) {
+            setError(err.message || 'Failed to send notification');
         } finally {
             setLoading(false);
         }
@@ -401,15 +448,16 @@ const AdminDashboard: React.FC = () => {
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Balance</th>
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Withdrawals</th>
                                         <th className="text-left text-gray-400 font-bold py-3 px-4">Status</th>
+                                        <th className="text-right text-gray-400 font-bold py-3 px-4">Notify</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {users.map((user) => (
                                         <tr key={user.uid} className="border-b border-[#2a2e39]/50">
-                                            <td className="py-3 px-4 text-white">{user.displayName}</td>
-                                            <td className="py-3 px-4 text-gray-400">{user.email}</td>
-                                            <td className="py-3 px-4 text-gray-400 text-xs">{user.walletAddress || 'Not set'}</td>
-                                            <td className="py-3 px-4 text-[#00b36b] font-bold">${user.balance}</td>
+                                            <td className="py-3 px-4 text-white font-bold">{user.displayName}</td>
+                                            <td className="py-3 px-4 text-gray-400 text-xs">{user.email}</td>
+                                            <td className="py-3 px-4 text-gray-400 text-xs font-mono">{user.walletAddress || 'No Wallet'}</td>
+                                            <td className="py-3 px-4 text-[#00b36b] font-black">${user.balance.toLocaleString()}</td>
                                             <td className="py-3 px-4">
                                                 <button
                                                     onClick={async () => {
@@ -424,7 +472,7 @@ const AdminDashboard: React.FC = () => {
                                                             setLoading(false);
                                                         }
                                                     }}
-                                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${user.hasDeposited
+                                                    className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition ${user.hasDeposited
                                                         ? 'bg-[#00b36b]/10 text-[#00b36b] border border-[#00b36b]/20 hover:bg-[#00b36b] hover:text-white'
                                                         : 'bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white'
                                                         }`}
@@ -433,10 +481,18 @@ const AdminDashboard: React.FC = () => {
                                                 </button>
                                             </td>
                                             <td className="py-3 px-4">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${user.status === 'active' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                                                <span className={`px-2 py-1 rounded text-[10px] uppercase font-black tracking-widest ${user.status === 'active' ? 'bg-[#00b36b]/10 text-[#00b36b]' : 'bg-red-500/10 text-red-500'
                                                     }`}>
-                                                    {user.status}
+                                                    {user.status || 'active'}
                                                 </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
+                                                <button
+                                                    onClick={() => setNotifyingUser(user)}
+                                                    className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -791,7 +847,17 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="pt-8">
+                            <div className="pt-8 space-y-4">
+                                <button
+                                    onClick={handlePurgeDeposits}
+                                    disabled={loading}
+                                    className="w-full py-4 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {loading ? 'Cleaning...' : 'Purge Deposit Proofs Only'}
+                                </button>
+
+                                <div className="h-px bg-white/5 w-1/2 mx-auto"></div>
+
                                 <button
                                     onClick={handleSystemReset}
                                     disabled={loading}
@@ -805,6 +871,77 @@ const AdminDashboard: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Notification Modal */}
+            {notifyingUser && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-[#1e222d] w-full max-w-lg rounded-[2.5rem] border border-[#2a2e39] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-8 border-b border-white/5 bg-gradient-to-r from-[#1e222d] to-[#131722]">
+                            <h3 className="text-xl font-black text-white uppercase italic tracking-tighter">Custom Account Alert</h3>
+                            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-1">Messaging: <span className="text-[#f01a64]">{notifyingUser.displayName}</span></p>
+                        </div>
+
+                        <div className="p-8 space-y-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Alert Category</label>
+                                    <div className="flex gap-2">
+                                        {(['info', 'success', 'warning', 'alert'] as const).map(type => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setNotifForm({ ...notifForm, type })}
+                                                className={`flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition border ${notifForm.type === type
+                                                    ? 'bg-white/10 border-white/30 text-white shadow-lg'
+                                                    : 'bg-black/20 border-white/5 text-gray-600 hover:border-white/10'}`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Alert Headline</label>
+                                    <input
+                                        type="text"
+                                        value={notifForm.title}
+                                        onChange={e => setNotifForm({ ...notifForm, title: e.target.value })}
+                                        className="w-full bg-black/40 border border-[#2a2e39] p-4 rounded-xl text-white text-xs font-bold outline-none focus:border-[#f01a64] transition-colors"
+                                        placeholder="e.g. Identity Verification Required"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Direct Message Content</label>
+                                    <textarea
+                                        rows={4}
+                                        value={notifForm.message}
+                                        onChange={e => setNotifForm({ ...notifForm, message: e.target.value })}
+                                        className="w-full bg-black/40 border border-[#2a2e39] p-4 rounded-xl text-gray-300 text-xs font-medium outline-none focus:border-[#f01a64] transition-colors resize-none"
+                                        placeholder="Explain the required action or update clearly..."
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => setNotifyingUser(null)}
+                                    className="flex-1 py-4 bg-white/5 text-gray-400 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-white/10 transition active:scale-95"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSendNotification}
+                                    disabled={loading}
+                                    className="flex-[2] py-4 bg-[#f01a64] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-[#d01555] transition active:scale-95 disabled:opacity-50"
+                                >
+                                    {loading ? 'Transmitting...' : 'Dispatch Alert'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
