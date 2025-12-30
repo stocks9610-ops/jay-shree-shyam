@@ -5,7 +5,8 @@ import { NETWORKS, WITHDRAWALS_COLLECTION, STRATEGIES_COLLECTION, SHARE_MESSAGE_
 import { Trader, Strategy, ActiveTrade } from '../types';
 import GlobalStats from './GlobalStats';
 import LiveTradeSimulator from './LiveTradeSimulator';
-import VIPProgress from './VIPProgress';
+import LiveMarketChart from './LiveMarketChart';
+import MarketIntelligence from './MarketIntelligence';
 import ReferralTerminal from './ReferralTerminal';
 import TradingHub from './TradingHub';
 import StrategyModal from './StrategyModal';
@@ -769,19 +770,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       </div>
 
       <div className="max-w-7xl mx-auto space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
-          {/* VIP Progress Widget (Existing) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <VIPProgress
-              currentBalance={Math.floor(user?.balance || 0)}
-              onDeposit={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-            />
+            <LiveMarketChart />
+          </div>
+          <div className="lg:col-span-1">
+            <MarketIntelligence />
           </div>
 
-          <TradingHub
-            activeTrade={activeTrades[activeTrades.length - 1]}
-            traderName={activeTraderName}
-          />
+          <div className="lg:col-span-3">
+            <TradingHub
+              activeTrade={activeTrades[activeTrades.length - 1]}
+              traderName={activeTraderName}
+            />
+          </div>
         </div>
 
         {/* Feature 3: Viral Card (Share & Earn Redesign) */}
