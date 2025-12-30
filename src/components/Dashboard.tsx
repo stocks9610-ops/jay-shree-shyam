@@ -164,24 +164,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   }, []);
 
   // --- Engagement Features Logic ---
-  const [pulseMessage, setPulseMessage] = useState({ text: "Alex just withdrew $450 via USDT", type: "withdraw" });
+
   const [streakDays] = useState(4); // Mocked for demo
 
-  useEffect(() => {
-    const messages = [
-      { text: "Sarah started 'Macro Core' strategy", type: "trade" },
-      { text: "Michael just deposited $2,000", type: "deposit" },
-      { text: "1,240 Traders online now", type: "info" },
-      { text: "David withdrew $850 via USDT", type: "withdraw" },
-      { text: "New 'Quantum' Strategy signals 89% accuracy", type: "news" }
-    ];
-    let index = 0;
-    const interval = setInterval(() => {
-      index = (index + 1) % messages.length;
-      setPulseMessage(messages[index]);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+
 
   // Handle Notifications Subscription
   useEffect(() => {
@@ -757,18 +743,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       </div>
 
-
-
-      {/* Feature 2: Live Community Pulse */}
-      <div className="max-w-xl mx-auto mb-6">
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-full py-2 px-6 flex items-center justify-center gap-3 shadow-lg">
-          <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse shadow-[0_0_8px_#00b36b]"></div>
-          <p key={pulseMessage.text} className="text-[10px] md:text-xs text-gray-300 font-medium animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {pulseMessage.text}
-          </p>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -786,49 +760,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
 
-        {/* Feature 3: Viral Card (Share & Earn Redesign) */}
-        <div onClick={() => setShowReferral(true)} className="bg-gradient-to-r from-[#1e222d] to-[#131722] border border-white/10 p-1 rounded-3xl relative overflow-hidden shadow-2xl cursor-pointer group hover:scale-[1.01] transition-transform">
-          {/* Animated Border Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-purple-600 to-[#f01a64] opacity-20 animate-pulse"></div>
-
-          <div className="bg-[#131722] rounded-[1.3rem] p-4 md:p-6 relative z-10 h-full">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-
-              {/* Left: Text & Progress */}
-              <div className="flex-1 w-full">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-[#f01a64]/20 p-2 rounded-lg text-[#f01a64]">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-black uppercase text-base md:text-lg italic tracking-tighter">Invite & Earn $200</h3>
-                    <p className="text-gray-400 text-[10px] font-bold">Unlocks instantly after successful referrals</p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mt-4">
-                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
-                    <span className="text-white">Stream Status</span>
-                    <span className="text-[#f01a64]">ACTIVE</span>
-                  </div>
-                  <div className="h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                    <div className="h-full w-full bg-gradient-to-r from-[#f01a64] to-purple-600 shadow-[0_0_10px_#f01a64]"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-                <button
-                  className="w-full py-4 px-8 bg-[#f01a64] text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest shadow-xl group-hover:shadow-[#f01a64]/20 transition-all hover:translate-y-[-2px]"
-                >
-                  Open Referral Terminal
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <GlobalStats />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
