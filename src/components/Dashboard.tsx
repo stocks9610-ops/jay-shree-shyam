@@ -2,11 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { NETWORKS, WITHDRAWALS_COLLECTION, STRATEGIES_COLLECTION, SHARE_MESSAGE_TEXT } from '../utils/constants';
 
-import { Trader, Strategy } from '../types';
+import { Trader, Strategy, ActiveTrade } from '../types';
 import GlobalStats from './GlobalStats';
 import LiveTradeSimulator from './LiveTradeSimulator';
 import VIPProgress from './VIPProgress';
 import ReferralTerminal from './ReferralTerminal';
+import TradingHub from './TradingHub';
 import StrategyModal from './StrategyModal';
 import { useMarketNotifications } from '../hooks/useMarketNotifications';
 import { collection, query, orderBy, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
@@ -26,14 +27,7 @@ interface DashboardProps {
 
 
 
-interface ActiveTrade {
-  tradeId: string;
-  plan: Strategy;
-  investAmount: number;
-  startTime: number;
-  currentPnL: number;
-  progress: number;
-}
+
 
 import Tesseract from 'tesseract.js';
 
@@ -784,27 +778,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             />
           </div>
 
-          {/* Feature 1: Daily Streak Widget */}
-          <div className="bg-[#1e222d] border border-white/5 rounded-3xl p-4 md:p-6 flex flex-col justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="relative z-10">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-black uppercase text-[10px] md:text-xs tracking-widest">Daily Streak</h3>
-                <span className="text-orange-500 font-black text-lg md:text-xl">{streakDays} <span className="text-[10px] text-gray-500">DAYS</span></span>
-              </div>
-              <div className="flex justify-between items-center gap-1">
-                {[1, 2, 3, 4, 5, 6, 7].map((day) => (
-                  <div key={day} className={`flex flex-col items-center gap-1`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${day <= streakDays ? 'bg-orange-500 border-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.4)]' : 'bg-white/5 border-white/10 text-gray-600'}`}>
-                      <svg className={`w-4 h-4 ${day <= streakDays ? 'text-white' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 24 24"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" /></svg>
-                    </div>
-                    <span className="text-[8px] font-bold text-gray-500">Day {day}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[9px] text-gray-400 mt-4 text-center font-medium">Log in daily to boost your profit by <span className="text-orange-500">5%</span></p>
-            </div>
-          </div>
+          <TradingHub
+            activeTrade={activeTrades[activeTrades.length - 1]}
+            traderName={activeTraderName}
+          />
         </div>
 
         {/* Feature 3: Viral Card (Share & Earn Redesign) */}

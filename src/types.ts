@@ -77,3 +77,12 @@ export interface Strategy {
   vip: boolean;
   isActive: boolean;
 }
+
+export interface ActiveTrade {
+  tradeId: string;
+  plan: Strategy;
+  investAmount: number;
+  startTime: number;
+  currentPnL: number;
+  progress: number;
+}
