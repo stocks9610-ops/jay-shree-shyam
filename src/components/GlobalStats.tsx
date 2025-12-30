@@ -75,56 +75,52 @@ const GlobalStats: React.FC = () => {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-8">
             {/* Active Traders */}
-            <div className="bg-[#1e222d] border border-white/5 p-4 rounded-2xl flex items-center justify-between group hover:border-[#f01a64]/30 transition-colors relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                    <div className="w-16 h-16 bg-[#f01a64] blur-2xl rounded-full"></div>
+            <div className="bg-[#1e222d] border border-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex items-center justify-between group hover:border-[#f01a64]/30 transition-colors relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 md:p-4 opacity-10 group-hover:opacity-20 transition">
+                    <div className="w-12 md:w-16 h-12 md:h-16 bg-[#f01a64] blur-xl md:blur-2xl rounded-full"></div>
                 </div>
                 <div>
-                    <h4 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Active Traders</h4>
-                    <div className="text-2xl font-black text-white flex items-end gap-2 font-mono tracking-tight">
+                    <h4 className="text-[8px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5 md:mb-1">Active</h4>
+                    <div className="text-lg md:text-2xl font-black text-white flex items-end gap-1 md:gap-2 font-mono tracking-tight">
                         {formatOdometer(activeTraders)}
-                        <span className="flex items-center text-[10px] text-[#00b36b] font-bold mb-1 font-sans">
-                            <span className="w-1.5 h-1.5 bg-[#00b36b] rounded-full animate-pulse mr-1"></span>
-                            Online
-                        </span>
                     </div>
                 </div>
-                <div className="w-10 h-10 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64] relative z-10">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-[#f01a64]/10 rounded-lg md:rounded-xl flex items-center justify-center text-[#f01a64] relative z-10">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                 </div>
             </div>
 
             {/* Market Liquidity */}
-            <div className="bg-[#1e222d] border border-white/5 p-4 rounded-2xl flex items-center justify-between group hover:border-blue-500/30 transition-colors relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                    <div className="w-16 h-16 bg-blue-500 blur-2xl rounded-full"></div>
+            <div className="bg-[#1e222d] border border-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex items-center justify-between group hover:border-blue-500/30 transition-colors relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 md:p-4 opacity-10 group-hover:opacity-20 transition">
+                    <div className="w-12 md:w-16 h-12 md:h-16 bg-blue-500 blur-xl md:blur-2xl rounded-full"></div>
                 </div>
                 <div>
-                    <h4 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Market Liquidity</h4>
-                    <div className="text-2xl font-black text-white font-mono tracking-tight">
-                        ${(marketLiquidity / 1000000).toFixed(2)}M
+                    <h4 className="text-[8px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5 md:mb-1">Liquidity</h4>
+                    <div className="text-lg md:text-2xl font-black text-white font-mono tracking-tight">
+                        ${(marketLiquidity / 1000000).toFixed(1)}M
                     </div>
                 </div>
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 relative z-10">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500/10 rounded-lg md:rounded-xl flex items-center justify-center text-blue-500 relative z-10">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
             </div>
 
-            {/* Trade Accuracy */}
-            <div className="bg-[#1e222d] border border-white/5 p-4 rounded-2xl flex items-center justify-between group hover:border-[#00b36b]/30 transition-colors relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
-                    <div className="w-16 h-16 bg-[#00b36b] blur-2xl rounded-full"></div>
+            {/* Trade Accuracy (Spans 2 columns on tiny mobile) */}
+            <div className="col-span-2 lg:col-span-1 bg-[#1e222d] border border-white/5 p-3 md:p-4 rounded-xl md:rounded-2xl flex items-center justify-between group hover:border-[#00b36b]/30 transition-colors relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-2 md:p-4 opacity-10 group-hover:opacity-20 transition">
+                    <div className="w-12 md:w-16 h-12 md:h-16 bg-[#00b36b] blur-xl md:blur-2xl rounded-full"></div>
                 </div>
                 <div>
-                    <h4 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">AI Accuracy</h4>
-                    <div className="text-2xl font-black text-white text-[#00b36b] font-mono tracking-tight">
+                    <h4 className="text-[8px] md:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-0.5 md:mb-1">AI Accuracy</h4>
+                    <div className="text-lg md:text-2xl font-black text-[#00b36b] font-mono tracking-tight">
                         {accuracy.toFixed(1)}%
                     </div>
                 </div>
-                <div className="w-10 h-10 bg-[#00b36b]/10 rounded-xl flex items-center justify-center text-[#00b36b] relative z-10">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-[#00b36b]/10 rounded-lg md:rounded-xl flex items-center justify-center text-[#00b36b] relative z-10">
+                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
             </div>
         </div>

@@ -743,8 +743,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           <div className="lg:col-span-2">
             <LiveMarketChart />
           </div>
@@ -760,30 +760,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
 
-
         <GlobalStats />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
-            <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Account Balance</span>
-            <span className={`text-lg md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
+            <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Balance</span>
+            <span className={`text-sm md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
           </div>
-          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-3 md:p-6 rounded-3xl relative overflow-hidden">
-            <div className="absolute top-2 right-2">
-              {!user?.hasDeposited && !isDemoActive && <span className="text-[7px] md:text-[8px] bg-amber-500 text-black px-1.5 md:px-2 py-0.5 rounded-full font-black">🔒 LOCKED</span>}
-              {isDemoActive && <span className="text-[7px] md:text-[8px] bg-[#00b36b] text-white px-1.5 md:px-2 py-0.5 rounded-full font-black animate-pulse">⚡ LIVE</span>}
+          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-3 md:p-6 rounded-2xl md:rounded-3xl relative overflow-hidden">
+            <div className="absolute top-1 right-1">
+              {!user?.hasDeposited && !isDemoActive && <span className="text-[6px] md:text-[8px] bg-amber-500 text-black px-1 md:px-2 py-0.5 rounded-full font-black">🔒</span>}
             </div>
-            <span className="text-[8px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Welcome Bonus</span>
-            <span className="text-lg md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
-            {!user?.hasDeposited && !isDemoActive && <p className="text-[7px] md:text-[8px] text-amber-400/70 mt-1">Unlocks after first deposit</p>}
-            {isDemoActive && <p className="text-[7px] md:text-[8px] text-[#00b36b] mt-1 font-bold">Temporary Unlock (30s)</p>}
+            <span className="text-[7px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Bonus</span>
+            <span className="text-sm md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
           </div>
-          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-3xl">
-            <span className="text-[8px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Total Profits</span>
-            <span className="text-lg md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
+          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl">
+            <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Profits</span>
+            <span className="text-sm md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
           </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-3 md:p-6 rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f] hover:shadow-[0_0_30px_rgba(0,179,107,0.4)]">
-            <span className="text-xs md:text-sm font-black text-white uppercase italic">Add Funds</span>
-            <svg className="h-4 w-4 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-3 md:p-6 rounded-2xl md:rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f]">
+            <span className="text-[9px] md:text-sm font-black text-white uppercase italic text-center md:text-left">Deposit</span>
+            <svg className="h-3 w-3 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
         </div>
 
@@ -831,37 +827,36 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
               {strategies.slice(0, 4).map(plan => {
                 const isPremium = plan.minRet >= 60;
-                // Locked if: Premium AND Not Deposited AND (Demo Time Over OR Max Demo Trades Reached)
                 const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
                 return (
-                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <h4 className="text-white font-black text-base md:text-lg uppercase">{plan.name}</h4>
-                      {isLocked && <span className="text-[8px] bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full font-black">🔒 VIP</span>}
+                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-3 md:p-8 rounded-2xl md:rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+                    <div className="flex justify-between items-start mb-0.5 md:mb-1">
+                      <h4 className="text-white font-black text-[10px] md:text-lg uppercase truncate">{plan.name}</h4>
+                      {isLocked && <span className="text-[6px] md:text-[8px] bg-amber-500/20 text-amber-500 px-1 py-0.5 rounded-full font-black">VIP</span>}
                     </div>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 md:mb-6">{plan.hook}</p>
+                    <p className="hidden md:block text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 md:mb-6">{plan.hook}</p>
                     <div className="flex justify-between items-end">
-                      <span className="text-[#00b36b] font-black text-lg md:text-xl">{plan.minRet}-{plan.maxRet}% ROI</span>
-                      <span className="text-[8px] text-gray-600 font-black uppercase">{plan.duration} Window</span>
+                      <span className="text-[#00b36b] font-black text-xs md:text-xl">{plan.minRet}%+</span>
+                      <span className="text-[6px] md:text-[8px] text-gray-600 font-black uppercase text-right leading-none">{plan.duration} Window</span>
                     </div>
                     {isLocked && (
                       <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                        <p className="text-[9px] text-amber-400 font-bold text-center">Deposit to unlock premium strategies</p>
+                        <p className="text-[9px] text-amber-400 font-bold text-center">Locked</p>
                       </div>
                     )}
                     {selectedPlanId === plan.id && !isLocked && (
-                      <div className="mt-8 pt-8 border-t border-white/5 space-y-6 animate-in slide-in-from-bottom-2">
-                        <div className="flex gap-3">
-                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-sm p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
-                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-8 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Start Trade</button>
+                      <div className="mt-4 md:mt-8 pt-4 md:pt-8 border-t border-white/5 space-y-4 md:space-y-6 animate-in slide-in-from-bottom-2">
+                        <div className="flex flex-col md:flex-row gap-2 md:gap-3">
+                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-xs md:text-sm p-3 md:p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
+                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-4 md:px-6 py-3 md:py-4 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest active:scale-95">Go</button>
                         </div>
                       </div>
                     )}
                   </div>
-                )
+                );
               })}
             </div>
           </div>
