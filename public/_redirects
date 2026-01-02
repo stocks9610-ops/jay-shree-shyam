@@ -1,0 +1,5 @@
+# SPA routing for React Router
+# Ensures /admin and all other routes work correctly with client-side routing
+
+/admin/*   /index.html   200
+/*         /index.html   200

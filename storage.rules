@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper: Check if user is admin (requires Firestore check usually, simplified for Storage)
+    function isAdmin() {
+      return request.auth != null && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId}/{allPaths=**} {
+      // User can only write/delete their own files
+      allow write, delete: if request.auth != null && request.auth.uid == userId;
+      // User can read their own files, Admin can read everything
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+    
+    // Deposit proofs - users can upload their own, admins can read all
+    match /deposits/{userId}/{allPaths=**} {
+      // User can upload their own deposit proofs
+      allow write: if request.auth != null && request.auth.uid == userId;
+      // User can read their own, Admin can read all
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+    }
+    
+    // Public assets (if any)
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

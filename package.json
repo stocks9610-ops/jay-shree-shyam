@@ -1,0 +1,37 @@
+{
+  "name": "copytrade-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "setup-auth": "vite-node scripts/manage.ts setup-admin",
+    "seed": "vite-node scripts/manage.ts init",
+    "manage": "vite-node scripts/manage.ts"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
+    "firebase": "^12.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.11.0",
+    "terser": "^5.44.1",
+    "tesseract.js": "^7.0.0",
+    "vite": "^7.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.3",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/tesseract.js": "^0.0.2",
+    "dotenv": "^17.2.3",
+    "typescript": "^5.4.5",
+    "vite-node": "^5.2.0"
+  }
+}
