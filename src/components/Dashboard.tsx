@@ -789,18 +789,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             </div>
           )}
 
-          {/* Row 2: Live Chart (Always Visible, Full Width) */}
-          <div className="lg:col-span-3 h-[500px]">
-            <LiveMarketChart symbol={currentTrader?.category === 'forex' ? "FX:EURUSD" : "BINANCE:BTCUSDT"} />
-          </div>
+          {/* Row 2: Live Chart (REMOVED) */}
 
-          {/* Row 3: Trading Hub */}
-          <div className="lg:col-span-3">
-            <TradingHub
-              activeTrade={activeTrades[activeTrades.length - 1]}
-              traderName={activeTraderName}
-            />
-          </div>
+          {/* Row 3: Trading Hub (Only visible during active trade) */}
+          {activeTrades.length > 0 && (
+            <div className="lg:col-span-3">
+              <TradingHub
+                activeTrade={activeTrades[activeTrades.length - 1]}
+                traderName={activeTraderName}
+              />
+            </div>
+          )}
         </div>
 
         <GlobalStats />
