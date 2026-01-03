@@ -97,16 +97,25 @@ const SuccessGallery: React.FC<SuccessGalleryProps> = ({ onClose }) => {
   ];
 
   const milestones = [
-    { date: "January 1, 2026", achievement: "AI Trader Mind Launch - Revolutionary AI-Powered Trading", icon: "🤖", future: true },
-    { date: "December 2024", achievement: "50,000+ Active Traders Milestone Achieved", icon: "👥" },
-    { date: "November 2024", achievement: "Featured in Major Financial Publications", icon: "📰" },
-    { date: "October 2024", achievement: "$2.5M+ Total Profits Generated", icon: "💰" },
-    { date: "September 2024", achievement: "Mobile App Launch - Trade Anywhere", icon: "📱" },
-    { date: "August 2024", achievement: "Official Platform Launch - Global Expansion", icon: "🚀" },
-    { date: "June 2024", achievement: "Beta Testing Phase - 1,000+ Early Adopters", icon: "🧪" },
-    { date: "March 2024", achievement: "Copy Trading System Development", icon: "⚙️" },
-    { date: "December 2023", achievement: "Platform Development Begins", icon: "💻" },
-    { date: "October 2023", achievement: "Company Founded - Vision Created", icon: "🌟" }
+    { date: "January 2026", achievement: "🚀 AI Trader Launch - Revolutionary Auto-Copy System", icon: "🤖", future: false, highlight: true },
+    { date: "December 2025", achievement: "Elite Trader Network - 50+ Verified Pro Traders Onboarded", icon: "⭐" },
+    { date: "November 2025", achievement: "Real-Time Mirroring Protocol - Zero Latency Trading", icon: "⚡" },
+    { date: "October 2025", achievement: "Global Expansion - Traders from 45+ Countries", icon: "🌍" },
+    { date: "September 2025", achievement: "$5M+ Total Profits Generated Across Platform", icon: "💰" },
+    { date: "August 2025", achievement: "Mobile Trading App Launch - iOS & Android", icon: "📱" },
+    { date: "July 2025", achievement: "25,000+ Active Users Milestone Achieved", icon: "👥" },
+    { date: "June 2025", achievement: "Advanced Analytics Dashboard - Live Performance Tracking", icon: "📊" },
+    { date: "May 2025", achievement: "Top 10 Traders Featured - Verified Track Records", icon: "🏆" },
+    { date: "April 2025", achievement: "Instant Withdrawal System - 24/7 Processing", icon: "💳" },
+    { date: "March 2025", achievement: "Copy Trading 2.0 - Multi-Trader Portfolio Feature", icon: "🔄" },
+    { date: "February 2025", achievement: "Security Upgrade - Bank-Level Encryption Implemented", icon: "🔒" },
+    { date: "January 2025", achievement: "New Year Surge - 10,000+ New Traders Join", icon: "🎉" },
+    { date: "December 2024", achievement: "First $1M in User Profits - Major Milestone", icon: "💎" },
+    { date: "November 2024", achievement: "Trader Verification System - Real Results Only", icon: "✅" },
+    { date: "October 2024", achievement: "Platform Beta Launch - 1,000+ Early Adopters", icon: "🧪" },
+    { date: "September 2024", achievement: "Copy Trading Engine Development Complete", icon: "⚙️" },
+    { date: "August 2024", achievement: "First Professional Traders Recruited", icon: "🎯" },
+    { date: "July 2024", achievement: "Platform Development Begins - Vision Created", icon: "💻" }
   ];
 
   return (
@@ -228,21 +237,27 @@ const SuccessGallery: React.FC<SuccessGalleryProps> = ({ onClose }) => {
             {milestones.map((milestone, index) => (
               <div key={index} className="flex gap-6 mb-8 last:mb-0 group">
                 <div className="flex flex-col items-center">
-                  <div className={`w-12 h-12 ${milestone.future ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] animate-pulse' : 'bg-[#f01a64]/10 border-2 border-[#f01a64]'} rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 ${milestone.highlight ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] animate-pulse shadow-lg shadow-[#00b36b]/50' : milestone.future ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] animate-pulse' : 'bg-[#1e222d] border-2 border-[#f01a64]/50'} rounded-full flex items-center justify-center text-2xl group-hover:scale-110 transition-transform`}>
                     {milestone.icon}
                   </div>
                   {index < milestones.length - 1 && (
-                    <div className="w-0.5 h-full bg-gradient-to-b from-[#f01a64] to-transparent mt-2"></div>
+                    <div className="w-0.5 h-full bg-gradient-to-b from-[#f01a64]/50 to-transparent mt-2"></div>
                   )}
                 </div>
                 <div className="flex-1 pb-8">
-                  <div className={`${milestone.future ? 'text-[#00b36b]' : 'text-[#f01a64]'} text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2`}>
+                  <div className={`${milestone.highlight ? 'text-[#00b36b]' : milestone.future ? 'text-[#00b36b]' : 'text-[#f01a64]'} text-xs font-black uppercase tracking-widest mb-1 flex items-center gap-2`}>
                     {milestone.date}
+                    {milestone.highlight && <span className="bg-[#00b36b]/20 text-[#00b36b] px-2 py-0.5 rounded text-[8px] animate-pulse">🔥 LATEST</span>}
                     {milestone.future && <span className="bg-[#00b36b]/20 text-[#00b36b] px-2 py-0.5 rounded text-[8px]">COMING SOON</span>}
                   </div>
-                  <div className="text-white text-base font-bold">
+                  <div className={`${milestone.highlight ? 'text-white text-lg font-black' : 'text-white text-base font-bold'}`}>
                     {milestone.achievement}
                   </div>
+                  {milestone.highlight && (
+                    <p className="text-gray-400 text-xs mt-2 italic">
+                      Join now and experience the future of automated copy trading with AI-powered strategy selection.
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
