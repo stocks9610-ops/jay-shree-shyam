@@ -728,10 +728,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 <div
                   key={step}
                   className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-all duration-300 ${deploymentStep === step
-                      ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] text-white scale-110 shadow-lg shadow-[#f01a64]/50'
-                      : deploymentStep > step
-                        ? 'bg-[#00b36b] text-white'
-                        : 'bg-white/10 text-gray-600'
+                    ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] text-white scale-110 shadow-lg shadow-[#f01a64]/50'
+                    : deploymentStep > step
+                      ? 'bg-[#00b36b] text-white'
+                      : 'bg-white/10 text-gray-600'
                     }`}
                 >
                   {deploymentStep > step ? '✓' : step}
@@ -1224,12 +1224,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
       </div>
-    </div>
-      {
-    showReferral && (
-      <ReferralTerminal onClose={() => setShowReferral(false)} />
-    )
-  }
+      {showReferral && (
+        <ReferralTerminal onClose={() => setShowReferral(false)} />
+      )}
+
 
   <StrategyModal
     isOpen={isStrategyModalOpen}
@@ -1241,7 +1239,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     isDemoActive={isDemoActive}
     demoTradeCount={demoTradeCount}
   />
-    </div >
+
+    </div>
+
   );
 };
 
