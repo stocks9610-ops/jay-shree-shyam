@@ -869,31 +869,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
-              {strategies.slice(0, 4).map(plan => {
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+              {strategies.slice(0, 6).map(plan => {
                 const isPremium = plan.minRet >= 60;
                 const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
                 return (
-                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-3 md:p-8 rounded-2xl md:rounded-[2.5rem] transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
+                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
                     <div className="flex justify-between items-start mb-0.5 md:mb-1">
-                      <h4 className="text-white font-black text-[10px] md:text-lg uppercase truncate">{plan.name}</h4>
+                      <h4 className="text-white font-black text-[10px] md:text-base uppercase truncate">{plan.name}</h4>
                       {isLocked && <span className="text-[6px] md:text-[8px] bg-amber-500/20 text-amber-500 px-1 py-0.5 rounded-full font-black">VIP</span>}
                     </div>
-                    <p className="hidden md:block text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 md:mb-6">{plan.hook}</p>
+                    <p className="hidden md:block text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-2 md:mb-4">{plan.hook}</p>
                     <div className="flex justify-between items-end">
-                      <span className="text-[#00b36b] font-black text-xs md:text-xl">{plan.minRet}%+</span>
+                      <span className="text-[#00b36b] font-black text-xs md:text-lg">{plan.minRet}%+</span>
                       <span className="text-[6px] md:text-[8px] text-gray-600 font-black uppercase text-right leading-none">{plan.duration} Window</span>
                     </div>
                     {isLocked && (
-                      <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                      <div className="mt-3 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
                         <p className="text-[9px] text-amber-400 font-bold text-center">Locked</p>
                       </div>
                     )}
                     {selectedPlanId === plan.id && !isLocked && (
-                      <div className="mt-4 md:mt-8 pt-4 md:pt-8 border-t border-white/5 space-y-4 md:space-y-6 animate-in slide-in-from-bottom-2">
-                        <div className="flex flex-col md:flex-row gap-2 md:gap-3">
-                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-xs md:text-sm p-3 md:p-4 rounded-xl outline-none font-black" placeholder="Amount..." />
-                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-4 md:px-6 py-3 md:py-4 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest active:scale-95">Go</button>
+                      <div className="mt-3 md:mt-5 pt-3 md:pt-5 border-t border-white/5 space-y-3 md:space-y-4 animate-in slide-in-from-bottom-2">
+                        <div className="flex flex-col md:flex-row gap-2">
+                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-xs md:text-sm p-2.5 md:p-3 rounded-xl outline-none font-black" placeholder="Amount..." />
+                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-4 md:px-5 py-2.5 md:py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest active:scale-95">Go</button>
                         </div>
                       </div>
                     )}
