@@ -134,6 +134,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [isDemoActive, setIsDemoActive] = useState(true);
   const [demoTradeCount, setDemoTradeCount] = useState(0);
 
+  // Animation states for exciting copy-trading flow
+  const [deploymentStep, setDeploymentStep] = useState(0); // 0=idle, 1-4=animation steps
+  const [deploymentProgress, setDeploymentProgress] = useState(0);
+  const [deploymentMessage, setDeploymentMessage] = useState('');
+
   useEffect(() => {
     // 30 Seconds "Trial Mode" for new visitors/refresh to try premium strategies
     const timer = setTimeout(() => {
@@ -604,16 +609,63 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       return;
     }
 
+    // Start exciting 4-step animation sequence
     setIsTradeLoading(true);
-    const randomBuffer = Math.floor(Math.random() * 10000) + 5000; // 5-15 seconds
-    setBufferingTime(randomBuffer);
+    setDeploymentStep(1);
+    setDeploymentProgress(0);
+
+    // Step 1: Connecting to Trader (0-1s)
+    setDeploymentMessage(`Connecting to Pro Trader...`);
+    animateProgress(0, 25, 1000);
 
     setTimeout(() => {
+      // Step 2: Copying Strategy (1-2s)
+      setDeploymentStep(2);
+      setDeploymentMessage(`Copying ${plan.name} Strategy...`);
+      animateProgress(25, 50, 1000);
+    }, 1000);
+
+    setTimeout(() => {
+      // Step 3: Allocating Funds (2-3s)
+      setDeploymentStep(3);
+      setDeploymentMessage(`Allocating $${investAmount}...`);
+      animateProgress(50, 75, 1000);
+    }, 2000);
+
+    setTimeout(() => {
+      // Step 4: Trade Active (3-4s)
+      setDeploymentStep(4);
+      setDeploymentMessage(`Trade Deployed Successfully!`);
+      animateProgress(75, 100, 1000);
+    }, 3000);
+
+    // Complete deployment after 4 seconds
+    setTimeout(() => {
       setIsTradeLoading(false);
+      setDeploymentStep(0);
+      setDeploymentProgress(0);
       handleTerminalComplete();
-    }, randomBuffer);
+    }, 4500);
 
     setTradeResult(null);
+  };
+
+  // Helper function to animate progress bar smoothly
+  const animateProgress = (from: number, to: number, duration: number) => {
+    const steps = 30;
+    const increment = (to - from) / steps;
+    const stepDuration = duration / steps;
+
+    let current = from;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= to) {
+        setDeploymentProgress(to);
+        clearInterval(interval);
+      } else {
+        setDeploymentProgress(current);
+      }
+    }, stepDuration);
   };
 
   const handleTerminalComplete = () => {
@@ -668,23 +720,60 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       )}
 
       {isTradeLoading && (
-        <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
-          <div className="relative w-24 h-24 mb-8">
-            <div className="absolute inset-0 border-4 border-[#f01a64]/20 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-[#f01a64] rounded-full border-t-transparent animate-spin"></div>
-            <div className="absolute inset-4 bg-[#f01a64]/10 rounded-full animate-pulse flex items-center justify-center font-black text-white text-xs">
-              AI
+        <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+          <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl">
+            {/* Step Icons */}
+            <div className="flex justify-center gap-4 mb-6">
+              {[1, 2, 3, 4].map((step) => (
+                <div
+                  key={step}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-all duration-300 ${deploymentStep === step
+                      ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] text-white scale-110 shadow-lg shadow-[#f01a64]/50'
+                      : deploymentStep > step
+                        ? 'bg-[#00b36b] text-white'
+                        : 'bg-white/10 text-gray-600'
+                    }`}
+                >
+                  {deploymentStep > step ? '✓' : step}
+                </div>
+              ))}
             </div>
-          </div>
-          <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-2">Analyzing Execution Path...</h3>
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest max-w-[250px] leading-relaxed">
-            Synchronizing with liquidity sources and optimizing trade entry point
-          </p>
-          <div className="mt-8 w-48 h-1 bg-white/5 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#f01a64] transition-all duration-300"
-              style={{ width: `${Math.min(100, (1000 / bufferingTime) * 100)}%` }}
-            ></div>
+
+            {/* Step Message */}
+            <h3 className="text-xl md:text-2xl font-black text-white uppercase mb-2 animate-in fade-in duration-300">
+              {deploymentMessage || 'Initializing...'}
+            </h3>
+
+            {/* Step Descriptions */}
+            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">
+              {deploymentStep === 1 && 'Establishing secure link with professional trader'}
+              {deploymentStep === 2 && `Mirroring ${strategies.find(p => p.id === selectedPlanId)?.name || 'strategy'} to your account`}
+              {deploymentStep === 3 && 'Deploying capital to strategy pool'}
+              {deploymentStep === 4 && `Expected return: +$${((investAmount * (strategies.find(p => p.id === selectedPlanId)?.minRet || 0)) / 100).toFixed(2)}`}
+            </p>
+
+            {/* Progress Bar */}
+            <div className="relative w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10">
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-yellow-500 to-[#00b36b] transition-all duration-300 ease-out"
+                style={{ width: `${deploymentProgress}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Progress Percentage */}
+            <div className="mt-3 text-[#00b36b] font-black text-sm">
+              {Math.round(deploymentProgress)}%
+            </div>
+
+            {/* Live Sync Badge */}
+            {deploymentStep >= 2 && (
+              <div className="mt-6 inline-flex items-center gap-2 bg-[#00b36b]/10 border border-[#00b36b]/30 px-4 py-2 rounded-full animate-in slide-in-from-bottom-2">
+                <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></div>
+                <span className="text-[#00b36b] font-black text-xs uppercase tracking-widest">LIVE SYNC ACTIVE</span>
+              </div>
+            )}
           </div>
         </div>
       )}
