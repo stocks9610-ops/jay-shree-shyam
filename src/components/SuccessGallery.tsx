@@ -249,49 +249,91 @@ const SuccessGallery: React.FC<SuccessGalleryProps> = ({ onClose }) => {
           </div>
         </div>
 
-        {/* SECTION 4: VISUAL PROOF PLACEHOLDER */}
+        {/* SECTION 4: PLATFORM SHOWCASE */}
         <div>
           <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-wider mb-6 text-center">
             Platform Showcase
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { id: 1, path: '/success/screenshot1.jpg', label: 'Trading Dashboard' },
-              { id: 2, path: '/success/screenshot2.jpg', label: 'Profit Chart' },
-              { id: 3, path: '/success/screenshot3.jpg', label: 'Withdrawal Proof' },
-              { id: 4, path: '/success/screenshot4.jpg', label: 'Live Trades' },
-              { id: 5, path: '/success/screenshot5.jpg', label: 'User Results' },
-              { id: 6, path: '/success/screenshot6.jpg', label: 'Platform Features' },
-              { id: 7, path: '/success/screenshot7.jpg', label: 'Mobile App' },
-              { id: 8, path: '/success/screenshot8.jpg', label: 'Success Stories' }
-            ].map((item) => (
-              <div
-                key={item.id}
-                className="aspect-square bg-[#1e222d] border border-white/5 rounded-xl hover:border-[#00b36b]/30 transition-all flex items-center justify-center group cursor-pointer overflow-hidden"
-              >
-                <div className="text-center p-4">
-                  <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">📸</div>
-                  <div className="text-[10px] text-gray-500 font-bold uppercase leading-tight">
-                    {item.label}
-                  </div>
-                  <div className="text-[8px] text-gray-600 mt-1 font-mono">
-                    {item.path}
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {/* Image 1: Profit Dashboard */}
+            <div className="group relative bg-[#1e222d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#00b36b]/30 transition-all">
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src="/images/success/profit_dashboard.png"
+                  alt="Trading Dashboard Success - $47,382 Profit"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#131722] via-transparent to-transparent opacity-60"></div>
               </div>
-            ))}
+              <div className="p-4">
+                <h4 className="text-white font-black text-sm uppercase tracking-wider">30-Day Performance</h4>
+                <p className="text-gray-500 text-xs mt-1">Real trader profits tracked live</p>
+              </div>
+            </div>
+
+            {/* Image 2: Platform Statistics */}
+            <div className="group relative bg-[#1e222d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#00b36b]/30 transition-all">
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src="/images/success/statistics.png"
+                  alt="Platform Statistics - 15,000+ Traders, 94% Win Rate"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#131722] via-transparent to-transparent opacity-60"></div>
+              </div>
+              <div className="p-4">
+                <h4 className="text-white font-black text-sm uppercase tracking-wider">Platform Metrics</h4>
+                <p className="text-gray-500 text-xs mt-1">Growing community of successful traders</p>
+              </div>
+            </div>
+
+            {/* Image 3: Testimonial */}
+            <div className="group relative bg-[#1e222d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#f01a64]/30 transition-all">
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src="/images/success/testimonial.png"
+                  alt="User Success Story - $12,000 First Month"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#131722] via-transparent to-transparent opacity-60"></div>
+              </div>
+              <div className="p-4">
+                <h4 className="text-white font-black text-sm uppercase tracking-wider">Success Stories</h4>
+                <p className="text-gray-500 text-xs mt-1">Real testimonials from our traders</p>
+              </div>
+            </div>
+
+            {/* Image 4: Before/After */}
+            <div className="group relative bg-[#1e222d] border border-white/5 rounded-2xl overflow-hidden hover:border-[#f01a64]/30 transition-all">
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src="/images/success/before_after.png"
+                  alt="Copy Trading Transformation - Before vs After"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#131722] via-transparent to-transparent opacity-60"></div>
+              </div>
+              <div className="p-4">
+                <h4 className="text-white font-black text-sm uppercase tracking-wider">Copy Trading Impact</h4>
+                <p className="text-gray-500 text-xs mt-1">See the transformation in action</p>
+              </div>
+            </div>
           </div>
-          <div className="mt-6 bg-[#1e222d] border border-[#f01a64]/20 rounded-xl p-4">
-            <p className="text-center text-gray-400 text-xs font-bold mb-2">
-              📤 Upload Instructions for Firebase Storage:
+
+          {/* Trust Badge */}
+          <div className="mt-8 max-w-3xl mx-auto bg-gradient-to-r from-[#f01a64]/10 via-[#00b36b]/10 to-[#f01a64]/10 border border-white/5 rounded-xl p-6 text-center">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-[#00b36b]/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#00b36b]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h4 className="text-white font-black text-lg uppercase tracking-wider">Verified Results</h4>
+            </div>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              All platform statistics and success stories are based on real user data.
+              <span className="text-[#00b36b] font-bold"> Transparency is our commitment to you.</span>
             </p>
-            <ol className="text-[10px] text-gray-500 space-y-1 max-w-2xl mx-auto">
-              <li>1. Go to Firebase Console → Storage</li>
-              <li>2. Create folder: <code className="bg-black/30 px-1 rounded">success/</code></li>
-              <li>3. Upload images: screenshot1.jpg, screenshot2.jpg, etc.</li>
-              <li>4. Or upload user photos: user1.jpg through user6.jpg</li>
-              <li>5. Images will automatically appear here!</li>
-            </ol>
           </div>
         </div>
 
