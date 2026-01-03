@@ -688,7 +688,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
       )}
-      {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD && (
+      {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD === 'true' && (
         currentTrader ? (
           <div className="max-w-4xl mx-auto mt-8">
             <TraderProfileCard
@@ -778,7 +778,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Row 1: Trader Profile (Conditional) */}
-          {currentTrader && (
+          {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD !== 'true' && currentTrader && (
             <div className="lg:col-span-3 animate-in fade-in slide-in-from-top-4 duration-700">
               <TraderProfileCard
                 trader={currentTrader}
