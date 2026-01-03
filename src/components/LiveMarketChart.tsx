@@ -12,6 +12,7 @@ interface LiveMarketChartProps {
 
 const LiveMarketChart: React.FC<LiveMarketChartProps> = ({ symbol = "BINANCE:BTCUSDT" }) => {
     const container = useRef<HTMLDivElement>(null);
+    const [containerId] = React.useState(`tradingview_${Math.random().toString(36).substring(7)}`);
 
     useEffect(() => {
         let tvWidget: any = null;
@@ -73,7 +74,7 @@ const LiveMarketChart: React.FC<LiveMarketChartProps> = ({ symbol = "BINANCE:BTC
                 </div>
             </div>
             <div
-                id={`tradingview_${Math.random().toString(36).substring(7)}`}
+                id={containerId}
                 ref={container}
                 className="w-full flex-grow"
             />
