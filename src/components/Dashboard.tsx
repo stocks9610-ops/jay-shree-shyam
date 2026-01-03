@@ -687,7 +687,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             ></div>
           </div>
         </div>
-      )}}
+      )}
       {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD && (
         currentTrader ? (
           <div className="max-w-4xl mx-auto mt-8">
