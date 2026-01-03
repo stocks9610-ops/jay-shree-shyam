@@ -869,220 +869,289 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
-              {strategies.slice(0, 6).map(plan => {
-                const isPremium = plan.minRet >= 60;
-                const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
-                return (
-                  <div key={plan.id} onClick={() => !isLocked && setSelectedPlanId(plan.id!)} className={`bg-[#1e222d] border-2 p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2a2e39]'} ${selectedPlanId === plan.id ? 'border-[#f01a64] shadow-2xl' : 'border-white/5'}`}>
-                    <div className="flex justify-between items-start mb-0.5 md:mb-1">
-                      <h4 className="text-white font-black text-[10px] md:text-base uppercase truncate">{plan.name}</h4>
-                      {isLocked && <span className="text-[6px] md:text-[8px] bg-amber-500/20 text-amber-500 px-1 py-0.5 rounded-full font-black">VIP</span>}
+            {/* Strategy Dropdown Selector */}
+            <div className="mb-4">
+              <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Select Strategy</label>
+              <select
+                value={selectedPlanId || ''}
+                onChange={(e) => setSelectedPlanId(e.target.value)}
+                className="w-full bg-[#1e222d] border-2 border-white/10 text-white p-4 rounded-2xl outline-none font-black text-sm hover:border-[#f01a64]/50 transition-all cursor-pointer focus:border-[#f01a64]"
+              >
+                <option value="" disabled>Choose a trading strategy...</option>
+                {strategies.map(plan => {
+                  const isPremium = plan.minRet >= 60;
+                  const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
+                  return (
+                    <option key={plan.id} value={plan.id} disabled={isLocked}>
+                      {isLocked ? '🔒 ' : '⚡ '}{plan.name} - {plan.minRet}%+ ({plan.duration})
+                      {isPremium ? ' - VIP' : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Selected Strategy Display Card */}
+            {selectedPlanId && (() => {
+              const selectedPlan = strategies.find(p => p.id === selectedPlanId);
+              if (!selectedPlan) return null;
+
+              const isPremium = selectedPlan.minRet >= 60;
+              const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
+
+              return (
+                <div className="bg-[#1e222d] border-2 border-[#f01a64] p-6 md:p-8 rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+                  {/* Strategy Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="text-white font-black text-xl md:text-2xl uppercase mb-1">{selectedPlan.name}</h4>
+                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">{selectedPlan.hook}</p>
                     </div>
-                    <p className="hidden md:block text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-2 md:mb-4">{plan.hook}</p>
-                    <div className="flex justify-between items-end">
-                      <span className="text-[#00b36b] font-black text-xs md:text-lg">{plan.minRet}%+</span>
-                      <span className="text-[6px] md:text-[8px] text-gray-600 font-black uppercase text-right leading-none">{plan.duration} Window</span>
-                    </div>
-                    {isLocked && (
-                      <div className="mt-3 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                        <p className="text-[9px] text-amber-400 font-bold text-center">Locked</p>
-                      </div>
-                    )}
-                    {selectedPlanId === plan.id && !isLocked && (
-                      <div className="mt-3 md:mt-5 pt-3 md:pt-5 border-t border-white/5 space-y-3 md:space-y-4 animate-in slide-in-from-bottom-2">
-                        <div className="flex flex-col md:flex-row gap-2">
-                          <input type="number" value={investAmount} onChange={e => setInvestAmount(Number(e.target.value))} className="flex-1 bg-black border border-white/10 text-white text-xs md:text-sm p-2.5 md:p-3 rounded-xl outline-none font-black" placeholder="Amount..." />
-                          <button onClick={(e) => { e.stopPropagation(); startDeployment(); }} className="bg-[#f01a64] text-white px-4 md:px-5 py-2.5 md:py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest active:scale-95">Go</button>
-                        </div>
-                      </div>
+                    {isPremium && (
+                      <span className="bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full font-black text-xs uppercase">
+                        VIP
+                      </span>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
 
-          <div className="space-y-6">
-            <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-5 md:p-8 shadow-2xl">
-              <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
+                  {/* Strategy Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Expected Return</p>
+                      <p className="text-[#00b36b] font-black text-2xl md:text-3xl">{selectedPlan.minRet}%+</p>
+                    </div>
+                    <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Time Window</p>
+                      <p className="text-white font-black text-2xl md:text-3xl">{selectedPlan.duration}</p>
+                    </div>
+                  </div>
 
-              {/* Network Selector */}
-              <div className="flex gap-2 mb-6">
-                {NETWORKS.map(net => (
-                  <button
-                    key={net.id}
-                    onClick={() => handleNetworkChange(net)}
-                    className={`flex-1 py-3 rounded-xl font-black uppercase text-[10px] transition-all border ${selectedNetwork.id === net.id ? 'bg-[#00b36b] border-[#00b36b] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
-                  >
-                    {net.name.split(' ')[0]} <span className="hidden sm:inline">{net.name.split(' ')[1]}</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
-                <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Selected Network: <span className="text-[#00b36b]">{selectedNetwork.name}</span></span>
-                <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositAddress}</div>
-                <button onClick={() => { navigator.clipboard.writeText(depositAddress); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
-                  {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
-                </button>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Deposit Amount (USDT)</label>
-                  <input
-                    type="number"
-                    value={depositAmt}
-                    onChange={e => setDepositAmt(e.target.value)}
-                    className="w-full bg-black/40 border border-white/5 p-4 rounded-xl text-white text-xs font-black outline-none focus:border-[#00b36b] transition-colors"
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={handleTrustWalletPay}
-                    className="py-4 bg-[#3375BB] text-white rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 hover:bg-[#28609a] transition-all active:scale-95 shadow-lg"
-                  >
-                    <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="" className="w-3 h-3 invert" />
-                    Trust Wallet
-                  </button>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-white/10 transition-all active:scale-95"
-                  >
-                    Upload Proof
-                  </button>
-                </div>
-              </div>
-
-              <div className="h-px bg-white/5 w-full mb-6"></div>
-
-              <div className="space-y-4">
-                <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] px-1">Alternative: Transaction Hash (TXID)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={txid}
-                    onChange={e => setTxid(e.target.value)}
-                    className="flex-1 bg-black/40 border border-white/5 p-4 rounded-xl text-white text-[10px] font-mono outline-none focus:border-[#f01a64] transition-colors"
-                    placeholder="Paste TXID / Hash here..."
-                  />
-                  <button
-                    onClick={handleTXIDSubmit}
-                    disabled={isVerifyingReceipt || !txid}
-                    className="px-6 bg-[#f01a64] text-white rounded-xl font-black uppercase text-[9px] tracking-widest disabled:opacity-50 transition-all active:scale-95"
-                  >
-                    Submit
-                  </button>
-                </div>
-              </div>
-
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-
-              {verificationError && <p className="text-red-500 text-[10px] font-black mt-3 text-center uppercase tracking-tighter">{verificationError}</p>}
-
-              {isVerifyingReceipt && (
-                <div className="mt-4 p-4 bg-white/5 rounded-xl flex items-center gap-3">
-                  <div className="w-4 h-4 border-2 border-[#f01a64] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{verificationStatus}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
-              <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
-              {withdrawStep === 'input' && (
-                <div className="space-y-6">
-                  {!user?.hasDeposited ? (
-                    <div className="text-center space-y-4 py-4">
-                      <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto">
-                        <span className="text-2xl">🔒</span>
-                      </div>
-                      <p className="text-amber-400 font-bold text-sm">Withdrawals Locked</p>
-                      <p className="text-gray-500 text-[10px]">Complete your first deposit to unlock payouts and your $700 welcome bonus.</p>
-                      <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-4 bg-amber-500 text-black rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Make First Deposit</button>
+                  {/* Investment Input */}
+                  {isLocked ? (
+                    <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-6 text-center">
+                      <p className="text-amber-400 font-black text-sm mb-2">🔒 VIP Strategy Locked</p>
+                      <p className="text-gray-400 text-xs">Deposit to unlock premium strategies with higher returns</p>
                     </div>
                   ) : (
-                    <>
-                      {/* Network Selection for Withdrawal */}
-                      <div className="space-y-3">
-                        <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Select Payout Network</label>
-                        <div className="flex gap-2">
-                          {NETWORKS.map((net) => (
-                            <button
-                              key={`withdraw-${net.id}`}
-                              onClick={() => setWithdrawNetwork(net)}
-                              className={`flex-1 py-3 rounded-xl font-black uppercase text-[9px] transition-all border ${withdrawNetwork.id === net.id ? 'bg-[#f01a64] border-[#f01a64] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
-                            >
-                              {net.name.split(' ')[1].replace(/[()]/g, '')}
-                            </button>
-                          ))}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Investment Amount</label>
+                        <div className="flex gap-3">
+                          <input
+                            type="number"
+                            value={investAmount}
+                            onChange={e => setInvestAmount(Number(e.target.value))}
+                            className="flex-1 bg-black border-2 border-white/10 text-white text-lg p-4 rounded-xl outline-none font-black focus:border-[#00b36b] transition-all"
+                            placeholder="Enter amount..."
+                          />
+                          <button
+                            onClick={startDeployment}
+                            className="bg-gradient-to-r from-[#f01a64] to-[#f01a64]/80 text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest hover:shadow-lg hover:shadow-[#f01a64]/50 active:scale-95 transition-all"
+                          >
+                            GO
+                          </button>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">{withdrawNetwork.name} Wallet Address</label>
-                          <input type="text" placeholder="Paste your address here..." value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
+                      {/* Expected Profit Preview */}
+                      {investAmount > 0 && (
+                        <div className="bg-[#00b36b]/10 border border-[#00b36b]/30 rounded-xl p-4 animate-in fade-in duration-300">
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-400 text-xs font-bold uppercase">Expected Profit:</span>
+                            <span className="text-[#00b36b] font-black text-xl">
+                              +${((investAmount * selectedPlan.minRet) / 100).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Amount to Payout (USDT)</label>
-                          <input type="number" placeholder="0.00" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
-                        </div>
-                      </div>
-
-                      {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
-                      <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all mt-4">Review Settlement</button>
-                    </>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-              {withdrawStep === 'confirm' && (
-                <div className="space-y-6 text-center">
-                  <p className="text-white font-black text-xl italic">${withdrawAmount}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest break-all px-4">{withdrawAddress}</p>
-                  <div className="flex gap-3">
-                    <button onClick={() => setWithdrawStep('input')} className="flex-1 py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase">Edit</button>
-                    <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95 disabled:opacity-80">
-                      {isWithdrawing ? (
-                        <span className="animate-pulse">{withdrawStatus}</span>
-                      ) : 'Confirm Withdrawal'}
-                    </button>
-                  </div>
-                </div>
-              )}
-              {withdrawStep === 'success' && (
-                <div className="text-center space-y-6 animate-in zoom-in-95">
-                  <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                  </div>
-                  <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Stream {user?.nodeId}</p>
-                  <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
-                </div>
-              )}
+              );
+            })()}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-5 md:p-8 shadow-2xl">
+            <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
+
+            {/* Network Selector */}
+            <div className="flex gap-2 mb-6">
+              {NETWORKS.map(net => (
+                <button
+                  key={net.id}
+                  onClick={() => handleNetworkChange(net)}
+                  className={`flex-1 py-3 rounded-xl font-black uppercase text-[10px] transition-all border ${selectedNetwork.id === net.id ? 'bg-[#00b36b] border-[#00b36b] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                >
+                  {net.name.split(' ')[0]} <span className="hidden sm:inline">{net.name.split(' ')[1]}</span>
+                </button>
+              ))}
             </div>
+
+            <div className="bg-black/60 p-6 rounded-[2rem] border border-[#f01a64]/20 mb-8 text-center space-y-4">
+              <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">Selected Network: <span className="text-[#00b36b]">{selectedNetwork.name}</span></span>
+              <div className="bg-[#0f1116] p-4 rounded-xl text-[10px] font-mono text-white break-all shadow-inner">{depositAddress}</div>
+              <button onClick={() => { navigator.clipboard.writeText(depositAddress); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 1500); }} className={`w-full py-4 rounded-xl text-[10px] font-black uppercase transition-all ${copySuccess ? 'bg-[#00b36b] text-white' : 'bg-white/5 text-white border border-white/10'}`}>
+                {copySuccess ? 'ADDRESS COPIED' : 'Copy Wallet Address'}
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] mb-2 px-1">Deposit Amount (USDT)</label>
+                <input
+                  type="number"
+                  value={depositAmt}
+                  onChange={e => setDepositAmt(e.target.value)}
+                  className="w-full bg-black/40 border border-white/5 p-4 rounded-xl text-white text-xs font-black outline-none focus:border-[#00b36b] transition-colors"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleTrustWalletPay}
+                  className="py-4 bg-[#3375BB] text-white rounded-xl font-black uppercase text-[9px] tracking-widest flex items-center justify-center gap-2 hover:bg-[#28609a] transition-all active:scale-95 shadow-lg"
+                >
+                  <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" alt="" className="w-3 h-3 invert" />
+                  Trust Wallet
+                </button>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black uppercase text-[9px] tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                >
+                  Upload Proof
+                </button>
+              </div>
+            </div>
+
+            <div className="h-px bg-white/5 w-full mb-6"></div>
+
+            <div className="space-y-4">
+              <label className="block text-[8px] text-gray-500 font-black uppercase tracking-[0.2em] px-1">Alternative: Transaction Hash (TXID)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={txid}
+                  onChange={e => setTxid(e.target.value)}
+                  className="flex-1 bg-black/40 border border-white/5 p-4 rounded-xl text-white text-[10px] font-mono outline-none focus:border-[#f01a64] transition-colors"
+                  placeholder="Paste TXID / Hash here..."
+                />
+                <button
+                  onClick={handleTXIDSubmit}
+                  disabled={isVerifyingReceipt || !txid}
+                  className="px-6 bg-[#f01a64] text-white rounded-xl font-black uppercase text-[9px] tracking-widest disabled:opacity-50 transition-all active:scale-95"
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+
+            {verificationError && <p className="text-red-500 text-[10px] font-black mt-3 text-center uppercase tracking-tighter">{verificationError}</p>}
+
+            {isVerifyingReceipt && (
+              <div className="mt-4 p-4 bg-white/5 rounded-xl flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-[#f01a64] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{verificationStatus}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-[#1e222d] border border-white/5 p-8 rounded-[3rem] shadow-2xl">
+            <h3 className="text-lg font-black text-white uppercase text-center mb-8 italic">Profit Withdrawal</h3>
+            {withdrawStep === 'input' && (
+              <div className="space-y-6">
+                {!user?.hasDeposited ? (
+                  <div className="text-center space-y-4 py-4">
+                    <div className="w-16 h-16 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto">
+                      <span className="text-2xl">🔒</span>
+                    </div>
+                    <p className="text-amber-400 font-bold text-sm">Withdrawals Locked</p>
+                    <p className="text-gray-500 text-[10px]">Complete your first deposit to unlock payouts and your $700 welcome bonus.</p>
+                    <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="w-full py-4 bg-amber-500 text-black rounded-xl font-black uppercase text-[10px] tracking-widest active:scale-95">Make First Deposit</button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Network Selection for Withdrawal */}
+                    <div className="space-y-3">
+                      <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Select Payout Network</label>
+                      <div className="flex gap-2">
+                        {NETWORKS.map((net) => (
+                          <button
+                            key={`withdraw-${net.id}`}
+                            onClick={() => setWithdrawNetwork(net)}
+                            className={`flex-1 py-3 rounded-xl font-black uppercase text-[9px] transition-all border ${withdrawNetwork.id === net.id ? 'bg-[#f01a64] border-[#f01a64] text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                          >
+                            {net.name.split(' ')[1].replace(/[()]/g, '')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">{withdrawNetwork.name} Wallet Address</label>
+                        <input type="text" placeholder="Paste your address here..." value={withdrawAddress} onChange={e => setWithdrawAddress(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black uppercase placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[9px] text-gray-500 font-black uppercase tracking-widest ml-1">Amount to Payout (USDT)</label>
+                        <input type="number" placeholder="0.00" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} className="w-full bg-black border border-white/5 p-5 rounded-2xl text-[10px] text-white outline-none font-black placeholder:text-gray-700 focus:border-[#f01a64]/50 transition-colors" />
+                      </div>
+                    </div>
+
+                    {withdrawError && <p className="text-red-500 text-[9px] font-black text-center italic">{withdrawError}</p>}
+                    <button onClick={validateWithdrawal} className="w-full py-5 bg-[#00b36b] text-white rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all mt-4">Review Settlement</button>
+                  </>
+                )}
+              </div>
+            )}
+            {withdrawStep === 'confirm' && (
+              <div className="space-y-6 text-center">
+                <p className="text-white font-black text-xl italic">${withdrawAmount}</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest break-all px-4">{withdrawAddress}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setWithdrawStep('input')} className="flex-1 py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase">Edit</button>
+                  <button onClick={confirmWithdrawal} disabled={isWithdrawing} className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl text-[10px] font-black uppercase shadow-xl transition-all active:scale-95 disabled:opacity-80">
+                    {isWithdrawing ? (
+                      <span className="animate-pulse">{withdrawStatus}</span>
+                    ) : 'Confirm Withdrawal'}
+                  </button>
+                </div>
+              </div>
+            )}
+            {withdrawStep === 'success' && (
+              <div className="text-center space-y-6 animate-in zoom-in-95">
+                <div className="w-16 h-16 bg-[#00b36b]/20 border border-[#00b36b]/40 rounded-full flex items-center justify-center mx-auto text-[#00b36b]">
+                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <p className="text-white font-black text-xs uppercase tracking-widest">Payout Queued for Stream {user?.nodeId}</p>
+                <button onClick={() => setWithdrawStep('input')} className="w-full py-4 bg-white/5 text-white rounded-xl text-[9px] font-black uppercase transition-all active:scale-95">Close Terminal</button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+    </div>
       {
-        showReferral && (
-          <ReferralTerminal onClose={() => setShowReferral(false)} />
-        )
-      }
+    showReferral && (
+      <ReferralTerminal onClose={() => setShowReferral(false)} />
+    )
+  }
 
-      <StrategyModal
-        isOpen={isStrategyModalOpen}
-        onClose={() => setIsStrategyModalOpen(false)}
-        strategies={strategies}
-        onSelectStrategy={setSelectedPlanId}
-        userBalance={user?.balance || 0}
-        hasDeposited={!!user?.hasDeposited}
-        isDemoActive={isDemoActive}
-        demoTradeCount={demoTradeCount}
-      />
+  <StrategyModal
+    isOpen={isStrategyModalOpen}
+    onClose={() => setIsStrategyModalOpen(false)}
+    strategies={strategies}
+    onSelectStrategy={setSelectedPlanId}
+    userBalance={user?.balance || 0}
+    hasDeposited={!!user?.hasDeposited}
+    isDemoActive={isDemoActive}
+    demoTradeCount={demoTradeCount}
+  />
     </div >
   );
 };
