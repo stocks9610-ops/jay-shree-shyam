@@ -12,7 +12,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.REACT_APP_TRADER_PROFILE_DASHBOARD': JSON.stringify(env.REACT_APP_TRADER_PROFILE_DASHBOARD || 'false')
     },
     resolve: {
       alias: {

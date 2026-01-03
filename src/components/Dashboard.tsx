@@ -20,6 +20,8 @@ import {
   deleteNotification,
   UserNotification
 } from '../services/notificationService';
+import TraderProfileCard from './TraderProfileCard';
+import { subscribeToTraders } from '../services/traderService';
 
 interface DashboardProps {
   onSwitchTrader?: () => void;
@@ -142,6 +144,18 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
   const queryParams = new URLSearchParams(window.location.search);
   const activeTraderName = queryParams.get('trader');
+  const [currentTrader, setCurrentTrader] = useState<Trader | null>(null);
+
+  // Fetch full trader details if activeTraderName is present
+  useEffect(() => {
+    if (activeTraderName) {
+      const unsub = subscribeToTraders((traders) => {
+        const found = traders.find(t => t.name === activeTraderName || t.id === activeTraderName);
+        if (found) setCurrentTrader(found);
+      });
+      return () => unsub();
+    }
+  }, [activeTraderName]);
 
   // --- Settings & Address Logic ---
   const [platformSettings, setPlatformSettings] = useState<any>(null);
@@ -673,6 +687,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             ></div>
           </div>
         </div>
+      )}}
+      {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD && (
+        currentTrader ? (
+          <div className="max-w-4xl mx-auto mt-8">
+            <TraderProfileCard
+              trader={currentTrader}
+              currentProfit={user?.totalProfit || 0}
+              currentWinRate={currentTrader.winRate}
+              onClose={() => setCurrentTrader(null)}
+            />
+          </div>
+        ) : (
+          <div className="text-center text-gray-400 py-8">
+            <p className="text-sm uppercase tracking-wider">
+              Add <code>?trader=&lt;id&gt;</code> to the URL to view a trader profile here.
+            </p>
+          </div>
+        )
       )}
 
       {showSuccessToast && (
@@ -745,13 +777,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-          <div className="lg:col-span-2">
-            <LiveMarketChart />
-          </div>
-          <div className="lg:col-span-1">
-            <MarketIntelligence />
+          {/* Row 1: Trader Profile (Conditional) */}
+          {currentTrader && (
+            <div className="lg:col-span-3 animate-in fade-in slide-in-from-top-4 duration-700">
+              <TraderProfileCard
+                trader={currentTrader}
+                currentProfit={user?.totalProfit || 0} // Placeholder, can be real trader profit if available
+                currentWinRate={currentTrader.winRate}
+                onClose={() => setCurrentTrader(null)}
+              />
+            </div>
+          )}
+
+          {/* Row 2: Live Chart (Always Visible, Full Width) */}
+          <div className="lg:col-span-3 h-[500px]">
+            <LiveMarketChart symbol={currentTrader?.category === 'forex' ? "FX:EURUSD" : "BINANCE:BTCUSDT"} />
           </div>
 
+          {/* Row 3: Trading Hub */}
           <div className="lg:col-span-3">
             <TradingHub
               activeTrade={activeTrades[activeTrades.length - 1]}
