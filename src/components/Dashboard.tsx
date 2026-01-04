@@ -134,7 +134,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     return [];
   });
 
-  // Backup active trades to Firebase (Debounced)
+  // Track if we have synced with server state at least once
+  const hasHydratedRef = useRef(false);
+
+  // 1. Hydrate from Server (Cross-device support) - Runs when user loads
+  useEffect(() => {
+    if (!user) return;
+
+    // If we haven't reconciled local vs server state yet
+    if (!hasHydratedRef.current) {
+      if (activeTrades.length === 0 && user.activeTrades && user.activeTrades.length > 0) {
+        console.log("☁️ Restoring active trades from Cloud Backup...");
+        setActiveTrades(user.activeTrades);
+      }
+      hasHydratedRef.current = true;
+    }
+  }, [user]);
+
+  // 2. Backup active trades to Firebase (Debounced)
   useEffect(() => {
     if (!user) return;
 
@@ -145,18 +162,20 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       localStorage.removeItem('activeTrades');
     }
 
-    // Sync to Firebase for backup (Debounced 10s to save writes)
-    const syncTimeout = setTimeout(() => {
-      // Only sync if different to avoid loops/writes
-      const currentJson = JSON.stringify(activeTrades.map(t => ({ ...t, currentPnL: Math.round(t.currentPnL * 100) / 100 }))); // Simplify float diffs
-      const serverJson = JSON.stringify(user.activeTrades || []);
+    // Only sync to Firebase if we have finished hydration (prevents wiping server on load)
+    if (hasHydratedRef.current) {
+      const syncTimeout = setTimeout(() => {
+        // Only sync if different to avoid loops/writes
+        const currentJson = JSON.stringify(activeTrades.map(t => ({ ...t, currentPnL: Math.round(t.currentPnL * 100) / 100 })));
+        const serverJson = JSON.stringify(user.activeTrades || []);
 
-      if (currentJson !== serverJson) {
-        updateUser({ activeTrades });
-      }
-    }, 10000);
+        if (currentJson !== serverJson) {
+          updateUser({ activeTrades });
+        }
+      }, 10000); // 10s debounce
 
-    return () => clearTimeout(syncTimeout);
+      return () => clearTimeout(syncTimeout);
+    }
   }, [activeTrades, user]);
   const [showReferral, setShowReferral] = useState(false);
   const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
