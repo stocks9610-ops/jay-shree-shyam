@@ -47,7 +47,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
                 <div className="flex-1 overflow-y-auto p-6 md:p-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {strategies.map(plan => {
-                            const isPremium = plan.minRet >= 60;
+                            const isPremium = plan.vip; // Use VIP field from database
                             const isLocked = isPremium && !hasDeposited && (!isDemoActive || demoTradeCount >= 3);
 
                             return (
@@ -60,8 +60,8 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
                                         }
                                     }}
                                     className={`bg-[#131722] border-2 group relative overflow-hidden p-6 rounded-[2rem] transition-all duration-300 ${isLocked
-                                            ? 'opacity-60 cursor-not-allowed border-white/5'
-                                            : 'cursor-pointer hover:bg-[#1a1e29] border-white/5 hover:border-[#f01a64]/50 hover:shadow-[0_0_30px_rgba(240,26,100,0.15)]'
+                                        ? 'opacity-60 cursor-not-allowed border-white/5'
+                                        : 'cursor-pointer hover:bg-[#1a1e29] border-white/5 hover:border-[#f01a64]/50 hover:shadow-[0_0_30px_rgba(240,26,100,0.15)]'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">

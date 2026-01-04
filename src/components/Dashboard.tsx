@@ -968,7 +968,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               >
                 <option value="" disabled>Choose a trading strategy...</option>
                 {strategies.map(plan => {
-                  const isPremium = plan.minRet >= 60;
+                  const isPremium = plan.vip; // Use VIP field from database
                   const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
                   return (
                     <option key={plan.id} value={plan.id} disabled={isLocked}>
@@ -985,7 +985,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               const selectedPlan = strategies.find(p => p.id === selectedPlanId);
               if (!selectedPlan) return null;
 
-              const isPremium = selectedPlan.minRet >= 60;
+              const isPremium = selectedPlan.vip; // Use VIP field from database
               const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
 
               return (
@@ -1229,16 +1229,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       )}
 
 
-  <StrategyModal
-    isOpen={isStrategyModalOpen}
-    onClose={() => setIsStrategyModalOpen(false)}
-    strategies={strategies}
-    onSelectStrategy={setSelectedPlanId}
-    userBalance={user?.balance || 0}
-    hasDeposited={!!user?.hasDeposited}
-    isDemoActive={isDemoActive}
-    demoTradeCount={demoTradeCount}
-  />
+      <StrategyModal
+        isOpen={isStrategyModalOpen}
+        onClose={() => setIsStrategyModalOpen(false)}
+        strategies={strategies}
+        onSelectStrategy={setSelectedPlanId}
+        userBalance={user?.balance || 0}
+        hasDeposited={!!user?.hasDeposited}
+        isDemoActive={isDemoActive}
+        demoTradeCount={demoTradeCount}
+      />
 
     </div>
 
