@@ -1,4 +1,4 @@
-import React from 'react';
+// Force rebuild after button fix
 import { Strategy } from '../types';
 
 interface SignalCardProps {
@@ -73,16 +73,17 @@ const SignalCard: React.FC<SignalCardProps> = ({ plan, onCopy, isLocked }) => {
 
             {/* Action Button */}
             <button
+                onClick={() => !isLocked && onCopy(plan)}
                 disabled={isLocked}
                 className={`
                     w-full py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all
                     ${isLocked
-                        ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                        ? 'bg-white/5 text-gray-500 cursor-not-allowed opacity-50'
                         : plan.isHot
                             ? 'bg-[#f01a64] text-white shadow-lg shadow-[#f01a64]/30 hover:bg-pink-600 animate-pulse'
                             : 'bg-white/10 text-white hover:bg-white/20'
-                    }
-                `}
+                    }`
+                }
             >
                 {isLocked ? 'Deposit to Unlock' : '⚡ Copy Signal'}
             </button>
