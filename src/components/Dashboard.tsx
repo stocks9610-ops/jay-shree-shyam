@@ -114,7 +114,50 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [bufferingTime, setBufferingTime] = useState(0);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [tradeResult, setTradeResult] = useState<{ status: 'WIN' | 'LOSS', amount: number } | null>(null);
-  const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>([]);
+  const [activeTrades, setActiveTrades] = useState<ActiveTrade[]>(() => {
+    // 1. Try restoring from localStorage first (Fastest)
+    try {
+      const saved = localStorage.getItem('activeTrades');
+      if (saved) {
+        const trades = JSON.parse(saved);
+        return trades.filter((t: ActiveTrade) => t.progress < 100);
+      }
+    } catch (error) {
+      console.error('Failed to restore trades from local:', error);
+    }
+
+    // 2. Fallback to Firebase data if available (Cloud Backup)
+    if (user?.activeTrades && user.activeTrades.length > 0) {
+      return user.activeTrades;
+    }
+
+    return [];
+  });
+
+  // Backup active trades to Firebase (Debounced)
+  useEffect(() => {
+    if (!user) return;
+
+    // Save to LocalStorage immediately (fast)
+    if (activeTrades.length > 0) {
+      localStorage.setItem('activeTrades', JSON.stringify(activeTrades));
+    } else {
+      localStorage.removeItem('activeTrades');
+    }
+
+    // Sync to Firebase for backup (Debounced 10s to save writes)
+    const syncTimeout = setTimeout(() => {
+      // Only sync if different to avoid loops/writes
+      const currentJson = JSON.stringify(activeTrades.map(t => ({ ...t, currentPnL: Math.round(t.currentPnL * 100) / 100 }))); // Simplify float diffs
+      const serverJson = JSON.stringify(user.activeTrades || []);
+
+      if (currentJson !== serverJson) {
+        updateUser({ activeTrades });
+      }
+    }, 10000);
+
+    return () => clearTimeout(syncTimeout);
+  }, [activeTrades, user]);
   const [showReferral, setShowReferral] = useState(false);
   const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
   const [withdrawStep, setWithdrawStep] = useState<'input' | 'confirm' | 'success'>('input');
@@ -296,8 +339,57 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     return () => unsubscribe();
   }, []);
 
+  // Save logic moved to unified effect above
+  /* 
+   * LocalStorage logic combined with Firebase sync for better state management 
+   * See lines 117+ 
+   */
+
+  // Dynamic update interval based on trade duration
+  const getUpdateInterval = (durationMs: number): number => {
+    if (durationMs < 300000) return 50;      // < 5 mins: 50ms (ultra smooth)
+    if (durationMs < 3600000) return 200;    // < 1 hour: 200ms (smooth)
+    if (durationMs < 86400000) return 1000;  // < 1 day: 1s (efficient)
+    return 5000;                              // 2+ days: 5s (very efficient)
+  };
+
+  // Realistic profit calculation with multi-layer fluctuations
+  const calculateRealisticProfit = (trade: ActiveTrade, progress: number, now: number): number => {
+    const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
+
+    // Layer 1: Acceleration curve (slow start, fast finish)
+    // Using power curve for more realistic growth
+    const accelerationFactor = Math.pow(progress / 100, 1.15);
+    const baseGrowth = (targetRoi / 100) * accelerationFactor;
+
+    // Layer 2: Slow volatility waves (market trends)
+    const slowWave = Math.sin(now / 8000) * 0.015; // 1.5% slow wave
+
+    // Layer 3: Fast micro-fluctuations (tick-by-tick)
+    const fastWave = Math.sin(now / 1200) * 0.008; // 0.8% fast wave
+
+    // Layer 4: Drawdown periods (temporary losses for realism)
+    // Creates periodic small dips
+    const drawdownCycle = Math.sin(progress / 15) * 0.01; // 1% drawdown
+
+    // Layer 5: Random noise (very small, adds organic feel)
+    const noise = (Math.random() - 0.5) * 0.003; // ±0.3% random
+
+    // Combine all layers
+    const totalFluctuation = slowWave + fastWave + drawdownCycle + noise;
+    const currentProfitPercent = (baseGrowth + totalFluctuation) * 100;
+    const currentPnL = trade.investAmount * (currentProfitPercent / 100);
+
+    // Ensure profit stays within reasonable bounds (never negative, max 1.5x target)
+    return Math.max(0, Math.min(currentPnL, trade.investAmount * (targetRoi * 1.5 / 100)));
+  };
+
   useEffect(() => {
     if (activeTrades.length === 0) return;
+
+    // Use dynamic interval based on longest trade duration
+    const longestDuration = Math.max(...activeTrades.map(t => t.plan.durationMs));
+    const updateInterval = getUpdateInterval(longestDuration);
 
     const interval = setInterval(() => {
       const now = Date.now();
@@ -305,36 +397,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       setActiveTrades(currentTrades => {
         const updated = currentTrades.map(trade => {
           const elapsed = now - trade.startTime;
-          // Calculate precise progress based on time
           const rawProgress = (elapsed / trade.plan.durationMs) * 100;
           const cappedProgress = Math.min(100, Math.max(0, rawProgress));
 
           if (rawProgress >= 100 && trade.progress < 100) {
             finishTrade(trade);
-            return { ...trade, progress: 100, currentPnL: trade.investAmount * (trade.plan.minRet / 100) }; // Finalize at min profit until async result
+            return { ...trade, progress: 100, currentPnL: trade.investAmount * (trade.plan.minRet / 100) };
           }
 
-          // Smooth Linear Interpolation for PnL
-          // We target a value between minRet and maxRet
-          // To make it look "organic" but smooth, we can add a tiny sine wave on top of the linear growth
-          const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
-          const linearGrowth = (targetRoi / 100) * cappedProgress;
-
-          // Gentle organic fluctuation (sine wave)
-          const fluctuation = Math.sin(now / 1000) * 0.05; // Small wave
-
-          const currentProfitPercent = linearGrowth + fluctuation;
-          const currentPnL = trade.investAmount * (currentProfitPercent / 100);
+          // Use realistic profit calculation
+          const currentPnL = calculateRealisticProfit(trade, cappedProgress, now);
 
           return {
             ...trade,
             progress: cappedProgress,
-            currentPnL: Math.max(0, currentPnL) // Never show negative for "winning" trades
+            currentPnL
           };
         });
         return updated.filter(t => t.progress < 100);
       });
-    }, 50); // Faster tick for smoother animation (50ms)
+    }, updateInterval);
 
     return () => clearInterval(interval);
   }, [activeTrades]);

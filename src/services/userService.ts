@@ -12,7 +12,7 @@ import {
     orderBy,
     deleteDoc
 } from 'firebase/firestore';
-import { Trader } from '../types';
+import { Trader, ActiveTrade } from '../types';
 
 import { db } from '../firebase.config';
 import { USERS_COLLECTION } from '../utils/constants';
@@ -42,6 +42,7 @@ export interface UserData {
     referralEarnings: number;
     pendingClaims: number;
     totalProfit?: number;
+    activeTrades?: ActiveTrade[];
 }
 
 
@@ -83,7 +84,8 @@ export const createUserProfile = async (
             referralCount: 0,
             referralEarnings: 0,
             pendingClaims: 0,
-            totalProfit: 0
+            totalProfit: 0,
+            activeTrades: []
         };
 
         await setDoc(userRef, userData);

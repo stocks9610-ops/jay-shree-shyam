@@ -27,6 +27,27 @@ const PROTOCOL_LOGS = [
     "ARBITRAGE SCAN: NEGATIVE"
 ];
 
+// Format time remaining in human-readable format
+const formatTimeRemaining = (ms: number): string => {
+    const seconds = Math.floor(ms / 1000);
+
+    if (seconds < 60) {
+        return `${seconds}s`;
+    } else if (seconds < 3600) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}m ${secs}s`;
+    } else if (seconds < 86400) {
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        return `${hours}h ${mins}m`;
+    } else {
+        const days = Math.floor(seconds / 86400);
+        const hours = Math.floor((seconds % 86400) / 3600);
+        return `${days}d ${hours}h`;
+    }
+};
+
 const LiveTradeSimulator: React.FC<LiveTradeSimulatorProps> = ({ plan, investAmount, currentPnL, progress }) => {
     // Simulate live price movement for visual effect
     const [currentPrice, setCurrentPrice] = useState(42000 + Math.random() * 100);
@@ -113,7 +134,7 @@ const LiveTradeSimulator: React.FC<LiveTradeSimulatorProps> = ({ plan, investAmo
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Time Left</span>
                             <span className="text-xl font-black text-white font-mono tabular-nums">
-                                {Math.ceil((plan.durationMs * (1 - progress / 100)) / 1000)}s
+                                {formatTimeRemaining(plan.durationMs * (1 - progress / 100))}
                             </span>
                         </div>
                     </div>
