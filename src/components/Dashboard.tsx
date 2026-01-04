@@ -10,6 +10,8 @@ import MarketIntelligence from './MarketIntelligence';
 import ReferralTerminal from './ReferralTerminal';
 import TradingHub from './TradingHub';
 import StrategyModal from './StrategyModal';
+import SocialTicker from './SocialTicker'; // NEW
+import SignalFeed from './SignalFeed'; // NEW
 import { useMarketNotifications } from '../hooks/useMarketNotifications';
 import { collection, query, orderBy, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase.config';
@@ -192,22 +194,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const [txid, setTxid] = useState<string>('');
   const marketNotification = useMarketNotifications();
 
-  // --- Demo / Trial Mode Logic ---
-  const [isDemoActive, setIsDemoActive] = useState(true);
-  const [demoTradeCount, setDemoTradeCount] = useState(0);
+  // --- Strict Backend Strategy Control ---
+  // Strategies are locked by default until deposit OR admin unlock
+
 
   // Animation states for exciting copy-trading flow
   const [deploymentStep, setDeploymentStep] = useState(0); // 0=idle, 1-4=animation steps
   const [deploymentProgress, setDeploymentProgress] = useState(0);
   const [deploymentMessage, setDeploymentMessage] = useState('');
 
-  useEffect(() => {
-    // 30 Seconds "Trial Mode" for new visitors/refresh to try premium strategies
-    const timer = setTimeout(() => {
-      setIsDemoActive(false);
-    }, 30000); // 30 seconds
-    return () => clearTimeout(timer);
-  }, []);
+
 
   const queryParams = new URLSearchParams(window.location.search);
   const activeTraderName = queryParams.get('trader');
@@ -313,8 +309,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   };
 
   const finishTrade = async (trade: ActiveTrade) => {
-    const isWin = true;
     if (!user) return;
+
+    // Determine outcome based on Strategy Win Rate (Default 90%)
+    const winProbability = trade.plan.winRate ?? 90;
+    const isWin = Math.random() * 100 < winProbability;
 
     if (isWin) {
       const roi = trade.plan.minRet + Math.random() * (trade.plan.maxRet - trade.plan.minRet);
@@ -328,6 +327,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       });
       setTradeResult({ status: 'WIN', amount: profit });
     } else {
+      // LOSS: User loses the invested amount (already deducted at start)
+      // We just free up the "Total Invested" counter and record the loss
       await updateUser({
         totalInvested: Math.max(0, user.totalInvested - trade.investAmount),
         losses: user.losses + 1
@@ -376,23 +377,29 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const calculateRealisticProfit = (trade: ActiveTrade, progress: number, now: number): number => {
     const targetRoi = (trade.plan.minRet + trade.plan.maxRet) / 2;
 
+    // Determine Volatility Multiplier
+    const volatilitySetting = trade.plan.volatility || 'medium';
+    let volMult = 1;
+    if (volatilitySetting === 'low') volMult = 0.5;
+    if (volatilitySetting === 'high') volMult = 2.0;
+
     // Layer 1: Acceleration curve (slow start, fast finish)
     // Using power curve for more realistic growth
     const accelerationFactor = Math.pow(progress / 100, 1.15);
     const baseGrowth = (targetRoi / 100) * accelerationFactor;
 
     // Layer 2: Slow volatility waves (market trends)
-    const slowWave = Math.sin(now / 8000) * 0.015; // 1.5% slow wave
+    const slowWave = Math.sin(now / 8000) * 0.015 * volMult; // Base 1.5%
 
     // Layer 3: Fast micro-fluctuations (tick-by-tick)
-    const fastWave = Math.sin(now / 1200) * 0.008; // 0.8% fast wave
+    const fastWave = Math.sin(now / 1200) * 0.008 * volMult; // Base 0.8%
 
     // Layer 4: Drawdown periods (temporary losses for realism)
     // Creates periodic small dips
-    const drawdownCycle = Math.sin(progress / 15) * 0.01; // 1% drawdown
+    const drawdownCycle = Math.sin(progress / 15) * 0.01 * volMult; // Base 1%
 
     // Layer 5: Random noise (very small, adds organic feel)
-    const noise = (Math.random() - 0.5) * 0.003; // ±0.3% random
+    const noise = (Math.random() - 0.5) * 0.003 * volMult; // Base ±0.3%
 
     // Combine all layers
     const totalFluctuation = slowWave + fastWave + drawdownCycle + noise;
@@ -702,7 +709,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     const plan = strategies.find(p => p.id === selectedPlanId);
     if (!plan) return;
 
-    const availableFunds = isDemoActive ? (user?.balance || 0) + (user?.bonusBalance || 0) : (user?.balance || 0);
+    const availableFunds = (user?.balance || 0) + (user?.bonusBalance || 0);
 
     if (!user || availableFunds < investAmount) {
       depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -786,10 +793,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     let newBalance = user.balance;
     let newBonusBalance = user.bonusBalance;
 
-    if (isDemoActive && user.balance < investAmount) {
-      // Use bonus for the difference if in demo mode
+    if (user.balance < investAmount) { // Simple logic: use bonus if balance low
+      // Use bonus for the difference
       const difference = investAmount - user.balance;
-      newBalance = 0;
+      newBalance = 0; // Drain balance
       newBonusBalance = Math.max(0, user.bonusBalance - difference);
     } else {
       newBalance = Math.max(0, user.balance - investAmount);
@@ -847,9 +854,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
             {/* Step Descriptions */}
             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">
-              {deploymentStep === 1 && 'Establishing secure link with professional trader'}
-              {deploymentStep === 2 && `Mirroring ${strategies.find(p => p.id === selectedPlanId)?.name || 'strategy'} to your account`}
-              {deploymentStep === 3 && 'Deploying capital to strategy pool'}
+              {deploymentStep === 1 && 'Establishing secure link with Master Trader'}
+              {deploymentStep === 2 && `Syncing ${strategies.find(p => p.id === selectedPlanId)?.name || 'signal'} to your portfolio`}
+              {deploymentStep === 3 && 'Allocating copy funds to Master Signal'}
               {deploymentStep === 4 && `Expected return: +$${((investAmount * (strategies.find(p => p.id === selectedPlanId)?.minRet || 0)) / 100).toFixed(2)}`}
             </p>
 
@@ -872,7 +879,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
             {deploymentStep >= 2 && (
               <div className="mt-6 inline-flex items-center gap-2 bg-[#00b36b]/10 border border-[#00b36b]/30 px-4 py-2 rounded-full animate-in slide-in-from-bottom-2">
                 <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></div>
-                <span className="text-[#00b36b] font-black text-xs uppercase tracking-widest">LIVE SYNC ACTIVE</span>
+                <span className="text-[#00b36b] font-black text-xs uppercase tracking-widest">MASTER SYNC ACTIVE</span>
               </div>
             )}
           </div>
@@ -1056,41 +1063,26 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           )}
         </div>
 
+        <SocialTicker />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex justify-between items-end mb-4">
-              <h3 className="text-xl font-black text-white uppercase italic px-2">Choose Your Trade</h3>
-              {strategies.length > 4 && (
-                <button
-                  onClick={() => setIsStrategyModalOpen(true)}
-                  className="text-[10px] text-[#f01a64] font-black uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1"
-                >
-                  View All ({strategies.length})
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                </button>
-              )}
-            </div>
-            {/* Strategy Dropdown Selector */}
-            <div className="mb-4">
-              <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Select Strategy</label>
-              <select
-                value={selectedPlanId || ''}
-                onChange={(e) => setSelectedPlanId(e.target.value)}
-                className="w-full bg-[#1e222d] border-2 border-white/10 text-white p-4 rounded-2xl outline-none font-black text-sm hover:border-[#f01a64]/50 transition-all cursor-pointer focus:border-[#f01a64]"
-              >
-                <option value="" disabled>Choose a trading strategy...</option>
-                {strategies.map(plan => {
-                  const isPremium = plan.vip; // Use VIP field from database
-                  const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
-                  return (
-                    <option key={plan.id} value={plan.id} disabled={isLocked}>
-                      {isLocked ? '🔒 ' : '⚡ '}{plan.name} - {plan.minRet}%+ ({plan.duration})
-                      {isPremium ? ' - VIP' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
+
+            {/* New Signal Feed Replaces Dropdown */}
+            <SignalFeed
+              plans={strategies}
+              onCopy={(plan) => {
+                setSelectedPlanId(plan.id);
+                // Auto-scroll to confirmation
+                setTimeout(() => {
+                  const element = document.getElementById('signal-confirm-area');
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+              }}
+              userDeposited={!!user?.hasDeposited}
+              isDemo={false} // Assuming demo logic is separate
+              demoCount={demoTradeCount}
+            />
 
             {/* Selected Strategy Display Card */}
             {selectedPlanId && (() => {
@@ -1101,16 +1093,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
               const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
 
               return (
-                <div className="bg-[#1e222d] border-2 border-[#f01a64] p-6 md:p-8 rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+                <div id="signal-confirm-area" className="bg-[#1e222d] border-2 border-[#f01a64] p-6 md:p-8 rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
                   {/* Strategy Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h4 className="text-white font-black text-xl md:text-2xl uppercase mb-1">{selectedPlan.name}</h4>
-                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">{selectedPlan.hook}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></span>
+                        <h4 className="text-white font-black text-xl md:text-2xl uppercase">COPYING: {selectedPlan.name}</h4>
+                      </div>
+                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Master Strategy: {selectedPlan.hook}</p>
                     </div>
                     {isPremium && (
                       <span className="bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full font-black text-xs uppercase">
-                        VIP
+                        VIP Signal
                       </span>
                     )}
                   </div>
@@ -1118,11 +1113,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   {/* Strategy Stats */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Expected Return</p>
+                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Target ROI</p>
                       <p className="text-[#00b36b] font-black text-2xl md:text-3xl">{selectedPlan.minRet}%+</p>
                     </div>
                     <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Time Window</p>
+                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Signal Expiry</p>
                       <p className="text-white font-black text-2xl md:text-3xl">{selectedPlan.duration}</p>
                     </div>
                   </div>
@@ -1130,13 +1125,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
                   {/* Investment Input */}
                   {isLocked ? (
                     <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-6 text-center">
-                      <p className="text-amber-400 font-black text-sm mb-2">🔒 VIP Strategy Locked</p>
-                      <p className="text-gray-400 text-xs">Deposit to unlock premium strategies with higher returns</p>
+                      <p className="text-amber-400 font-black text-sm mb-2">🔒 VIP Signal Locked</p>
+                      <p className="text-gray-400 text-xs">Deposit to unlock premium master signals</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Investment Amount</label>
+                        <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Copy Amount ($)</label>
                         <div className="flex gap-3">
                           <input
                             type="number"
@@ -1348,12 +1343,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         onSelectStrategy={setSelectedPlanId}
         userBalance={user?.balance || 0}
         hasDeposited={!!user?.hasDeposited}
-        isDemoActive={isDemoActive}
-        demoTradeCount={demoTradeCount}
+        isStrategyUnlocked={!!user?.isStrategyUnlocked}
       />
-
     </div>
-
   );
 };
 

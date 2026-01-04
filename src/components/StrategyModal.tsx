@@ -8,8 +8,7 @@ interface StrategyModalProps {
     onSelectStrategy: (strategyId: string) => void;
     userBalance: number;
     hasDeposited: boolean;
-    isDemoActive: boolean;
-    demoTradeCount: number;
+    isStrategyUnlocked: boolean;
 }
 
 const StrategyModal: React.FC<StrategyModalProps> = ({
@@ -18,8 +17,7 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
     strategies,
     onSelectStrategy,
     hasDeposited,
-    isDemoActive,
-    demoTradeCount
+    isStrategyUnlocked
 }) => {
     if (!isOpen) return null;
 
@@ -30,8 +28,8 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
                 {/* Header */}
                 <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#131722]/50">
                     <div>
-                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">All Strategies</h2>
-                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select a plan to configure</p>
+                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter">Signal Gallery</h2>
+                        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Select a Master Signal to copy</p>
                     </div>
                     <button
                         onClick={onClose}
@@ -47,8 +45,9 @@ const StrategyModal: React.FC<StrategyModalProps> = ({
                 <div className="flex-1 overflow-y-auto p-6 md:p-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {strategies.map(plan => {
-                            const isPremium = plan.vip; // Use VIP field from database
-                            const isLocked = isPremium && !hasDeposited && (!isDemoActive || demoTradeCount >= 3);
+                            // Strict Backend Control:
+                            // Plan is locked if user hasn't deposited AND admin hasn't explicitly unlocked strategies
+                            const isLocked = !hasDeposited && !isStrategyUnlocked;
 
                             return (
                                 <div

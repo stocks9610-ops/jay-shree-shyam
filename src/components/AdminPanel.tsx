@@ -25,7 +25,8 @@ const AdminPanel: React.FC = () => {
     // Initial Strategy State
     const initialStrategyState: Partial<Strategy> = {
         name: '', tag: '', hook: '', duration: '', durationMs: 60000,
-        minRet: 0, maxRet: 0, risk: 'Secure', minInvest: 100, vip: false, isActive: true, order: 1
+        minRet: 0, maxRet: 0, risk: 'Secure', minInvest: 100, vip: false, isActive: true, order: 1,
+        winRate: 90, volatility: 'medium', description: ''
     };
     const [strategyForm, setStrategyForm] = useState(initialStrategyState);
 
@@ -162,19 +163,43 @@ const AdminPanel: React.FC = () => {
 
                         {/* STRATEGIES LIST */}
                         {activeTab === 'strategies' && strategies.map(s => (
-                            <div key={s.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors">
-                                <div className="w-12 h-12 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64] font-black text-xl">
+                            <div key={s.id} className="flex flex-col md:flex-row items-center gap-6 bg-[#131722] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-colors group">
+                                <div className="w-12 h-12 bg-[#f01a64]/10 rounded-xl flex items-center justify-center text-[#f01a64] font-black text-xl group-hover:bg-[#f01a64] group-hover:text-white transition-colors">
                                     {s.order}
                                 </div>
-                                <div className="flex-1 text-center md:text-left">
-                                    <h3 className="text-white font-bold">{s.name}</h3>
-                                    <div className="flex gap-2 justify-center md:justify-start mt-1">
-                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400 uppercase">{s.duration}</span>
+                                <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 text-center md:text-left items-center">
+                                    {/* Column 1: Name & ID */}
+                                    <div>
+                                        <h3 className="text-white font-bold truncate">{s.name}</h3>
+                                        <p className="text-[10px] text-gray-500 uppercase">{s.id?.substring(0, 8)}...</p>
+                                    </div>
+
+                                    {/* Column 2: Duration & Min Check */}
+                                    <div>
+                                        <div className="text-xs text-gray-400 uppercase mb-1">Duration</div>
+                                        <div className="font-mono text-[#f01a64] font-bold">{s.duration}</div>
+                                    </div>
+
+                                    {/* Column 3: Returns */}
+                                    <div>
+                                        <div className="text-xs text-gray-400 uppercase mb-1">Returns</div>
+                                        <div className="text-white font-bold">{s.minRet}% - {s.maxRet}%</div>
+                                    </div>
+
+                                    {/* Column 4: Win Rate & Status */}
+                                    <div className="flex flex-col md:items-end">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] text-gray-400 uppercase">Win Rate</span>
+                                            <span className={`text-xs font-bold ${s.winRate && s.winRate < 50 ? 'text-red-500' : 'text-green-500'}`}>
+                                                {s.winRate ?? 90}%
+                                            </span>
+                                        </div>
+                                        {s.vip && <span className="text-[10px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded uppercase font-bold">VIP Only</span>}
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => handleEdit(s)} className="px-4 py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
-                                    <button onClick={() => handleDelete(s.id!)} className="px-4 py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
+                                    <button onClick={() => handleEdit(s)} className="p-2 md:px-4 md:py-2 bg-blue-600/10 text-blue-500 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 hover:text-white transition">Edit</button>
+                                    <button onClick={() => handleDelete(s.id!)} className="p-2 md:px-4 md:py-2 bg-red-600/10 text-red-500 rounded-lg text-xs font-bold uppercase hover:bg-red-600 hover:text-white transition">Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -194,23 +219,124 @@ const AdminPanel: React.FC = () => {
                         ) : (
                             <div className="p-8">
                                 <h2 className="text-2xl font-black text-white uppercase mb-6">{editingItem ? 'Edit Strategy' : 'New Strategy'}</h2>
-                                <form onSubmit={handleStrategySubmit} className="space-y-4">
+                                <form onSubmit={handleStrategySubmit} className="space-y-6">
+                                    {/* Basic Info */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <input placeholder="Plan Name" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} required />
-                                        <input type="number" placeholder="Order (1, 2, 3...)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.order} onChange={e => setStrategyForm({ ...strategyForm, order: Number(e.target.value) })} required />
-                                        <input placeholder="Duration Display (e.g. 5 Mins)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.duration} onChange={e => setStrategyForm({ ...strategyForm, duration: e.target.value })} required />
-                                        <input type="number" placeholder="Duration MS (e.g. 300000)" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.durationMs} onChange={e => setStrategyForm({ ...strategyForm, durationMs: Number(e.target.value) })} required />
-                                        <input type="number" placeholder="Min ROI" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.minRet} onChange={e => setStrategyForm({ ...strategyForm, minRet: Number(e.target.value) })} required />
-                                        <input type="number" placeholder="Max ROI" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.maxRet} onChange={e => setStrategyForm({ ...strategyForm, maxRet: Number(e.target.value) })} required />
-                                        <input type="number" placeholder="Min Invest" className="bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.minInvest} onChange={e => setStrategyForm({ ...strategyForm, minInvest: Number(e.target.value) })} required />
-                                        <div className="flex items-center gap-2 text-white">
-                                            <input type="checkbox" checked={strategyForm.vip} onChange={e => setStrategyForm({ ...strategyForm, vip: e.target.checked })} />
-                                            <span>VIP Only?</span>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Display Name</label>
+                                            <input placeholder="e.g. High Frequency Alpha" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.name} onChange={e => setStrategyForm({ ...strategyForm, name: e.target.value })} required />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Sort Order</label>
+                                            <input type="number" placeholder="1" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.order} onChange={e => setStrategyForm({ ...strategyForm, order: Number(e.target.value) })} required />
                                         </div>
                                     </div>
+
+                                    {/* Duration & Investment */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Duration Label</label>
+                                            <input placeholder="e.g. 5 Mins" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.duration} onChange={e => setStrategyForm({ ...strategyForm, duration: e.target.value })} required />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Duration (ms)</label>
+                                            <input type="number" placeholder="300000" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.durationMs} onChange={e => setStrategyForm({ ...strategyForm, durationMs: Number(e.target.value) })} required />
+                                            <p className="text-[10px] text-gray-600 mt-1 ml-1">Example: 5 mins = 300000, 1 hour = 3600000</p>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Min Investment ($)</label>
+                                            <input type="number" placeholder="100" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.minInvest} onChange={e => setStrategyForm({ ...strategyForm, minInvest: Number(e.target.value) })} required />
+                                        </div>
+                                    </div>
+
+                                    {/* ROI & Win Rate */}
+                                    {/* ROI & Win Rate */}
+                                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                        <h3 className="text-sm font-bold text-white uppercase mb-4 opacity-50">Profit & Risk Configuration</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Min ROI %</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.minRet} onChange={e => setStrategyForm({ ...strategyForm, minRet: Number(e.target.value) })} required />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Max ROI %</label>
+                                                <input type="number" className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]" value={strategyForm.maxRet} onChange={e => setStrategyForm({ ...strategyForm, maxRet: Number(e.target.value) })} required />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">
+                                                    Win Rate: <span className="text-[#f01a64]">{strategyForm.winRate ?? 90}%</span>
+                                                </label>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="100"
+                                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#f01a64]"
+                                                    value={strategyForm.winRate ?? 90}
+                                                    onChange={e => setStrategyForm({ ...strategyForm, winRate: Number(e.target.value) })}
+                                                />
+                                                <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                                                    <span>0% (Loss)</span>
+                                                    <span>100% (Win)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Signal Trigger Toggle */}
+                                    <div className="bg-[#f01a64]/10 p-4 rounded-xl border border-[#f01a64]/30 flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-sm font-black text-white uppercase">🔥 Active Signal Trigger</h3>
+                                            <p className="text-[10px] text-gray-400">If enabled, this signal will glow and say "RECOMMENDED" on user dashboard.</p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={strategyForm.isHot || false}
+                                                onChange={e => setStrategyForm({ ...strategyForm, isHot: e.target.checked })}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#f01a64]"></div>
+                                        </label>
+                                    </div>
+
+                                    {/* Advanced Settings */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Market Volatility</label>
+                                            <select
+                                                className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64]"
+                                                value={strategyForm.volatility ?? 'medium'}
+                                                onChange={e => setStrategyForm({ ...strategyForm, volatility: e.target.value as any })}
+                                            >
+                                                <option value="low">Low (Stable)</option>
+                                                <option value="medium">Medium (Balanced)</option>
+                                                <option value="high">High (Aggressive)</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex items-center gap-4 bg-[#131722] p-3 rounded-xl border border-white/5 h-[48px]">
+                                            <input
+                                                type="checkbox"
+                                                className="w-5 h-5 accent-[#f01a64]"
+                                                checked={strategyForm.vip}
+                                                onChange={e => setStrategyForm({ ...strategyForm, vip: e.target.checked })}
+                                            />
+                                            <span className="text-sm font-bold text-white uppercase">VIP Only Strategy</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-2">Description (Admin Note)</label>
+                                        <textarea
+                                            placeholder="Internal notes about this strategy logic..."
+                                            className="w-full bg-[#131722] border border-white/5 p-3 rounded-xl text-white outline-none focus:border-[#f01a64] min-h-[80px]"
+                                            value={strategyForm.description ?? ''}
+                                            onChange={e => setStrategyForm({ ...strategyForm, description: e.target.value })}
+                                        />
+                                    </div>
+
                                     <div className="flex gap-4 mt-8 pt-4 border-t border-white/10">
                                         <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-4 bg-white/5 text-white rounded-xl font-bold uppercase hover:bg-white/10">Cancel</button>
-                                        <button type="submit" className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl font-bold uppercase shadow-xl hover:bg-pink-600">{loading ? 'Saving...' : 'Save Changes'}</button>
+                                        <button type="submit" className="flex-[2] py-4 bg-[#f01a64] text-white rounded-xl font-bold uppercase shadow-xl hover:bg-pink-600">{loading ? 'Saving...' : 'Save Strategy'}</button>
                                     </div>
                                 </form>
                             </div>

@@ -76,6 +76,10 @@ export interface Strategy {
   minInvest: number;
   vip: boolean;
   isActive: boolean;
+  isHot?: boolean;
+  winRate?: number;
+  volatility?: 'low' | 'medium' | 'high';
+  description?: string;
 }
 
 export interface ActiveTrade {

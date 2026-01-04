@@ -43,6 +43,7 @@ export interface UserData {
     pendingClaims: number;
     totalProfit?: number;
     activeTrades?: ActiveTrade[];
+    isStrategyUnlocked?: boolean; // Admin override to unlock strategies without deposit
 }
 
 
@@ -85,7 +86,8 @@ export const createUserProfile = async (
             referralEarnings: 0,
             pendingClaims: 0,
             totalProfit: 0,
-            activeTrades: []
+            activeTrades: [],
+            isStrategyUnlocked: false
         };
 
         await setDoc(userRef, userData);
