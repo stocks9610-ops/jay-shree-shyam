@@ -884,8 +884,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         </div>
       )}
 
+      {/* Notification Toggle Button (Always Visible) */}
+      <button
+        onClick={() => setShowNotifPanel(!showNotifPanel)}
+        className={`fixed top-24 left-4 z-[210] p-3 rounded-full shadow-2xl transition-all duration-300 ${showNotifPanel ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'} bg-[#1e222d] border border-white/10 text-white hover:border-[#f01a64] active:scale-95 group backdrop-blur-md`}
+      >
+        <div className="relative">
+          <svg className="w-5 h-5 text-gray-400 group-hover:text-[#f01a64] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#f01a64] rounded-full border-2 border-[#1e222d] animate-pulse"></span>}
+        </div>
+      </button>
+
       {/* Manual Admin Notifications Panel */}
-      <div className={`fixed top-24 left-4 z-[220] max-w-sm w-full transition-all duration-500 ${unreadCount > 0 || showNotifPanel ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
+      <div className={`fixed top-24 left-4 z-[220] max-w-sm w-full transition-all duration-500 ${showNotifPanel ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
         <div className="bg-[#1e222d] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden backdrop-blur-xl">
           <div className="p-5 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-[#1e222d] to-[#131722]">
             <div className="flex items-center gap-2">
