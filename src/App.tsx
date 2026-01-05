@@ -13,6 +13,7 @@ import SuccessGallery from './components/SuccessGallery';
 import SignupModal from './components/SignupModal';
 import ReferralTerminal from './components/ReferralTerminal';
 import MarketChart from './components/MarketChart';
+import LoginWrapper from './components/LoginWrapper';
 
 
 
@@ -39,6 +40,7 @@ const MainLayout = () => {
   const [showGallery, setShowGallery] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
   const { currentUser, userProfile } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-pink-500/30 overflow-x-hidden bg-[#131722] relative">
@@ -48,8 +50,8 @@ const MainLayout = () => {
         onGalleryClick={() => setShowGallery(true)}
         user={userProfile}
         onLogout={() => { }} // Logout handled by AuthContext or Firebase directly usually
-        onDashboardClick={() => window.location.href = '/dashboard'}
-        onHomeClick={() => window.location.href = '/'}
+        onDashboardClick={() => navigate('/dashboard')}
+        onHomeClick={() => navigate('/')}
         onSearch={() => { }}
         showSearch={true}
       />
@@ -80,7 +82,7 @@ const MainLayout = () => {
         <div id="traders">
           <TraderList onCopyClick={(trader) => {
             if (currentUser) {
-              window.location.href = `/dashboard?trader=${encodeURIComponent(trader.name)}`;
+              navigate(`/dashboard?trader=${encodeURIComponent(trader.name)}`);
             } else {
               setShowSignup(true);
             }
@@ -99,7 +101,7 @@ const MainLayout = () => {
           onClose={() => setShowSignup(false)}
           onSuccess={() => {
             setShowSignup(false);
-            window.location.href = '/dashboard';
+            navigate('/dashboard');
           }}
         />
       )}
@@ -116,6 +118,7 @@ const MainLayout = () => {
 // Dashboard Layout Wrapper to provide Auth Context to Navbar
 const DashboardLayout = () => {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   return (
     <>
       <Navbar
@@ -123,8 +126,8 @@ const DashboardLayout = () => {
         onGalleryClick={() => { }}
         user={userProfile}
         onLogout={() => { }}
-        onDashboardClick={() => window.location.href = '/dashboard'}
-        onHomeClick={() => window.location.href = '/'}
+        onDashboardClick={() => navigate('/dashboard')}
+        onHomeClick={() => navigate('/')}
         onSearch={() => { }}
         showSearch={true}
       />
@@ -148,14 +151,7 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
           <Route path="/login" element={
-            <AuthForms onSuccess={async (user) => {
-              const admin = await isAdmin(user.uid);
-              if (admin) {
-                window.location.href = '/secure-access-shyam';
-              } else {
-                window.location.href = '/dashboard';
-              }
-            }} />
+            <LoginWrapper />
           } />
 
           {/* Protected User Routes */}
@@ -176,7 +172,7 @@ function App() {
                     user={null}
                     onLogout={() => { }}
                     onDashboardClick={() => { }}
-                    onHomeClick={() => window.location.href = '/'}
+                    onHomeClick={() => { /* Already at root, no action */ }}
                     onSearch={() => { }}
                     showSearch={false}
                   />

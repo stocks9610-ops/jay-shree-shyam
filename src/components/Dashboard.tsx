@@ -629,6 +629,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     }
 
     const url = `trust://send?asset=${asset}&address=${depositAddress}&amount=${amt}`;
+    // Note: This causes a redirect but is intentional for external app deep linking
+    // It does NOT redirect to /dashboard, so it's safe
     window.location.href = url;
   };
 
@@ -828,7 +830,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       )}
 
       {isTradeLoading && (
-        <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+        <div className={`fixed inset-0 z-[300] bg-black/90 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300`}>
           <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl">
             {/* Step Icons */}
             <div className="flex justify-center gap-4 mb-6">
