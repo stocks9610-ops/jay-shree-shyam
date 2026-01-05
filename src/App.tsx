@@ -154,12 +154,8 @@ function App() {
             <LoginWrapper />
           } />
 
-          {/* Protected User Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          } />
+          {/* Dashboard Route - Public Access */}
+          <Route path="/dashboard" element={<DashboardLayout />} />
 
           {/* Protected Admin Routes - Hidden URL for security */}
           <Route path="/secure-access-shyam" element={
