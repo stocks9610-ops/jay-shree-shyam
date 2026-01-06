@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { NETWORKS, WITHDRAWALS_COLLECTION, STRATEGIES_COLLECTION, SHARE_MESSAGE_TEXT } from '../utils/constants';
 
@@ -108,6 +109,19 @@ const verifyPaymentProof = async (base64Image: string, mimeType: string) => {
 
 const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const { userProfile: user, updateUser } = useAuth();
+  const navigate = useNavigate();
+
+  // Failsafe: Redirect to login if user data hangs for > 5 seconds
+  useEffect(() => {
+    if (!user) {
+      const timer = setTimeout(() => {
+        console.warn("User data load timed out. Redirecting to login.");
+        navigate('/login');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, navigate]);
+
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(500);
@@ -830,8 +844,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
       )}
 
       {isTradeLoading && (
-        <div className={`fixed inset-0 z-[300] bg-black/90 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300`}>
-          <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl">
+        <div className={`fixed inset-0 z-[300] bg-black/99 md:bg-black/90 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 relative`}>
+          <button
+            onClick={() => setIsTradeLoading(false)}
+            className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors z-[310]"
+          >
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl relative">
             {/* Step Icons */}
             <div className="flex justify-center gap-4 mb-6">
               {[1, 2, 3, 4].map((step) => (
