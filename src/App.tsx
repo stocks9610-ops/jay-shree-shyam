@@ -19,7 +19,7 @@ import MarketChart from './components/MarketChart';
 
 
 // Admin & Auth Components - Lazy loaded for better performance
-import AuthForms from './components/Auth/AuthForms';
+
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
@@ -164,9 +164,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
-          <Route path="/login" element={<LoginPage />} />
-
-          {/* Dashboard Route - Public Access */}
+          <Route path="/login" element={<LoginPage />} />{/* Dashboard Route - Public Access */}
           <Route path="/dashboard" element={<DashboardLayout />} />
 
           {/* Protected Admin Routes - Hidden URL for security */}
