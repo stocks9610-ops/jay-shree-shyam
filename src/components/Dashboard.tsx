@@ -268,11 +268,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
     const unsubscribe = subscribeToNotifications(user.uid, (notifs) => {
       setUserNotifications(notifs);
 
-      // Auto-show panel if there's a new unread alert
-      const hasNewUnread = notifs.some(n => !n.isRead);
-      if (hasNewUnread && notifs.length > userNotifications.length) {
-        setShowNotifPanel(true);
-      }
+      // Auto-show panel logic removed to prevent UI blocking issues
+      // if (hasNewUnread && notifs.length > userNotifications.length) {
+      //   setShowNotifPanel(true);
+      // }
     });
 
     return () => unsubscribe();
