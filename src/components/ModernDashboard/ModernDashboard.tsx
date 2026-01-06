@@ -1,8 +1,8 @@
 import React from 'react';
 import Layout from './Layout';
 import OverviewCard from './OverviewCard';
+import ActiveTradesList from './ActiveTradesList';
 import { useAuth } from '../../contexts/AuthContext';
-// import ActiveTradesList from './ActiveTradesList'; // Coming next
 // import SignalFeed from '../SignalFeed'; // Reuse existing component
 
 const ModernDashboard: React.FC = () => {
@@ -36,16 +36,11 @@ const ModernDashboard: React.FC = () => {
                 {/* Stats Overview */}
                 <OverviewCard user={userProfile} />
 
-                {/* Content Area Placeholder */}
+                {/* Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
-                        {/* We will add ActiveTradesList here */}
-                        <div className="bg-[#1e222d] rounded-3xl p-8 border border-white/5 min-h-[300px] flex items-center justify-center border-dashed border-gray-700">
-                            <div className="text-center">
-                                <p className="text-gray-500 font-bold uppercase tracking-widest text-xs mb-2">Active Trades Module</p>
-                                <p className="text-gray-600 text-xs">Loading data grid...</p>
-                            </div>
-                        </div>
+                        {/* Active Trades Module */}
+                        <ActiveTradesList trades={userProfile?.activeTrades} />
                     </div>
 
                     <div className="space-y-8">
