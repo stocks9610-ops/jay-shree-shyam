@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { isAdmin } from './services/userService';
+import AuthForms from './components/Auth/AuthForms';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -13,7 +14,7 @@ import SuccessGallery from './components/SuccessGallery';
 import SignupModal from './components/SignupModal';
 import ReferralTerminal from './components/ReferralTerminal';
 import MarketChart from './components/MarketChart';
-import LoginWrapper from './components/LoginWrapper';
+
 
 
 
@@ -142,6 +143,19 @@ const DashboardLayout = () => {
   );
 };
 
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const handleSuccess = async (user) => {
+    const admin = await isAdmin(user.uid);
+    if (admin) {
+      navigate('/secure-access-shyam');
+    } else {
+      navigate('/dashboard');
+    }
+  };
+  return <AuthForms onSuccess={handleSuccess} />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -150,9 +164,7 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
-          <Route path="/login" element={
-            <LoginWrapper />
-          } />
+          <Route path="/login" element={<LoginPage />} />
 
           {/* Dashboard Route - Public Access */}
           <Route path="/dashboard" element={<DashboardLayout />} />
