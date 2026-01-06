@@ -3,9 +3,11 @@ import { UserData } from '../../services/userService';
 
 interface OverviewCardProps {
     user: UserData | null;
+    onDeposit: () => void;
+    onWithdraw: () => void;
 }
 
-const OverviewCard: React.FC<OverviewCardProps> = ({ user }) => {
+const OverviewCard: React.FC<OverviewCardProps> = ({ user, onDeposit, onWithdraw }) => {
     const balance = user?.balance || 0;
     const initialDeposit = user?.initialDeposit || 0; // Assuming we add this to tracking, or approximate
     const totalProfit = balance - initialDeposit;
@@ -38,10 +40,10 @@ const OverviewCard: React.FC<OverviewCardProps> = ({ user }) => {
                     </div>
 
                     <div className="mt-8 flex gap-3">
-                        <button className="flex-1 bg-[#f01a64] hover:bg-[#d01555] text-white py-4 rounded-xl font-black uppercase text-sm tracking-wider shadow-lg shadow-[#f01a64]/20 transition-all hover:-translate-y-1 active:scale-95">
+                        <button onClick={onDeposit} className="flex-1 bg-[#f01a64] hover:bg-[#d01555] text-white py-4 rounded-xl font-black uppercase text-sm tracking-wider shadow-lg shadow-[#f01a64]/20 transition-all hover:-translate-y-1 active:scale-95">
                             Deposit
                         </button>
-                        <button className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-black uppercase text-sm tracking-wider border border-white/5 transition-all hover:-translate-y-1 active:scale-95">
+                        <button onClick={onWithdraw} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-4 rounded-xl font-black uppercase text-sm tracking-wider border border-white/5 transition-all hover:-translate-y-1 active:scale-95">
                             Withdraw
                         </button>
                     </div>

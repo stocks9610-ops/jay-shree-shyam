@@ -6,17 +6,27 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useStrategies } from '../../hooks/useStrategies';
 import SignalFeed from '../SignalFeed';
 import StrategyModal from '../StrategyModal';
+import TransactionModal from './TransactionModal';
 import { Strategy } from '../../types';
 
 const ModernDashboard: React.FC = () => {
     const { userProfile, loading: authLoading } = useAuth();
     const { strategies, loading: stratLoading } = useStrategies();
+
+    // Modal States
     const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
     const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
+    const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+    const [transactionType, setTransactionType] = useState<'DEPOSIT' | 'WITHDRAW' | null>(null);
 
     const handleCopyStrategy = (strategy: Strategy) => {
         setSelectedStrategy(strategy);
         setIsStrategyModalOpen(true);
+    };
+
+    const handleOpenTransaction = (type: 'DEPOSIT' | 'WITHDRAW') => {
+        setTransactionType(type);
+        setIsTransactionModalOpen(true);
     };
 
     if (authLoading) {
@@ -41,11 +51,14 @@ const ModernDashboard: React.FC = () => {
                         </h1>
                         <p className="text-gray-400 font-medium">Market volatility is <span className="text-[#00b36b] font-bold">Low</span>. Good conditions for copy-trading.</p>
                     </div>
-                    {/* Compact Mobile Stats or Actions could go here */}
                 </div>
 
                 {/* Stats Overview */}
-                <OverviewCard user={userProfile} />
+                <OverviewCard
+                    user={userProfile}
+                    onDeposit={() => handleOpenTransaction('DEPOSIT')}
+                    onWithdraw={() => handleOpenTransaction('WITHDRAW')}
+                />
 
                 {/* Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -76,7 +89,7 @@ const ModernDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Strategy Modal (Reused) */}
+            {/* Strategy Modal */}
             {isStrategyModalOpen && selectedStrategy && (
                 <StrategyModal
                     isOpen={isStrategyModalOpen}
@@ -86,6 +99,14 @@ const ModernDashboard: React.FC = () => {
                     userDeposited={userProfile?.hasDeposited || false}
                 />
             )}
+
+            {/* Transaction Modal */}
+            <TransactionModal
+                isOpen={isTransactionModalOpen}
+                type={transactionType}
+                onClose={() => setIsTransactionModalOpen(false)}
+                userBalance={userProfile?.balance || 0}
+            />
         </Layout>
     );
 };
