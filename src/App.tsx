@@ -24,8 +24,8 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
-const Dashboard = lazy(() => import('./components/Dashboard'));
-const ModernDashboard = lazy(() => import('./components/ModernDashboard/ModernDashboard')); // New Dashboard
+const Dashboard = lazy(() => import('./components/ModernDashboard/ModernDashboard')); // Dashboard v2 (Live)
+// const ModernDashboard = lazy(() => import('./components/ModernDashboard/ModernDashboard')); // Removed test import
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -168,22 +168,10 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
           <Route path="/login" element={<LoginPage />} />{/* Dashboard Route - Public Access */}
+          {/* Dashboard Route - Public Access (Now serving Modern Dashboard) */}
           <Route path="/dashboard" element={
             <ErrorBoundary>
               <DashboardLayout />
-            </ErrorBoundary>
-          } />
-
-          {/* New Modern Dashboard (Beta) */}
-          <Route path="/new-dashboard" element={
-            <ErrorBoundary>
-              <Suspense fallback={
-                <div className="min-h-screen bg-[#0f111a] flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f01a64]"></div>
-                </div>
-              }>
-                <ModernDashboard />
-              </Suspense>
             </ErrorBoundary>
           } />
 
