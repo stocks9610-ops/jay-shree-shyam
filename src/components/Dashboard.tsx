@@ -112,16 +112,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
   const { userProfile: user, updateUser } = useAuth();
   const navigate = useNavigate();
 
-  // Failsafe: Redirect to login if user data hangs for > 5 seconds
-  useEffect(() => {
-    if (!user) {
-      const timer = setTimeout(() => {
-        console.warn("User data load timed out. Redirecting to login.");
-        navigate('/login');
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [user, navigate]);
+  // Auto-redirect removed to allow public dashboard access
+  // useEffect(() => {
+  //   if (!user) {
+  //     const timer = setTimeout(() => {
+  //       console.warn("User data load timed out. Redirecting to login.");
+  //       navigate('/login');
+  //     }, 5000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [user, navigate]);
 
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
