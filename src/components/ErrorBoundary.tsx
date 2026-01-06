@@ -1,8 +1,7 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
     children: ReactNode;
-    fallback?: ReactNode;
 }
 
 interface State {
@@ -13,37 +12,42 @@ interface State {
 class ErrorBoundary extends Component<Props, State> {
     public state: State = {
         hasError: false,
-        error: null,
+        error: null
     };
 
     public static getDerivedStateFromError(error: Error): State {
-        // Update state so the next render will show the fallback UI.
         return { hasError: true, error };
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error("Uncaught error:", error, errorInfo);
+        console.error('Uncaught error:', error, errorInfo);
     }
 
     public render() {
         if (this.state.hasError) {
-            if (this.props.fallback) {
-                return this.props.fallback;
-            }
             return (
-                <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-2xl text-center my-4">
-                    <h3 className="text-red-500 font-black uppercase tracking-widest text-sm mb-2">Component Error</h3>
-                    <p className="text-gray-400 text-xs mb-4">Something went wrong in this section.</p>
-                    <details className="text-[10px] text-left bg-black/30 p-2 rounded text-gray-500 overflow-auto max-h-32">
-                        <summary className="cursor-pointer mb-1 hover:text-white">View Error Details</summary>
-                        {this.state.error?.toString()}
-                    </details>
-                    <button
-                        onClick={() => this.setState({ hasError: false })}
-                        className="mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg uppercase tracking-wider"
-                    >
-                        Try Again
-                    </button>
+                <div className="min-h-screen bg-[#131722] flex items-center justify-center p-4">
+                    <div className="bg-[#1e222d] border border-red-500/30 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-xl font-black text-white uppercase tracking-wider mb-2">Something went wrong</h2>
+                        <p className="text-gray-400 text-sm mb-6">We encountered an unexpected issue displaying this content.</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="px-6 py-3 bg-[#f01a64] hover:bg-[#d01555] text-white rounded-xl font-bold uppercase tracking-wider transition"
+                        >
+                            Reload Page
+                        </button>
+                        <details className="mt-6 text-left">
+                            <summary className="text-xs text-gray-600 cursor-pointer">Error Details</summary>
+                            <pre className="text-[10px] text-red-400 mt-2 overflow-x-auto p-2 bg-black/30 rounded-lg">
+                                {this.state.error?.toString()}
+                            </pre>
+                        </details>
+                    </div>
                 </div>
             );
         }

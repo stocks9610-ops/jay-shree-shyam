@@ -25,6 +25,7 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const WithdrawalManager = lazy(() => import('./components/User/WithdrawalManager'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Trader } from './types';
 
@@ -165,7 +166,11 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<MainLayout />} />
           <Route path="/login" element={<LoginPage />} />{/* Dashboard Route - Public Access */}
-          <Route path="/dashboard" element={<DashboardLayout />} />
+          <Route path="/dashboard" element={
+            <ErrorBoundary>
+              <DashboardLayout />
+            </ErrorBoundary>
+          } />
 
           {/* Protected Admin Routes - Hidden URL for security */}
           <Route path="/secure-access-shyam" element={
