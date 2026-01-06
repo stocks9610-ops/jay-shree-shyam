@@ -9,14 +9,21 @@ interface SignalCardProps {
 
 const SignalCard: React.FC<SignalCardProps> = ({ plan, onCopy, isLocked }) => {
     // Generate a consistent "Fake" Entry price based on ID
-    const seed = plan.id ? plan.id.charCodeAt(0) : 0;
-    const isCrypto = plan.name.toLowerCase().includes('btc') || plan.name.toLowerCase().includes('eth');
+    // SAFEGUARD: Ensure plan and plan.id exist
+    const planId = plan?.id || 'default';
+    const seed = planId.charCodeAt(0) || 0;
+
+    // SAFEGUARD: Ensure plan.name exists before calling toLowerCase
+    const planName = plan?.name || 'Unknown Strategy';
+    const isCrypto = planName.toLowerCase().includes('btc') || planName.toLowerCase().includes('eth');
+
     const entryPrice = isCrypto
         ? (40000 + (seed * 100)).toLocaleString()
         : (2000 + (seed * 10)).toLocaleString();
 
     // Generate a "Live" PnL that looks attractive
-    const pnl = (plan.minRet / 10).toFixed(2);
+    // SAFEGUARD: Ensure plan.minRet exists
+    const pnl = ((plan?.minRet || 10) / 10).toFixed(2);
 
     return (
         <div

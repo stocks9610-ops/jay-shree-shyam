@@ -10,6 +10,7 @@ import LiveMarketChart from './LiveMarketChart';
 import MarketIntelligence from './MarketIntelligence';
 import ReferralTerminal from './ReferralTerminal';
 import TradingHub from './TradingHub';
+import ErrorBoundary from './ErrorBoundary';
 import StrategyModal from './StrategyModal';
 import SocialTicker from './SocialTicker'; // NEW
 import SignalFeed from './SignalFeed'; // NEW
@@ -1093,20 +1094,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
 
-            {/* New Signal Feed Replaces Dropdown */}
-            <SignalFeed
-              plans={strategies}
-              onCopy={(plan) => {
-                setSelectedPlanId(plan.id);
-                // Auto-scroll to confirmation
-                setTimeout(() => {
-                  const element = document.getElementById('signal-confirm-area');
-                  element?.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-              }}
-              userDeposited={!!user?.hasDeposited}
-              isDemo={false} // Assuming demo logic is separate
-              demoCount={demoTradeCount}
+            isDemo={false} // Assuming demo logic is separate
+            demoCount={demoTradeCount}
             />
 
             {/* Selected Strategy Display Card */}
