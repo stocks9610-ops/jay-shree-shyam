@@ -837,351 +837,365 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
 
 
   return (
-    <div className="bg-[#131722] min-h-screen pt-20 pb-24 md:pt-24 md:pb-32 px-3 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
-      {(!user) && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
-          Loading Account Data...
-        </div>
-      )}
-
-      {isTradeLoading && (
-        <div className={`fixed inset-0 z-[300] bg-black/99 md:bg-black/90 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 relative`}>
-          <button
-            onClick={() => setIsTradeLoading(false)}
-            className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors z-[310]"
-          >
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl relative">
-            {/* Step Icons */}
-            <div className="flex justify-center gap-4 mb-6">
-              {[1, 2, 3, 4].map((step) => (
-                <div
-                  key={step}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-all duration-300 ${deploymentStep === step
-                    ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] text-white scale-110 shadow-lg shadow-[#f01a64]/50'
-                    : deploymentStep > step
-                      ? 'bg-[#00b36b] text-white'
-                      : 'bg-white/10 text-gray-600'
-                    }`}
-                >
-                  {deploymentStep > step ? '✓' : step}
-                </div>
-              ))}
-            </div>
-
-            {/* Step Message */}
-            <h3 className="text-xl md:text-2xl font-black text-white uppercase mb-2 animate-in fade-in duration-300">
-              {deploymentMessage || 'Initializing...'}
-            </h3>
-
-            {/* Step Descriptions */}
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">
-              {deploymentStep === 1 && 'Establishing secure link with Master Trader'}
-              {deploymentStep === 2 && `Syncing ${strategies.find(p => p.id === selectedPlanId)?.name || 'signal'} to your portfolio`}
-              {deploymentStep === 3 && 'Allocating copy funds to Master Signal'}
-              {deploymentStep === 4 && `Expected return: +$${((investAmount * (strategies.find(p => p.id === selectedPlanId)?.minRet || 0)) / 100).toFixed(2)}`}
-            </p>
-
-            {/* Progress Bar */}
-            <div className="relative w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10">
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-yellow-500 to-[#00b36b] transition-all duration-300 ease-out"
-                style={{ width: `${deploymentProgress}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              </div>
-            </div>
-
-            {/* Progress Percentage */}
-            <div className="mt-3 text-[#00b36b] font-black text-sm">
-              {Math.round(deploymentProgress)}%
-            </div>
-
-            {/* Live Sync Badge */}
-            {deploymentStep >= 2 && (
-              <div className="mt-6 inline-flex items-center gap-2 bg-[#00b36b]/10 border border-[#00b36b]/30 px-4 py-2 rounded-full animate-in slide-in-from-bottom-2">
-                <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></div>
-                <span className="text-[#00b36b] font-black text-xs uppercase tracking-widest">MASTER SYNC ACTIVE</span>
-              </div>
-            )}
+    <>
+      <div className="bg-[#131722] min-h-screen pt-20 pb-24 md:pt-24 md:pb-32 px-3 sm:px-6 lg:px-8 relative selection:bg-[#f01a64]/10">
+        {(!user) && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#131722] text-white">
+            Loading Account Data...
           </div>
-        </div>
-      )}
-      {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD === 'true' && (
-        currentTrader ? (
-          <div className="max-w-4xl mx-auto mt-8">
-            <TraderProfileCard
-              trader={currentTrader}
-              currentProfit={user?.totalProfit || 0}
-              currentWinRate={currentTrader.winRate}
-              onClose={() => setCurrentTrader(null)}
-            />
-          </div>
-        ) : (
-          <div className="text-center text-gray-400 py-8">
-            <p className="text-sm uppercase tracking-wider">
-              Add <code>?trader=&lt;id&gt;</code> to the URL to view a trader profile here.
-            </p>
-          </div>
-        )
-      )}
+        )}
 
-      {showSuccessToast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
-          <span className="font-black uppercase tracking-widest text-xs">Trade Executed Successfully</span>
-        </div>
-      )}
-
-      {/* Notification Toggle Button (Always Visible) */}
-      <button
-        onClick={() => setShowNotifPanel(!showNotifPanel)}
-        className={`fixed top-24 left-4 z-[210] p-3 rounded-full shadow-2xl transition-all duration-300 ${showNotifPanel ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'} bg-[#1e222d] border border-white/10 text-white hover:border-[#f01a64] active:scale-95 group backdrop-blur-md`}
-      >
-        <div className="relative">
-          <svg className="w-5 h-5 text-gray-400 group-hover:text-[#f01a64] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-          {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#f01a64] rounded-full border-2 border-[#1e222d] animate-pulse"></span>}
-        </div>
-      </button>
-
-      {/* Manual Admin Notifications Panel */}
-      <div className={`fixed top-24 left-4 z-[220] max-w-sm w-full transition-all duration-500 ${showNotifPanel ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
-        <div className="bg-[#1e222d] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden backdrop-blur-xl">
-          <div className="p-5 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-[#1e222d] to-[#131722]">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <svg className="w-5 h-5 text-[#f01a64]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e222d]"></span>}
-              </div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">System Notifications</h4>
-            </div>
-            <button onClick={() => setShowNotifPanel(false)} className="text-gray-500 hover:text-white transition">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+        {isTradeLoading && (
+          <div className={`fixed inset-0 z-[300] bg-black/99 md:bg-black/90 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 relative`}>
+            <button
+              onClick={() => setIsTradeLoading(false)}
+              className="absolute top-8 right-8 text-gray-500 hover:text-white transition-colors z-[310]"
+            >
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-          </div>
 
-          <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
-            {userNotifications.length === 0 ? (
-              <div className="p-10 text-center">
-                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest italic">Inbox Zero</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-white/5">
-                {userNotifications.map(notif => (
-                  <div key={notif.id} className={`p-5 transition-colors relative group ${notif.isRead ? 'bg-transparent' : 'bg-white/5'}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${notif.type === 'alert' ? 'bg-red-500/20 text-red-500' :
-                        notif.type === 'warning' ? 'bg-amber-500/20 text-amber-500' :
-                          notif.type === 'success' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
-                            'bg-blue-500/20 text-blue-500'
-                        }`}>
-                        {notif.type}
-                      </span>
-                      <span className="text-[7px] text-gray-600 font-bold">{notif.createdAt?.toDate().toLocaleDateString()}</span>
-                    </div>
-                    <h5 className={`text-xs font-black mb-1 ${notif.isRead ? 'text-gray-400' : 'text-white'}`}>{notif.title}</h5>
-                    <p className="text-[10px] text-gray-500 leading-relaxed pr-6">{notif.message}</p>
-
-                    <div className="mt-3 flex gap-2">
-                      {!notif.isRead && (
-                        <button
-                          onClick={() => handleMarkNotifRead(notif.id!)}
-                          className="text-[8px] font-black uppercase tracking-widest text-[#f01a64] hover:text-white transition"
-                        >
-                          Mark as Read
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteNotif(notif.id!)}
-                        className="text-[8px] font-black uppercase tracking-widest text-gray-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
-                      >
-                        Dismiss
-                      </button>
-                    </div>
+            <div className="max-w-md w-full bg-[#1e222d] border-2 border-[#f01a64]/50 rounded-3xl p-8 shadow-2xl relative">
+              {/* Step Icons */}
+              <div className="flex justify-center gap-4 mb-6">
+                {[1, 2, 3, 4].map((step) => (
+                  <div
+                    key={step}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm transition-all duration-300 ${deploymentStep === step
+                      ? 'bg-gradient-to-br from-[#f01a64] to-[#00b36b] text-white scale-110 shadow-lg shadow-[#f01a64]/50'
+                      : deploymentStep > step
+                        ? 'bg-[#00b36b] text-white'
+                        : 'bg-white/10 text-gray-600'
+                      }`}
+                  >
+                    {deploymentStep > step ? '✓' : step}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-          {/* Row 1: Trader Profile (Conditional) */}
-          {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD !== 'true' && currentTrader && (
-            <div className="lg:col-span-3 animate-in fade-in slide-in-from-top-4 duration-700">
+              {/* Step Message */}
+              <h3 className="text-xl md:text-2xl font-black text-white uppercase mb-2 animate-in fade-in duration-300">
+                {deploymentMessage || 'Initializing...'}
+              </h3>
+
+              {/* Step Descriptions */}
+              <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-6">
+                {deploymentStep === 1 && 'Establishing secure link with Master Trader'}
+                {deploymentStep === 2 && `Syncing ${strategies.find(p => p.id === selectedPlanId)?.name || 'signal'} to your portfolio`}
+                {deploymentStep === 3 && 'Allocating copy funds to Master Signal'}
+                {deploymentStep === 4 && `Expected return: +$${((investAmount * (strategies.find(p => p.id === selectedPlanId)?.minRet || 0)) / 100).toFixed(2)}`}
+              </p>
+
+              {/* Progress Bar */}
+              <div className="relative w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10">
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-[#f01a64] via-yellow-500 to-[#00b36b] transition-all duration-300 ease-out"
+                  style={{ width: `${deploymentProgress}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                </div>
+              </div>
+
+              {/* Progress Percentage */}
+              <div className="mt-3 text-[#00b36b] font-black text-sm">
+                {Math.round(deploymentProgress)}%
+              </div>
+
+              {/* Live Sync Badge */}
+              {deploymentStep >= 2 && (
+                <div className="mt-6 inline-flex items-center gap-2 bg-[#00b36b]/10 border border-[#00b36b]/30 px-4 py-2 rounded-full animate-in slide-in-from-bottom-2">
+                  <div className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></div>
+                  <span className="text-[#00b36b] font-black text-xs uppercase tracking-widest">MASTER SYNC ACTIVE</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD === 'true' && (
+          currentTrader ? (
+            <div className="max-w-4xl mx-auto mt-8">
               <TraderProfileCard
                 trader={currentTrader}
-                currentProfit={user?.totalProfit || 0} // Placeholder, can be real trader profit if available
+                currentProfit={user?.totalProfit || 0}
                 currentWinRate={currentTrader.winRate}
                 onClose={() => setCurrentTrader(null)}
               />
             </div>
-          )}
-
-          {/* Row 2: Live Chart (REMOVED) */}
-
-          {/* Row 3: Trading Hub (Only visible during active trade) */}
-          {activeTrades.length > 0 && (
-            <div className="lg:col-span-3">
-              <TradingHub
-                activeTrade={activeTrades[activeTrades.length - 1]}
-                traderName={activeTraderName}
-              />
+          ) : (
+            <div className="text-center text-gray-400 py-8">
+              <p className="text-sm uppercase tracking-wider">
+                Add <code>?trader=&lt;id&gt;</code> to the URL to view a trader profile here.
+              </p>
             </div>
-          )}
-        </div>
+          )
+        )}
 
-        <GlobalStats />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
-            <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Balance</span>
-            <span className={`text-sm md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
-          </div>
-          <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-3 md:p-6 rounded-2xl md:rounded-3xl relative overflow-hidden">
-            <div className="absolute top-1 right-1">
-              {!user?.hasDeposited && !isDemoActive && <span className="text-[6px] md:text-[8px] bg-amber-500 text-black px-1 md:px-2 py-0.5 rounded-full font-black">🔒</span>}
-            </div>
-            <span className="text-[7px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Bonus</span>
-            <span className="text-sm md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
-          </div>
-          <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl">
-            <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Profits</span>
-            <span className="text-sm md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
-          </div>
-          <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-3 md:p-6 rounded-2xl md:rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f]">
-            <span className="text-[9px] md:text-sm font-black text-white uppercase italic text-center md:text-left">Deposit</span>
-            <svg className="h-3 w-3 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </button>
-        </div>
-
-        {activeTrades.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeTrades.map((trade) => (
-              <LiveTradeSimulator
-                key={trade.tradeId}
-                tradeId={trade.tradeId}
-                plan={trade.plan}
-                investAmount={trade.investAmount}
-                startTime={trade.startTime}
-                currentPnL={trade.currentPnL}
-                progress={trade.progress}
-              />
-            ))}
+        {showSuccessToast && (
+          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[210] bg-[#00b36b] text-white px-8 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-top-4">
+            <span className="font-black uppercase tracking-widest text-xs">Trade Executed Successfully</span>
           </div>
         )}
 
-        <div id="active-context">
-          {activeTraderName && (
-            <div className="bg-[#f01a64]/10 border border-[#f01a64]/20 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-[#f01a64] rounded-full animate-pulse"></div>
-                <span className="text-[10px] text-white font-black uppercase tracking-widest">
-                  Mirroring Protocol: <span className="text-[#f01a64]">{activeTraderName}</span>
-                </span>
-              </div>
-              <span className="text-[8px] bg-[#f01a64] text-white px-2 py-0.5 rounded font-black uppercase">Sync Active</span>
-            </div>
-          )}
-        </div>
+        {/* Notification Toggle Button (Always Visible) */}
+        <button
+          onClick={() => setShowNotifPanel(!showNotifPanel)}
+          className={`fixed top-24 left-4 z-[210] p-3 rounded-full shadow-2xl transition-all duration-300 ${showNotifPanel ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'} bg-[#1e222d] border border-white/10 text-white hover:border-[#f01a64] active:scale-95 group backdrop-blur-md`}
+        >
+          <div className="relative">
+            <svg className="w-5 h-5 text-gray-400 group-hover:text-[#f01a64] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#f01a64] rounded-full border-2 border-[#1e222d] animate-pulse"></span>}
+          </div>
+        </button>
 
-        <SocialTicker />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-
-            isDemo={false} // Assuming demo logic is separate
-            demoCount={demoTradeCount}
-            />
-
-            {/* Selected Strategy Display Card */}
-            {selectedPlanId && (() => {
-              const selectedPlan = strategies.find(p => p.id === selectedPlanId);
-              if (!selectedPlan) return null;
-
-              const isPremium = selectedPlan.vip; // Use VIP field from database
-              const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
-
-              return (
-                <div id="signal-confirm-area" className="bg-[#1e222d] border-2 border-[#f01a64] p-6 md:p-8 rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
-                  {/* Strategy Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></span>
-                        <h4 className="text-white font-black text-xl md:text-2xl uppercase">COPYING: {selectedPlan.name}</h4>
-                      </div>
-                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Master Strategy: {selectedPlan.hook}</p>
-                    </div>
-                    {isPremium && (
-                      <span className="bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full font-black text-xs uppercase">
-                        VIP Signal
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Strategy Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Target ROI</p>
-                      <p className="text-[#00b36b] font-black text-2xl md:text-3xl">{selectedPlan.minRet}%+</p>
-                    </div>
-                    <div className="bg-black/30 p-4 rounded-xl border border-white/5">
-                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Signal Expiry</p>
-                      <p className="text-white font-black text-2xl md:text-3xl">{selectedPlan.duration}</p>
-                    </div>
-                  </div>
-
-                  {/* Investment Input */}
-                  {isLocked ? (
-                    <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-6 text-center">
-                      <p className="text-amber-400 font-black text-sm mb-2">🔒 VIP Signal Locked</p>
-                      <p className="text-gray-400 text-xs">Deposit to unlock premium master signals</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Copy Amount ($)</label>
-                        <div className="flex gap-3">
-                          <input
-                            type="number"
-                            value={investAmount}
-                            onChange={e => setInvestAmount(Number(e.target.value))}
-                            className="flex-1 bg-black border-2 border-white/10 text-white text-lg p-4 rounded-xl outline-none font-black focus:border-[#00b36b] transition-all"
-                            placeholder="Enter amount..."
-                          />
-                          <button
-                            onClick={startDeployment}
-                            className="bg-gradient-to-r from-[#f01a64] to-[#f01a64]/80 text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest hover:shadow-lg hover:shadow-[#f01a64]/50 active:scale-95 transition-all"
-                          >
-                            GO
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expected Profit Preview */}
-                      {investAmount > 0 && (
-                        <div className="bg-[#00b36b]/10 border border-[#00b36b]/30 rounded-xl p-4 animate-in fade-in duration-300">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-400 text-xs font-bold uppercase">Expected Profit:</span>
-                            <span className="text-[#00b36b] font-black text-xl">
-                              +${((investAmount * selectedPlan.minRet) / 100).toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+        {/* Manual Admin Notifications Panel */}
+        <div className={`fixed top-24 left-4 z-[220] max-w-sm w-full transition-all duration-500 ${showNotifPanel ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'}`}>
+          <div className="bg-[#1e222d] border border-white/10 rounded-[2rem] shadow-2xl overflow-hidden backdrop-blur-xl">
+            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-gradient-to-r from-[#1e222d] to-[#131722]">
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <svg className="w-5 h-5 text-[#f01a64]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#1e222d]"></span>}
                 </div>
-              );
-            })()}
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white">System Notifications</h4>
+              </div>
+              <button onClick={() => setShowNotifPanel(false)} className="text-gray-500 hover:text-white transition">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="max-h-[350px] overflow-y-auto custom-scrollbar">
+              {userNotifications.length === 0 ? (
+                <div className="p-10 text-center">
+                  <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest italic">Inbox Zero</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-white/5">
+                  {userNotifications.map(notif => (
+                    <div key={notif.id} className={`p-5 transition-colors relative group ${notif.isRead ? 'bg-transparent' : 'bg-white/5'}`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${notif.type === 'alert' ? 'bg-red-500/20 text-red-500' :
+                          notif.type === 'warning' ? 'bg-amber-500/20 text-amber-500' :
+                            notif.type === 'success' ? 'bg-[#00b36b]/20 text-[#00b36b]' :
+                              'bg-blue-500/20 text-blue-500'
+                          }`}>
+                          {notif.type}
+                        </span>
+                        <span className="text-[7px] text-gray-600 font-bold">{notif.createdAt?.toDate().toLocaleDateString()}</span>
+                      </div>
+                      <h5 className={`text-xs font-black mb-1 ${notif.isRead ? 'text-gray-400' : 'text-white'}`}>{notif.title}</h5>
+                      <p className="text-[10px] text-gray-500 leading-relaxed pr-6">{notif.message}</p>
+
+                      <div className="mt-3 flex gap-2">
+                        {!notif.isRead && (
+                          <button
+                            onClick={() => handleMarkNotifRead(notif.id!)}
+                            className="text-[8px] font-black uppercase tracking-widest text-[#f01a64] hover:text-white transition"
+                          >
+                            Mark as Read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteNotif(notif.id!)}
+                          className="text-[8px] font-black uppercase tracking-widest text-gray-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
+            {/* Row 1: Trader Profile (Conditional) */}
+            {process.env.REACT_APP_TRADER_PROFILE_DASHBOARD !== 'true' && currentTrader && (
+              <div className="lg:col-span-3 animate-in fade-in slide-in-from-top-4 duration-700">
+                <TraderProfileCard
+                  trader={currentTrader}
+                  currentProfit={user?.totalProfit || 0} // Placeholder, can be real trader profit if available
+                  currentWinRate={currentTrader.winRate}
+                  onClose={() => setCurrentTrader(null)}
+                />
+              </div>
+            )}
+
+            {/* Row 2: Live Chart (REMOVED) */}
+
+            {/* Row 3: Trading Hub (Only visible during active trade) */}
+            {activeTrades.length > 0 && (
+              <div className="lg:col-span-3">
+                <TradingHub
+                  activeTrade={activeTrades[activeTrades.length - 1]}
+                  traderName={activeTraderName}
+                />
+              </div>
+            )}
+          </div>
+
+          <GlobalStats />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+            <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl group hover:border-[#f01a64]/30 transition-colors">
+              <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Balance</span>
+              <span className={`text-sm md:text-2xl font-black ${user?.hasDeposited ? 'text-[#00b36b]' : 'text-white'}`}>${(user?.balance || 0).toLocaleString()}</span>
+            </div>
+            <div className="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 p-3 md:p-6 rounded-2xl md:rounded-3xl relative overflow-hidden">
+              <div className="absolute top-1 right-1">
+                {!user?.hasDeposited && !isDemoActive && <span className="text-[6px] md:text-[8px] bg-amber-500 text-black px-1 md:px-2 py-0.5 rounded-full font-black">🔒</span>}
+              </div>
+              <span className="text-[7px] md:text-[9px] text-amber-400 font-black uppercase tracking-widest block mb-1">Bonus</span>
+              <span className="text-sm md:text-2xl font-black text-amber-500">${(user?.bonusBalance || 0).toLocaleString()}</span>
+            </div>
+            <div className="bg-[#1e222d] border border-white/5 p-3 md:p-6 rounded-2xl md:rounded-3xl">
+              <span className="text-[7px] md:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">Profits</span>
+              <span className="text-sm md:text-2xl font-black text-[#00b36b]">+${tradeProfit.toLocaleString()}</span>
+            </div>
+            <button onClick={() => depositSectionRef.current?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#00b36b] p-3 md:p-6 rounded-2xl md:rounded-3xl flex flex-col md:flex-row items-center justify-center md:justify-between gap-1 shadow-xl active:scale-95 transition-all hover:bg-[#009e5f]">
+              <span className="text-[9px] md:text-sm font-black text-white uppercase italic text-center md:text-left">Deposit</span>
+              <svg className="h-3 w-3 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </button>
+          </div>
+
+          {activeTrades.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeTrades.map((trade) => (
+                <LiveTradeSimulator
+                  key={trade.tradeId}
+                  tradeId={trade.tradeId}
+                  plan={trade.plan}
+                  investAmount={trade.investAmount}
+                  startTime={trade.startTime}
+                  currentPnL={trade.currentPnL}
+                  progress={trade.progress}
+                />
+              ))}
+            </div>
+          )}
+
+          <div id="active-context">
+            {activeTraderName && (
+              <div className="bg-[#f01a64]/10 border border-[#f01a64]/20 p-4 rounded-2xl flex items-center justify-between animate-in slide-in-from-top-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-[#f01a64] rounded-full animate-pulse"></div>
+                  <span className="text-[10px] text-white font-black uppercase tracking-widest">
+                    Mirroring Protocol: <span className="text-[#f01a64]">{activeTraderName}</span>
+                  </span>
+                </div>
+                <span className="text-[8px] bg-[#f01a64] text-white px-2 py-0.5 rounded font-black uppercase">Sync Active</span>
+              </div>
+            )}
+          </div>
+
+          <SocialTicker />
+
+          <div className="mb-8 md:mb-12">
+            <ErrorBoundary>
+              <SignalFeed
+                plans={strategies}
+                onSelectStrategy={(id) => {
+                  setSelectedPlanId(id);
+                  // Auto-scroll to confirmation
+                  setTimeout(() => {
+                    const element = document.getElementById('signal-confirm-area');
+                    element?.scrollIntoView({ behavior: 'smooth' });
+                  }, 100);
+                }}
+                userBalance={user?.balance || 0}
+                hasDeposited={!!user?.hasDeposited}
+                isStrategyUnlocked={user?.isStrategyUnlocked || false}
+                demoCount={demoTradeCount}
+              />
+            </ErrorBoundary>
+          </div>
+
+          {/* Selected Strategy Display Card */}
+          {selectedPlanId && (() => {
+            const selectedPlan = strategies.find(p => p.id === selectedPlanId);
+            if (!selectedPlan) return null;
+
+            const isPremium = selectedPlan.vip; // Use VIP field from database
+            const isLocked = isPremium && !user?.hasDeposited && (!isDemoActive || demoTradeCount >= 3);
+
+            return (
+              <div id="signal-confirm-area" className="bg-[#1e222d] border-2 border-[#f01a64] p-6 md:p-8 rounded-3xl shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+                {/* Strategy Header */}
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 bg-[#00b36b] rounded-full animate-pulse"></span>
+                      <h4 className="text-white font-black text-xl md:text-2xl uppercase">COPYING: {selectedPlan.name}</h4>
+                    </div>
+                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Master Strategy: {selectedPlan.hook}</p>
+                  </div>
+                  {isPremium && (
+                    <span className="bg-amber-500/20 text-amber-500 px-3 py-1 rounded-full font-black text-xs uppercase">
+                      VIP Signal
+                    </span>
+                  )}
+                </div>
+
+                {/* Strategy Stats */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Target ROI</p>
+                    <p className="text-[#00b36b] font-black text-2xl md:text-3xl">{selectedPlan.minRet}%+</p>
+                  </div>
+                  <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">Signal Expiry</p>
+                    <p className="text-white font-black text-2xl md:text-3xl">{selectedPlan.duration}</p>
+                  </div>
+                </div>
+
+                {/* Investment Input */}
+                {isLocked ? (
+                  <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-6 text-center">
+                    <p className="text-amber-400 font-black text-sm mb-2">🔒 VIP Signal Locked</p>
+                    <p className="text-gray-400 text-xs">Deposit to unlock premium master signals</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-gray-500 text-[10px] font-black uppercase tracking-widest mb-2">Copy Amount ($)</label>
+                      <div className="flex gap-3">
+                        <input
+                          type="number"
+                          value={investAmount}
+                          onChange={e => setInvestAmount(Number(e.target.value))}
+                          className="flex-1 bg-black border-2 border-white/10 text-white text-lg p-4 rounded-xl outline-none font-black focus:border-[#00b36b] transition-all"
+                          placeholder="Enter amount..."
+                        />
+                        <button
+                          onClick={startDeployment}
+                          className="bg-gradient-to-r from-[#f01a64] to-[#f01a64]/80 text-white px-8 py-4 rounded-xl font-black uppercase text-sm tracking-widest hover:shadow-lg hover:shadow-[#f01a64]/50 active:scale-95 transition-all"
+                        >
+                          GO
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expected Profit Preview */}
+                    {investAmount > 0 && (
+                      <div className="bg-[#00b36b]/10 border border-[#00b36b]/30 rounded-xl p-4 animate-in fade-in duration-300">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-xs font-bold uppercase">Expected Profit:</span>
+                          <span className="text-[#00b36b] font-black text-xl">
+                            +${((investAmount * selectedPlan.minRet) / 100).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Side Panel (Trading Hub) */}
         <div className="space-y-6">
           <div ref={depositSectionRef} className="bg-[#1e222d] border border-white/5 rounded-[2rem] md:rounded-[3rem] p-5 md:p-8 shadow-2xl">
             <h3 className="text-lg font-black text-white uppercase mb-6 italic">Secure Wallet Handshake</h3>
@@ -1345,9 +1359,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
           </div>
         </div>
       </div>
-      {showReferral && (
-        <ReferralTerminal onClose={() => setShowReferral(false)} />
-      )}
+      {
+        showReferral && (
+          <ReferralTerminal onClose={() => setShowReferral(false)} />
+        )
+      }
 
 
       <StrategyModal
@@ -1359,7 +1375,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onSwitchTrader }) => {
         hasDeposited={!!user?.hasDeposited}
         isStrategyUnlocked={!!user?.isStrategyUnlocked}
       />
-    </div>
+    </>
   );
 };
 
