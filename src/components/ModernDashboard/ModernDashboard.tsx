@@ -7,6 +7,9 @@ import { useStrategies } from '../../hooks/useStrategies';
 import SignalFeed from '../SignalFeed';
 import StrategyModal from '../StrategyModal';
 import TransactionModal from './TransactionModal';
+import LiveMarketChart from '../LiveMarketChart';
+import SocialTicker from '../SocialTicker';
+import ReferralTerminal from '../ReferralTerminal';
 import { Strategy } from '../../types';
 
 const ModernDashboard: React.FC = () => {
@@ -18,6 +21,7 @@ const ModernDashboard: React.FC = () => {
     const [isStrategyModalOpen, setIsStrategyModalOpen] = useState(false);
     const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
     const [transactionType, setTransactionType] = useState<'DEPOSIT' | 'WITHDRAW' | null>(null);
+    const [showReferral, setShowReferral] = useState(false);
 
     const handleCopyStrategy = (strategy: Strategy) => {
         setSelectedStrategy(strategy);
@@ -63,6 +67,11 @@ const ModernDashboard: React.FC = () => {
                 {/* Content Area */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
+                        {/* Live Market Chart */}
+                        <div className="bg-[#1e222d] rounded-3xl border border-white/5 overflow-hidden h-[500px]">
+                            <LiveMarketChart />
+                        </div>
+
                         {/* Active Trades Module */}
                         <ActiveTradesList trades={userProfile?.activeTrades} />
                     </div>
